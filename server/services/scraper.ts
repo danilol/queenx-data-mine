@@ -21,16 +21,27 @@ export class RuPaulScraper {
   }
 
   async initialize(options: ScrapingOptions = {}) {
-    this.browser = await chromium.launch({
-      headless: options.headless ?? false,
-      slowMo: 100,
-    });
-
-    // Ensure screenshot directory exists
     try {
-      await fs.mkdir(this.screenshotDir, { recursive: true });
+      this.browser = await chromium.launch({
+        headless: options.headless ?? true, // Default to headless mode for better compatibility
+        slowMo: 100,
+        args: [
+          '--no-sandbox',
+          '--disable-setuid-sandbox',
+          '--disable-dev-shm-usage',
+          '--disable-web-security',
+          '--disable-features=VizDisplayCompositor'
+        ],
+      });
+
+      // Ensure screenshot directory exists
+      try {
+        await fs.mkdir(this.screenshotDir, { recursive: true });
+      } catch (error) {
+        console.log("Screenshot directory already exists or couldn't be created");
+      }
     } catch (error) {
-      console.log("Screenshot directory already exists or couldn't be created");
+      throw new Error(`Failed to initialize browser: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   }
 
@@ -263,4 +274,6 @@ export class RuPaulScraper {
   }
 }
 
-export const scraper = new RuPaulScraper();
+// For now, use mock scraper to demonstrate functionality
+import { MockRuPaulScraper } from "./mock-scraper";
+export const scraper = new MockRuPaulScraper();

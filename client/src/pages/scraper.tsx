@@ -13,7 +13,7 @@ import { useWebSocket } from "@/hooks/use-websocket";
 import { api } from "@/lib/api";
 
 export default function Scraper() {
-  const [headlessMode, setHeadlessMode] = useState(false);
+  const [headlessMode, setHeadlessMode] = useState(true);
   const [screenshotsEnabled, setScreenshotsEnabled] = useState(true);
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -77,6 +77,25 @@ export default function Scraper() {
         />
 
         <div className="p-6 space-y-6">
+          {/* Demo Mode Notice */}
+          <Card className="border-blue-200 bg-blue-50">
+            <CardContent className="p-4">
+              <div className="flex items-start space-x-3">
+                <Monitor className="h-5 w-5 text-blue-600 mt-0.5" />
+                <div className="flex-1">
+                  <h3 className="font-semibold text-blue-900 mb-1">Demo Mode Active</h3>
+                  <p className="text-sm text-blue-700 mb-2">
+                    Currently using sample data to demonstrate functionality. The scraper simulates collecting 
+                    RuPaul's Drag Race contestant information with real-time progress tracking.
+                  </p>
+                  <p className="text-xs text-blue-600">
+                    For production use with real Playwright browser automation, system dependencies would need to be installed.
+                  </p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
           {/* WebSocket Status */}
           <Card>
             <CardContent className="p-4">
@@ -144,7 +163,7 @@ export default function Scraper() {
                       className="flex-1"
                     >
                       <Play className="h-4 w-4 mr-2" />
-                      {startScrapingMutation.isPending ? "Starting..." : "Start Scraping"}
+                      {startScrapingMutation.isPending ? "Starting..." : "Start Demo Scraping"}
                     </Button>
                     
                     <Button
