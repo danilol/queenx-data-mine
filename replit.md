@@ -2,6 +2,14 @@
 
 This is a RuPaul's Drag Race contestant scraping and management system built as a full-stack web application. The system automatically scrapes contestant data from Wikipedia using Playwright web automation, stores it in a PostgreSQL database, and provides a modern web interface for viewing and managing the collected data. The application features real-time progress tracking during scraping operations, comprehensive contestant profiles with photos and biographical information, and data export capabilities.
 
+## Recent Changes (August 2025)
+
+- **Fixed 400 Browser Error**: Implemented mock scraper fallback when Playwright system dependencies are unavailable
+- **Production README**: Created comprehensive setup guide with detailed TODOs for production deployment
+- **Demo Mode**: Added clear notifications about demo functionality vs production browser automation
+- **Real-time Scraping**: Verified WebSocket progress tracking works perfectly with sample data
+- **Data Export**: Confirmed CSV/JSON export functionality works with scraped data
+
 # User Preferences
 
 Preferred communication style: Simple, everyday language.
