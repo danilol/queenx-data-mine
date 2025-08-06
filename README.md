@@ -342,15 +342,330 @@ lsof -ti:5000 | xargs kill -9
 
 Enable verbose logging:
 ```bash
+# Full debug mode
 DEBUG=* npm run dev
+
+# Playwright-specific debugging
+DEBUG=pw:* npm run dev
+
+# Scraper-specific debugging  
+DEBUG=scraper:* npm run dev
 ```
 
-## 📝 Data Sources
+### Playwright-Specific Debugging
 
-Currently scrapes from:
+```bash
+# Run with browser visible (non-headless)
+PLAYWRIGHT_HEADLESS=false npm run dev
+
+# Enable slow motion for better observation
+PLAYWRIGHT_SLOW_MO=1000 npm run dev
+
+# Save videos of scraping sessions
+PLAYWRIGHT_VIDEO=true npm run dev
+```
+
+## 🔍 Playwright Debugging
+
+### Visual Debugging Mode
+
+For development and troubleshooting, you can run Playwright in non-headless mode to see the browser in action:
+
+```typescript
+// In server/services/scraper.ts
+const options = {
+  headless: false,        // Show browser window
+  screenshotsEnabled: true, // Capture screenshots
+  slowMo: 500            // Slow down actions (milliseconds)
+};
+```
+
+### Debug Console Output
+
+Enable detailed logging for scraping operations:
+
+```bash
+# Enable Playwright debug logs
+DEBUG=pw:* npm run dev
+
+# Enable only browser logs
+DEBUG=pw:browser npm run dev
+
+# Enable application debug logs
+DEBUG=scraper:* npm run dev
+```
+
+### Screenshot Analysis
+
+Screenshots are automatically saved to `./screenshots/` directory during scraping:
+
+```bash
+# View captured screenshots
+ls -la screenshots/
+open screenshots/  # macOS
+xdg-open screenshots/  # Linux
+```
+
+### Interactive Debugging
+
+For step-by-step debugging, you can pause execution and inspect the page:
+
+```typescript
+// Add breakpoints in scraper code
+await page.pause(); // Opens Playwright Inspector
+
+// Take manual screenshots
+await page.screenshot({ path: 'debug.png', fullPage: true });
+
+// Inspect element selectors
+const element = await page.locator('selector').first();
+console.log(await element.textContent());
+```
+
+### Common Debugging Techniques
+
+1. **Selector Testing**: Use browser DevTools to test CSS selectors
+2. **Network Inspection**: Monitor requests in browser Network tab
+3. **Console Logs**: Check for JavaScript errors on scraped pages
+4. **Element Waiting**: Use `page.waitForSelector()` for dynamic content
+
+## 📝 Data Sources & Adding New URLs
+
+### Current Data Sources
+
 - **Wikipedia**: Primary source for contestant information
 - **RuPaul's Drag Race Fandom Wiki**: Additional details
 - **Future**: Official franchise websites, social media APIs
+
+### Adding a New Scraping Source
+
+To add a new URL or data source, follow these steps:
+
+#### 1. Update Season Data Structure
+
+First, add your new source to the season data in `server/services/scraper.ts`:
+
+```typescript
+// In scrapeWikipediaDragRaceData method
+const seasonData = [
+  {
+    name: "RuPaul's Drag Race Season 16",
+    url: "https://en.wikipedia.org/wiki/RuPaul%27s_Drag_Race_(season_16)",
+    franchise: "US",
+    year: 2024
+  },
+  {
+    name: "Drag Race UK Season 5", 
+    url: "https://en.wikipedia.org/wiki/RuPaul%27s_Drag_Race_UK_(series_5)",
+    franchise: "UK",
+    year: 2023
+  },
+  // Add your new source here:
+  {
+    name: "Your New Season",
+    url: "https://your-new-source.com/drag-race-data",
+    franchise: "NEW",
+    year: 2024
+  }
+];
+```
+
+#### 2. Create Source-Specific Scraper Method
+
+Create a dedicated scraper method for different website structures:
+
+```typescript
+// Add to RuPaulScraper class
+private async scrapeCustomSource(page: Page, seasonData: any, jobId: string) {
+  try {
+    await page.goto(seasonData.url, { waitUntil: 'networkidle' });
+    
+    // Wait for content to load
+    await page.waitForSelector('.contestant-table', { timeout: 10000 });
+    
+    // Custom selectors for your source
+    const rows = await page.locator('.contestant-row').all();
+    
+    for (let i = 0; i < rows.length; i++) {
+      const row = rows[i];
+      
+      // Extract data based on your source's HTML structure
+      const dragName = await row.locator('.drag-name').textContent() || '';
+      const realName = await row.locator('.real-name').textContent() || '';
+      const age = await row.locator('.age').textContent() || '';
+      
+      // Broadcast progress
+      broadcastProgress({
+        jobId,
+        status: "running",
+        progress: Math.round(((i + 1) / rows.length) * 100),
+        totalItems: rows.length,
+        message: `Processing: ${dragName}`,
+        currentItem: dragName
+      });
+      
+      // Save to database
+      await storage.createContestant({
+        dragName: dragName.trim(),
+        realName: realName.trim() || null,
+        age: this.extractAge(age),
+        season: seasonData.name,
+        franchise: seasonData.franchise,
+        wikipediaUrl: seasonData.url,
+        isScraped: true
+      });
+      
+      // Optional: Take screenshot for debugging
+      if (this.screenshotDir) {
+        await this.takeScreenshot(page, `contestant_${i}_${dragName.replace(/\s+/g, '_')}`);
+      }
+    }
+    
+  } catch (error) {
+    console.error(`Error scraping ${seasonData.name}:`, error);
+    throw error;
+  }
+}
+```
+
+#### 3. Update Main Scraper Logic
+
+Modify the main scraping loop to handle different sources:
+
+```typescript
+// In scrapeWikipediaDragRaceData method
+for (const season of seasonData) {
+  try {
+    // Determine scraper method based on URL or source type
+    if (season.url.includes('wikipedia.org')) {
+      await this.scrapeSingleSeason(page, season, jobId);
+    } else if (season.url.includes('your-new-source.com')) {
+      await this.scrapeCustomSource(page, season, jobId);
+    } else if (season.url.includes('fandom.com')) {
+      await this.scrapeFandomSource(page, season, jobId);
+    } else {
+      console.warn(`Unknown source type for: ${season.url}`);
+      continue;
+    }
+    
+    // Mark season as scraped
+    await storage.createSeason({
+      name: season.name,
+      franchise: season.franchise,
+      year: season.year,
+      wikipediaUrl: season.url,
+      isScraped: true
+    });
+    
+  } catch (error) {
+    console.error(`Failed to scrape season ${season.name}:`, error);
+    // Continue with next season instead of failing completely
+  }
+}
+```
+
+#### 4. Handle Different Data Formats
+
+Add utility methods for data extraction specific to your source:
+
+```typescript
+// Add utility methods to RuPaulScraper class
+private extractAgeFromCustomSource(text: string): number | null {
+  // Custom age extraction logic for your source
+  const ageMatch = text.match(/Age:\s*(\d+)/i);
+  return ageMatch ? parseInt(ageMatch[1]) : null;
+}
+
+private extractOutcomeFromCustomSource(text: string): string | null {
+  // Custom outcome extraction logic
+  if (text.toLowerCase().includes('winner')) return 'Winner';
+  if (text.toLowerCase().includes('runner-up')) return 'Runner-up';
+  // Add more mappings as needed
+  return text.trim() || null;
+}
+
+private async extractPhotoUrl(page: Page, containerSelector: string): Promise<string | null> {
+  try {
+    const img = await page.locator(`${containerSelector} img`).first();
+    return await img.getAttribute('src');
+  } catch {
+    return null;
+  }
+}
+```
+
+#### 5. Test Your New Source
+
+Create a test method to verify your scraper works:
+
+```typescript
+// Add to development/testing
+async testNewSource() {
+  const testSeason = {
+    name: "Test Season",
+    url: "https://your-new-source.com/test-page",
+    franchise: "TEST",
+    year: 2024
+  };
+  
+  const browser = await chromium.launch({ headless: false });
+  const page = await browser.newPage();
+  
+  try {
+    await this.scrapeCustomSource(page, testSeason, 'test-job');
+    console.log('✓ New source scraper working correctly');
+  } catch (error) {
+    console.error('✗ New source scraper failed:', error);
+  } finally {
+    await browser.close();
+  }
+}
+```
+
+#### 6. Update Mock Data (Optional)
+
+If you want to test with mock data first, add sample data to `server/services/mock-scraper.ts`:
+
+```typescript
+// Add to SAMPLE_CONTESTANTS array
+const NEW_SOURCE_CONTESTANTS = [
+  {
+    dragName: "Test Queen",
+    realName: "Test Person",
+    age: 25,
+    hometown: "Test City",
+    season: "Your New Season",
+    franchise: "NEW",
+    outcome: "Contestant",
+    biography: "Sample biography from new source",
+    photoUrl: null,
+    wikipediaUrl: "https://your-new-source.com"
+  }
+];
+```
+
+### Best Practices for New Sources
+
+1. **Respect Rate Limits**: Add delays between requests
+2. **Handle Errors Gracefully**: Don't let one page failure stop entire scraping
+3. **Validate Data**: Check for required fields before saving
+4. **Use Specific Selectors**: Avoid generic selectors that might break
+5. **Test Thoroughly**: Always test with headless=false first
+6. **Document Selectors**: Comment your CSS selectors for future maintenance
+
+### Example: Adding Drag Race Thailand
+
+```typescript
+// Complete example for adding a new franchise
+{
+  name: "Drag Race Thailand Season 3",
+  url: "https://en.wikipedia.org/wiki/Drag_Race_Thailand_(season_3)",
+  franchise: "Thailand",
+  year: 2021
+}
+
+// Custom scraper method would handle Thai names and local data format
+```
 
 ## 🤝 Contributing
 

@@ -9,6 +9,7 @@ This is a RuPaul's Drag Race contestant scraping and management system built as 
 - **Demo Mode**: Added clear notifications about demo functionality vs production browser automation
 - **Real-time Scraping**: Verified WebSocket progress tracking works perfectly with sample data
 - **Data Export**: Confirmed CSV/JSON export functionality works with scraped data
+- **Documentation**: Added comprehensive debugging guide and instructions for adding new scraping sources
 
 # User Preferences
 
