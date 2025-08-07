@@ -1,0 +1,18 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "type": "node",
+      "request": "launch",
+      "name": "Debug Scraper",
+      "program": "${workspaceFolder}/server/index.ts", // <-- update this to your entry file
+      "runtimeArgs": [
+        "-r",
+        "ts-node/register"
+      ],
+      "env": {
+        "HEADLESS": "false"
+      }
+    }
+  ]
+}

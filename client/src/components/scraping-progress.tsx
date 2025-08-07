@@ -2,7 +2,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { CheckCircle, Clock, AlertCircle, Play } from "lucide-react";
-import { ScrapingProgress as ScrapingProgressType } from "@shared/schema";
+import { ScrapingProgress as ScrapingProgressType, seasonStatusSchema } from "@shared/schema";
+import { z } from "zod";
 import { useWebSocket } from "@/hooks/use-websocket";
 import { useQuery } from "@tanstack/react-query";
 import { api } from "@/lib/api";
@@ -12,14 +13,39 @@ export function ScrapingProgress() {
   const { data: scrapingStatus } = useQuery({
     queryKey: ["/api/scraping/status"],
     queryFn: () => api.getScrapingStatus(),
-    refetchInterval: 5000,
+    refetchInterval: 3000,
   });
 
+  const defaultStatus: ScrapingProgressType = {
+    jobId: null,
+    status: 'idle',
+    progress: 0,
+    totalItems: 0,
+    seasons: [],
+  };
+
   // Use real-time progress if available, otherwise fall back to API status
-  const currentStatus = scrapingProgress || scrapingStatus;
-  const isActive = currentStatus && 'status' in currentStatus && currentStatus.status === 'running';
-  const isCompleted = currentStatus && 'status' in currentStatus && currentStatus.status === 'completed';
-  const isFailed = currentStatus && 'status' in currentStatus && currentStatus.status === 'failed';
+  const getApiStatus = (): ScrapingProgressType => {
+    if (scrapingStatus && 'progress' in scrapingStatus) {
+      const status = scrapingStatus as any;
+      return {
+        jobId: status.id,
+        status: status.status,
+        progress: status.progress,
+        totalItems: status.totalItems,
+        currentItem: status.currentItem,
+        message: status.message,
+        screenshot: status.screenshot,
+        seasons: status.seasons,
+      };
+    }
+    return { ...defaultStatus, status: (scrapingStatus?.status as 'idle' | 'running' | 'completed' | 'failed') || 'idle' };
+  };
+
+  const currentStatus: ScrapingProgressType = scrapingProgress || getApiStatus();
+  const isActive = currentStatus.status === 'running';
+  const isCompleted = currentStatus.status === 'completed';
+  const isFailed = currentStatus.status === 'failed';
   
   const getStatusBadge = () => {
     if (isActive) {
@@ -55,23 +81,11 @@ export function ScrapingProgress() {
   };
 
   const getProgress = (): number => {
-    if (scrapingProgress) {
-      return scrapingProgress.progress || 0;
-    }
-    if (currentStatus && 'progress' in currentStatus) {
-      return currentStatus.progress || 0;
-    }
-    return isCompleted ? 100 : 0;
+    return currentStatus.progress || (isCompleted ? 100 : 0);
   };
 
   const getCurrentItem = (): string => {
-    if (scrapingProgress) {
-      return scrapingProgress.currentItem || "Initializing...";
-    }
-    if (currentStatus && 'currentItem' in currentStatus) {
-      return currentStatus.currentItem || "Processing...";
-    }
-    return "Ready to start";
+    return currentStatus.currentItem || (isActive ? "Processing..." : "Ready to start");
   };
 
   const progress = getProgress();
@@ -109,47 +123,7 @@ export function ScrapingProgress() {
             </div>
           )}
           
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
-            <div>
-              <h4 className="font-medium text-gray-900 mb-2">Data Sources Status</h4>
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-gray-600">Wikipedia</span>
-                  <Badge variant={isActive ? "secondary" : isCompleted ? "default" : "outline"} className="text-xs">
-                    {isActive ? "Active" : isCompleted ? "Complete" : "Pending"}
-                  </Badge>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-gray-600">Fandom Wiki</span>
-                  <Badge variant="outline" className="text-xs">Pending</Badge>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-gray-600">Official Website</span>
-                  <Badge variant="outline" className="text-xs">Pending</Badge>
-                </div>
-              </div>
-            </div>
-            
-            <div>
-              <h4 className="font-medium text-gray-900 mb-2">Recent Activity</h4>
-              <div className="space-y-2 text-sm text-gray-600">
-                {scrapingProgress?.message && (
-                  <div className="flex items-center">
-                    <CheckCircle className="h-4 w-4 text-emerald-500 mr-2" />
-                    {scrapingProgress.message}
-                  </div>
-                )}
-                <div className="flex items-center">
-                  <CheckCircle className="h-4 w-4 text-emerald-500 mr-2" />
-                  System initialized
-                </div>
-                <div className="flex items-center">
-                  <CheckCircle className="h-4 w-4 text-emerald-500 mr-2" />
-                  Ready to scrape data
-                </div>
-              </div>
-            </div>
-          </div>
+
         </div>
       </CardContent>
     </Card>

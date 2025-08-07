@@ -98,7 +98,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Seasons endpoints
   app.get("/api/seasons", async (req, res) => {
     try {
-      const seasons = await storage.getSeasons();
+      const seasons = await storage.getAllSeasons();
       res.json(seasons);
     } catch (error) {
       res.status(500).json({ error: "Failed to fetch seasons" });
@@ -189,7 +189,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/export/json", async (req, res) => {
     try {
       const contestants = await storage.getContestants();
-      const seasons = await storage.getSeasons();
+      const seasons = await storage.getAllSeasons();
       
       const exportData = {
         exportedAt: new Date().toISOString(),

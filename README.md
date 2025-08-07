@@ -63,7 +63,7 @@ DATABASE_URL="postgresql://username:password@localhost:5432/drag_race_db"
 
 # Server Configuration
 NODE_ENV=development
-PORT=5000
+PORT=3000
 
 # Scraper Configuration
 USE_REAL_SCRAPER=true  # Set to false to use demo mode
@@ -92,7 +92,7 @@ npm run db:push
 npm run dev
 ```
 
-The application will be available at `http://localhost:5000`
+The application will be available at `http://localhost:3000`
 
 ## 🛠️ Development
 
@@ -319,7 +319,7 @@ sudo npx playwright install-deps
 
 #### 2. WebSocket Connection Failed
 ```bash
-WebSocket connection to 'ws://localhost:5000/ws' failed
+WebSocket connection to 'ws://localhost:3000/ws' failed
 ```
 **Solution**: Ensure server is running and WebSocket path is correct
 
@@ -331,11 +331,11 @@ Error: connect ECONNREFUSED 127.0.0.1:5432
 
 #### 4. Port Already in Use
 ```bash
-Error: listen EADDRINUSE: address already in use :::5000
+Error: listen EADDRINUSE: address already in use :::3000
 ```
 **Solution**: Kill existing process or change port
 ```bash
-lsof -ti:5000 | xargs kill -9
+lsof -ti:3000 | xargs kill -9
 ```
 
 ### Debug Mode

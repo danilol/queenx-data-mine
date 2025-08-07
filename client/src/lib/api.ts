@@ -1,5 +1,5 @@
 import { apiRequest } from "./queryClient";
-import { Contestant, InsertContestant, UpdateContestant, AppStats, ScrapingJob } from "@shared/schema";
+import { Contestant, InsertContestant, UpdateContestant, AppStats, ScrapingJob, Season, FullContestant } from "@shared/schema";
 
 export const api = {
   // Stats
@@ -9,7 +9,7 @@ export const api = {
   },
 
   // Contestants
-  getContestants: async (search?: string, limit?: number): Promise<Contestant[]> => {
+  getContestants: async (search?: string, limit?: number): Promise<FullContestant[]> => {
     const params = new URLSearchParams();
     if (search) params.set("search", search);
     if (limit) params.set("limit", limit.toString());

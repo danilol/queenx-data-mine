@@ -1,0 +1,14 @@
+{
+    "sqltools.connections": [
+        {
+            "previewLimit": 50,
+            "server": "localhost",
+            "port": 5432,
+            "driver": "PostgreSQL",
+            "name": "drag_race_db",
+            "database": "drag_race_db",
+            "username": "danilo",
+            "password": ""
+        }
+    ]
+}

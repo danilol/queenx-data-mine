@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { api } from "@/lib/api";
-import { type Contestant } from "@shared/schema";
+import { FullContestant, Contestant } from "@shared/schema";
 import { Link } from "wouter";
 
 export default function Dashboard() {
@@ -23,10 +23,12 @@ export default function Dashboard() {
     queryFn: () => api.getStats(),
   });
 
-  const { data: recentContestants = [] } = useQuery({
+  const { data: recentContestantsData = [] } = useQuery<FullContestant[]>({
     queryKey: ["/api/contestants", "recent"],
     queryFn: () => api.getContestants(undefined, 10),
   });
+
+  const recentContestants = recentContestantsData.filter((c: FullContestant, i: number, arr: FullContestant[]) => arr.findIndex(c2 => c2.id === c.id) === i);
 
   const handleEditContestant = (contestant: Contestant) => {
     setSelectedContestant(contestant);
@@ -76,38 +78,38 @@ export default function Dashboard() {
           <ScrapingProgress />
 
           {/* Recent Contestants */}
-          <Card className="border border-gray-200">
+          <Card>
             <CardContent className="p-6">
               <div className="flex items-center justify-between mb-6">
-                <h3 className="text-lg font-semibold text-gray-900">Recently Added Contestants</h3>
+                <h3 className="text-lg font-semibold text-foreground">Recently Added Contestants</h3>
                 <Link href="/contestants">
-                  <span className="text-blue-600 hover:text-blue-700 font-medium text-sm cursor-pointer">
+                  <span className="text-primary hover:text-primary/80 font-medium text-sm cursor-pointer">
                     View All →
                   </span>
                 </Link>
               </div>
 
               {recentContestants.length === 0 ? (
-                <div className="text-center py-8 text-gray-500">
+                <div className="text-center py-8 text-muted-foreground">
                   <p>No contestants found. Start scraping to populate the database.</p>
                 </div>
               ) : (
                 <div className="overflow-x-auto">
                   <table className="w-full">
                     <thead>
-                      <tr className="border-b border-gray-200">
-                        <th className="text-left py-3 px-2 font-medium text-gray-600 text-sm">Photo</th>
-                        <th className="text-left py-3 px-2 font-medium text-gray-600 text-sm">Drag Name</th>
-                        <th className="text-left py-3 px-2 font-medium text-gray-600 text-sm">Real Name</th>
-                        <th className="text-left py-3 px-2 font-medium text-gray-600 text-sm">Season</th>
-                        <th className="text-left py-3 px-2 font-medium text-gray-600 text-sm">Hometown</th>
-                        <th className="text-left py-3 px-2 font-medium text-gray-600 text-sm">Outcome</th>
-                        <th className="text-left py-3 px-2 font-medium text-gray-600 text-sm">Actions</th>
+                      <tr className="border-b">
+                        <th className="text-left py-3 px-2 font-medium text-muted-foreground text-sm">Photo</th>
+                        <th className="text-left py-3 px-2 font-medium text-muted-foreground text-sm">Drag Name</th>
+                        <th className="text-left py-3 px-2 font-medium text-muted-foreground text-sm">Real Name</th>
+                        <th className="text-left py-3 px-2 font-medium text-muted-foreground text-sm">Season</th>
+                        <th className="text-left py-3 px-2 font-medium text-muted-foreground text-sm">Hometown</th>
+                        <th className="text-left py-3 px-2 font-medium text-muted-foreground text-sm">Outcome</th>
+                        <th className="text-left py-3 px-2 font-medium text-muted-foreground text-sm">Actions</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-gray-200">
+                    <tbody className="divide-y divide-muted/50">
                       {recentContestants.map((contestant) => (
-                        <tr key={contestant.id} className="hover:bg-gray-50">
+                        <tr key={contestant.id} className="border-b hover:bg-muted/50">
                           <td className="py-4 px-2">
                             {contestant.photoUrl ? (
                               <img
@@ -116,26 +118,26 @@ export default function Dashboard() {
                                 className="w-12 h-12 rounded-lg object-cover"
                               />
                             ) : (
-                              <div className="w-12 h-12 bg-gray-200 rounded-lg flex items-center justify-center">
-                                <span className="text-gray-400 text-xs">No Photo</span>
+                              <div className="w-12 h-12 bg-muted/50 rounded-lg flex items-center justify-center">
+                                <span className="text-muted-foreground text-xs">No Photo</span>
                               </div>
                             )}
                           </td>
                           <td className="py-4 px-2">
-                            <div className="font-semibold text-gray-900">{contestant.dragName}</div>
+                            <div className="font-medium text-foreground">{contestant.dragName}</div>
                           </td>
-                          <td className="py-4 px-2 text-gray-600">{contestant.realName || "—"}</td>
+                          <td className="py-4 px-2 text-muted-foreground">{contestant.realName || "—"}</td>
                           <td className="py-4 px-2">
                             <Badge variant="secondary">{contestant.season}</Badge>
                           </td>
-                          <td className="py-4 px-2 text-gray-600">{contestant.hometown || "—"}</td>
+                          <td className="py-4 px-2 text-muted-foreground">{contestant.hometown || "—"}</td>
                           <td className="py-4 px-2">
                             {contestant.outcome ? (
                               <Badge variant={getOutcomeVariant(contestant.outcome)}>
                                 {contestant.outcome}
                               </Badge>
                             ) : (
-                              <span className="text-gray-400">—</span>
+                              <span className="text-muted-foreground">—</span>
                             )}
                           </td>
                           <td className="py-4 px-2">
@@ -152,7 +154,7 @@ export default function Dashboard() {
                                 variant="ghost"
                                 onClick={() => handleDeleteContestant(contestant)}
                               >
-                                <Trash2 className="h-4 w-4 text-red-600" />
+                                <Trash2 className="h-4 w-4 text-destructive" />
                               </Button>
                             </div>
                           </td>
@@ -167,15 +169,15 @@ export default function Dashboard() {
 
           {/* Quick Actions */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <Card className="border border-gray-200">
+            <Card>
               <CardContent className="p-6">
                 <div className="flex items-center mb-4">
-                  <div className="p-2 bg-blue-100 rounded-lg mr-3">
-                    <i className="fas fa-spider text-blue-600"></i>
+                  <div className="p-2 bg-accent rounded-lg mr-3">
+                    <i className="fas fa-spider text-primary"></i>
                   </div>
-                  <h4 className="font-semibold text-gray-900">Scraper Settings</h4>
+                  <h4 className="font-semibold text-foreground">Scraper Settings</h4>
                 </div>
-                <p className="text-gray-600 text-sm mb-4">Configure scraping parameters and data sources</p>
+                <p className="text-muted-foreground text-sm mb-4">Configure scraping parameters and data sources</p>
                 <Link href="/scraper">
                   <div className="w-full">
                     <Button variant="outline" className="w-full">
@@ -186,15 +188,15 @@ export default function Dashboard() {
               </CardContent>
             </Card>
 
-            <Card className="border border-gray-200">
+            <Card>
               <CardContent className="p-6">
                 <div className="flex items-center mb-4">
-                  <div className="p-2 bg-emerald-100 rounded-lg mr-3">
-                    <i className="fas fa-download text-emerald-600"></i>
+                  <div className="p-2 bg-accent rounded-lg mr-3">
+                    <i className="fas fa-download text-primary"></i>
                   </div>
-                  <h4 className="font-semibold text-gray-900">Export Data</h4>
+                  <h4 className="font-semibold text-foreground">Export Data</h4>
                 </div>
-                <p className="text-gray-600 text-sm mb-4">Download your data in CSV or JSON format</p>
+                <p className="text-muted-foreground text-sm mb-4">Download your data in CSV or JSON format</p>
                 <Link href="/export">
                   <div className="w-full">
                     <Button variant="outline" className="w-full">
@@ -205,15 +207,15 @@ export default function Dashboard() {
               </CardContent>
             </Card>
 
-            <Card className="border border-gray-200">
+            <Card>
               <CardContent className="p-6">
                 <div className="flex items-center mb-4">
-                  <div className="p-2 bg-amber-100 rounded-lg mr-3">
-                    <i className="fas fa-bug text-amber-600"></i>
+                  <div className="p-2 bg-accent rounded-lg mr-3">
+                    <i className="fas fa-bug text-primary"></i>
                   </div>
-                  <h4 className="font-semibold text-gray-900">Debug Mode</h4>
+                  <h4 className="font-semibold text-foreground">Debug Mode</h4>
                 </div>
-                <p className="text-gray-600 text-sm mb-4">Enable visual debugging for scraping process</p>
+                <p className="text-muted-foreground text-sm mb-4">Enable visual debugging for scraping process</p>
                 <Button variant="outline" className="w-full">
                   Enable Debug
                 </Button>

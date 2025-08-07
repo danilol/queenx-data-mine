@@ -3,6 +3,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Play, Square, Bug, Settings, Monitor } from "lucide-react";
 import { Header } from "@/components/layout/header";
 import { ScrapingProgress } from "@/components/scraping-progress";
+import { FranchiseProgress } from "@/components/franchise-progress";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
@@ -78,17 +79,17 @@ export default function Scraper() {
 
         <div className="p-6 space-y-6">
           {/* Demo Mode Notice */}
-          <Card className="border-blue-200 bg-blue-50">
+          <Card className="bg-accent">
             <CardContent className="p-4">
               <div className="flex items-start space-x-3">
-                <Monitor className="h-5 w-5 text-blue-600 mt-0.5" />
+                <Monitor className="h-5 w-5 text-primary mt-0.5" />
                 <div className="flex-1">
-                  <h3 className="font-semibold text-blue-900 mb-1">Demo Mode Active</h3>
-                  <p className="text-sm text-blue-700 mb-2">
+                  <h3 className="font-semibold text-foreground mb-1">Demo Mode Active</h3>
+                  <p className="text-sm text-muted-foreground mb-2">
                     Currently using sample data to demonstrate functionality. The scraper simulates collecting 
                     RuPaul's Drag Race contestant information with real-time progress tracking.
                   </p>
-                  <p className="text-xs text-blue-600">
+                  <p className="text-xs text-muted-foreground">
                     For production use with real Playwright browser automation, system dependencies would need to be installed.
                   </p>
                 </div>
@@ -102,7 +103,7 @@ export default function Scraper() {
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-2">
                   <div className={`w-2 h-2 rounded-full ${isConnected ? 'bg-green-500' : 'bg-red-500'}`} />
-                  <span className="text-sm text-gray-600">
+                  <span className="text-sm text-muted-foreground">
                     Real-time Connection: {isConnected ? 'Connected' : 'Disconnected'}
                   </span>
                 </div>
@@ -238,6 +239,36 @@ export default function Scraper() {
           {/* Scraping Progress */}
           <ScrapingProgress />
 
+          {/* Detailed Franchise Progress */}
+          {scrapingStatus && 'seasons' in scrapingStatus && Array.isArray(scrapingStatus.seasons) && (
+            <FranchiseProgress seasons={scrapingStatus.seasons} />
+          )}
+
+          {/* Data Sources Status */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Data Sources</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-muted-foreground">Wikipedia</span>
+                  <Badge variant={scrapingStatus && 'status' in scrapingStatus && scrapingStatus.status === 'running' ? "secondary" : scrapingStatus && 'status' in scrapingStatus && scrapingStatus.status === 'completed' ? "default" : "outline"} className="text-xs">
+                    {scrapingStatus && 'status' in scrapingStatus && scrapingStatus.status === 'running' ? "Active" : scrapingStatus && 'status' in scrapingStatus && scrapingStatus.status === 'completed' ? "Complete" : "Pending"}
+                  </Badge>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-muted-foreground">Fandom Wiki</span>
+                  <Badge variant="outline" className="text-xs">Pending</Badge>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-muted-foreground">Official Website</span>
+                  <Badge variant="outline" className="text-xs">Pending</Badge>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
           {/* Job History */}
           <Card>
             <CardHeader>
@@ -245,13 +276,13 @@ export default function Scraper() {
             </CardHeader>
             <CardContent>
               {scrapingJobs.length === 0 ? (
-                <div className="text-center py-8 text-gray-500">
+                <div className="text-center py-8 text-muted-foreground">
                   <p>No scraping jobs found. Start your first scraping session above.</p>
                 </div>
               ) : (
                 <div className="space-y-3">
                   {scrapingJobs.slice(0, 10).map((job) => (
-                    <div key={job.id} className="flex items-center justify-between p-3 border border-gray-200 rounded-lg">
+                    <div key={job.id} className="flex items-center justify-between p-3 border rounded-lg">
                       <div>
                         <div className="flex items-center space-x-2">
                           <Badge variant={
@@ -261,20 +292,20 @@ export default function Scraper() {
                           }>
                             {job.status}
                           </Badge>
-                          <span className="text-sm text-gray-600">
+                          <span className="text-sm text-muted-foreground">
                             {job.startedAt ? new Date(job.startedAt).toLocaleString() : 'Not started'}
                           </span>
                         </div>
                         {job.errorMessage && (
-                          <p className="text-sm text-red-600 mt-1">{job.errorMessage}</p>
+                          <p className="text-sm text-destructive mt-1">{job.errorMessage}</p>
                         )}
                       </div>
                       <div className="text-right">
-                        <div className="text-sm font-medium text-gray-900">
+                        <div className="text-sm font-medium text-foreground">
                           {job.progress || 0}% Complete
                         </div>
                         {job.totalItems && (
-                          <div className="text-xs text-gray-500">
+                          <div className="text-xs text-muted-foreground">
                             {job.totalItems} total items
                           </div>
                         )}

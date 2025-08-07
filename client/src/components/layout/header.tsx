@@ -1,5 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Play, RotateCcw } from "lucide-react";
+import { ThemeToggle } from "@/components/theme-toggle";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import { useToast } from "@/hooks/use-toast";
@@ -45,18 +46,19 @@ export function Header({ title, subtitle, showScrapingButtons = false }: HeaderP
   });
 
   return (
-    <header className="bg-white border-b border-gray-200 p-6">
+    <header className="bg-card border-b p-6">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold text-gray-900">{title}</h2>
-          <p className="text-gray-600 mt-1">{subtitle}</p>
+          <h2 className="text-2xl font-bold text-card-foreground">{title}</h2>
+          <p className="text-muted-foreground mt-1">{subtitle}</p>
         </div>
-        <div className="flex items-center space-x-4">
+        <div className="flex items-center gap-4">
+          <ThemeToggle />
           {showScrapingButtons && (
             <Button
               onClick={() => startScrapingMutation.mutate()}
               disabled={startScrapingMutation.isPending}
-              className="bg-blue-600 hover:bg-blue-700"
+              className="bg-primary text-primary-foreground hover:bg-primary/90"
             >
               <Play className="h-4 w-4 mr-2" />
               {startScrapingMutation.isPending ? "Starting..." : "Start Scraping"}
