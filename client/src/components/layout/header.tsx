@@ -46,19 +46,19 @@ export function Header({ title, subtitle, showScrapingButtons = false }: HeaderP
   });
 
   return (
-    <header className="bg-card border-b p-6">
-      <div className="flex items-center justify-between">
+    <header className="bg-card/30 backdrop-blur-xl border-b border-border/30 p-6 sticky top-0 z-20">
+      <div className="flex items-center justify-between max-w-7xl mx-auto">
         <div>
-          <h2 className="text-2xl font-bold text-card-foreground">{title}</h2>
-          <p className="text-muted-foreground mt-1">{subtitle}</p>
+          <h2 className="text-3xl font-bold bg-gradient-to-r from-primary to-primary/80 bg-clip-text text-transparent">{title}</h2>
+          <p className="text-muted-foreground mt-2 text-sm">{subtitle}</p>
         </div>
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-3">
           <ThemeToggle />
           {showScrapingButtons && (
             <Button
               onClick={() => startScrapingMutation.mutate()}
               disabled={startScrapingMutation.isPending}
-              className="bg-primary text-primary-foreground hover:bg-primary/90"
+              className="bg-gradient-to-r from-purple-500 to-purple-600 text-white hover:from-purple-600 hover:to-purple-700 shadow-lg transition-all duration-200"
             >
               <Play className="h-4 w-4 mr-2" />
               {startScrapingMutation.isPending ? "Starting..." : "Start Scraping"}

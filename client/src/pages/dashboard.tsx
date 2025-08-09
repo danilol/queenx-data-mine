@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { Edit, Trash2 } from "lucide-react";
+import { Edit, Trash2, Settings, Download, Bug } from "lucide-react";
 import { useState } from "react";
 import { Header } from "@/components/layout/header";
 import { StatsCards } from "@/components/stats-cards";
@@ -70,7 +70,7 @@ export default function Dashboard() {
           showScrapingButtons={true}
         />
 
-        <div className="p-6 space-y-6">
+        <div className="p-6 space-y-8 max-w-7xl mx-auto">
           {/* Stats Cards */}
           <StatsCards stats={stats} isLoading={statsLoading} />
 
@@ -78,12 +78,12 @@ export default function Dashboard() {
           <ScrapingProgress />
 
           {/* Recent Contestants */}
-          <Card>
+          <Card className="card-enhanced">
             <CardContent className="p-6">
               <div className="flex items-center justify-between mb-6">
-                <h3 className="text-lg font-semibold text-foreground">Recently Added Contestants</h3>
+                <h3 className="text-xl font-semibold text-foreground">Recently Added Contestants</h3>
                 <Link href="/contestants">
-                  <span className="text-primary hover:text-primary/80 font-medium text-sm cursor-pointer">
+                  <span className="text-primary hover:text-primary/80 font-medium text-sm cursor-pointer transition-colors">
                     View All →
                   </span>
                 </Link>
@@ -169,18 +169,18 @@ export default function Dashboard() {
 
           {/* Quick Actions */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <Card>
+            <Card className="card-enhanced hover:scale-105 transition-transform duration-200">
               <CardContent className="p-6">
                 <div className="flex items-center mb-4">
-                  <div className="p-2 bg-accent rounded-lg mr-3">
-                    <i className="fas fa-spider text-primary"></i>
+                  <div className="p-3 bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl mr-3 shadow-lg">
+                    <Settings className="h-5 w-5 text-white" />
                   </div>
                   <h4 className="font-semibold text-foreground">Scraper Settings</h4>
                 </div>
                 <p className="text-muted-foreground text-sm mb-4">Configure scraping parameters and data sources</p>
                 <Link href="/scraper">
                   <div className="w-full">
-                    <Button variant="outline" className="w-full">
+                    <Button variant="outline" className="w-full hover:bg-primary hover:text-primary-foreground transition-colors">
                       Open Settings
                     </Button>
                   </div>
@@ -188,18 +188,18 @@ export default function Dashboard() {
               </CardContent>
             </Card>
 
-            <Card>
+            <Card className="card-enhanced hover:scale-105 transition-transform duration-200">
               <CardContent className="p-6">
                 <div className="flex items-center mb-4">
-                  <div className="p-2 bg-accent rounded-lg mr-3">
-                    <i className="fas fa-download text-primary"></i>
+                  <div className="p-3 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-xl mr-3 shadow-lg">
+                    <Download className="h-5 w-5 text-white" />
                   </div>
                   <h4 className="font-semibold text-foreground">Export Data</h4>
                 </div>
                 <p className="text-muted-foreground text-sm mb-4">Download your data in CSV or JSON format</p>
                 <Link href="/export">
                   <div className="w-full">
-                    <Button variant="outline" className="w-full">
+                    <Button variant="outline" className="w-full hover:bg-primary hover:text-primary-foreground transition-colors">
                       Export Now
                     </Button>
                   </div>
@@ -207,16 +207,16 @@ export default function Dashboard() {
               </CardContent>
             </Card>
 
-            <Card>
+            <Card className="card-enhanced hover:scale-105 transition-transform duration-200">
               <CardContent className="p-6">
                 <div className="flex items-center mb-4">
-                  <div className="p-2 bg-accent rounded-lg mr-3">
-                    <i className="fas fa-bug text-primary"></i>
+                  <div className="p-3 bg-gradient-to-br from-orange-500 to-orange-600 rounded-xl mr-3 shadow-lg">
+                    <Bug className="h-5 w-5 text-white" />
                   </div>
                   <h4 className="font-semibold text-foreground">Debug Mode</h4>
                 </div>
                 <p className="text-muted-foreground text-sm mb-4">Enable visual debugging for scraping process</p>
-                <Button variant="outline" className="w-full">
+                <Button variant="outline" className="w-full hover:bg-primary hover:text-primary-foreground transition-colors">
                   Enable Debug
                 </Button>
               </CardContent>

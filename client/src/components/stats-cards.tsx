@@ -13,29 +13,29 @@ export function StatsCards({ stats, isLoading }: StatsCardsProps) {
       title: "Total Contestants",
       value: stats?.contestants || 0,
       icon: Users,
-      bgColor: "bg-blue-100",
-      iconColor: "text-blue-600",
+      gradient: "bg-gradient-to-br from-blue-500 to-blue-600",
+      textGradient: "bg-gradient-to-r from-blue-600 to-blue-500",
     },
     {
       title: "Seasons Scraped",
       value: stats?.seasons || 0,
       icon: Calendar,
-      bgColor: "bg-emerald-100",
-      iconColor: "text-emerald-600",
+      gradient: "bg-gradient-to-br from-emerald-500 to-emerald-600",
+      textGradient: "bg-gradient-to-r from-emerald-600 to-emerald-500",
     },
     {
       title: "Franchises",
       value: stats?.franchises || 0,
       icon: Globe,
-      bgColor: "bg-amber-100",
-      iconColor: "text-amber-600",
+      gradient: "bg-gradient-to-br from-purple-500 to-purple-600",
+      textGradient: "bg-gradient-to-r from-purple-600 to-purple-500",
     },
     {
       title: "Photos Collected",
       value: stats?.photos || 0,
       icon: Images,
-      bgColor: "bg-purple-100",
-      iconColor: "text-purple-600",
+      gradient: "bg-gradient-to-br from-orange-500 to-orange-600",
+      textGradient: "bg-gradient-to-r from-orange-600 to-orange-500",
     },
   ];
 
@@ -44,15 +44,15 @@ export function StatsCards({ stats, isLoading }: StatsCardsProps) {
       {cards.map((card) => {
         const Icon = card.icon;
         return (
-          <Card key={card.title} className="border border-gray-200">
+          <Card key={card.title} className="card-enhanced">
             <CardContent className="p-6">
               <div className="flex items-center">
-                <div className={`p-2 ${card.bgColor} rounded-lg`}>
-                  <Icon className={`h-5 w-5 ${card.iconColor}`} />
+                <div className={`p-3 ${card.gradient} rounded-xl shadow-lg`}>
+                  <Icon className="h-6 w-6 text-white" />
                 </div>
                 <div className="ml-4">
-                  <p className="text-sm font-medium text-gray-600">{card.title}</p>
-                  <p className="text-2xl font-bold text-gray-900">
+                  <p className="text-sm font-medium text-muted-foreground">{card.title}</p>
+                  <p className={`text-3xl font-bold ${card.textGradient} bg-clip-text text-transparent`}>
                     {isLoading ? "..." : card.value.toLocaleString()}
                   </p>
                 </div>

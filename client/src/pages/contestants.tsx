@@ -57,15 +57,9 @@ export default function Contestants() {
       id: "",
       dragName: "",
       realName: "",
-      age: null,
       hometown: "",
-      season: "",
-      franchise: "US",
-      outcome: "",
       biography: "",
       photoUrl: "",
-      wikipediaUrl: "",
-      isScraped: false,
       createdAt: new Date(),
       updatedAt: new Date(),
     } as Contestant);
@@ -99,19 +93,19 @@ export default function Contestants() {
 
         <div className="p-6 space-y-6">
           {/* Search and Actions */}
-          <Card>
-            <CardContent className="p-4">
+          <Card className="card-enhanced">
+            <CardContent className="p-6">
               <div className="flex items-center justify-between gap-4">
-                <div className="relative flex-1 max-w-md">
-                  <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+                <div className="relative flex-1 max-w-lg">
+                  <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                   <Input
                     placeholder="Search by drag name, real name, hometown, or season..."
-                    className="pl-10"
+                    className="pl-10 h-11"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                   />
                 </div>
-                <Button onClick={handleAddNew}>
+                <Button onClick={handleAddNew} className="h-11 px-6">
                   <Plus className="h-4 w-4 mr-2" />
                   Add Contestant
                 </Button>
@@ -121,15 +115,15 @@ export default function Contestants() {
 
           {/* Results */}
           {isLoading ? (
-            <Card>
-              <CardContent className="p-8 text-center">
-                <p className="text-gray-500">Loading contestants...</p>
+            <Card className="card-enhanced">
+              <CardContent className="p-12 text-center">
+                <p className="text-muted-foreground text-lg">Loading contestants...</p>
               </CardContent>
             </Card>
           ) : contestants.length === 0 ? (
-            <Card>
-              <CardContent className="p-8 text-center">
-                <p className="text-gray-500">
+            <Card className="card-enhanced">
+              <CardContent className="p-12 text-center">
+                <p className="text-muted-foreground text-lg">
                   {searchQuery
                     ? "No contestants found matching your search."
                     : "No contestants found. Start scraping to populate the database."}
@@ -137,34 +131,36 @@ export default function Contestants() {
               </CardContent>
             </Card>
           ) : (
-            <div className="space-y-6">
+            <div className="space-y-8">
               {Object.entries(groupedContestants).map(([franchise, franchiseContestants]) => (
-                <Card key={franchise}>
+                <Card key={franchise} className="card-enhanced">
                   <CardContent className="p-6">
-                    <div className="flex items-center justify-between mb-4">
-                      <h3 className="text-lg font-semibold text-gray-900">
+                    <div className="flex items-center justify-between mb-6">
+                      <h3 className="text-xl font-semibold text-foreground">
                         {franchise === "US" ? "RuPaul's Drag Race (US)" : `Drag Race ${franchise}`}
                       </h3>
-                      <Badge variant="outline">{franchiseContestants.length} contestants</Badge>
+                      <Badge variant="secondary" className="px-3 py-1">
+                        {franchiseContestants.length} contestants
+                      </Badge>
                     </div>
 
                     <div className="overflow-x-auto">
                       <table className="w-full">
                         <thead>
-                          <tr className="border-b border-gray-200">
-                            <th className="text-left py-3 px-2 font-medium text-gray-600 text-sm">Photo</th>
-                            <th className="text-left py-3 px-2 font-medium text-gray-600 text-sm">Drag Name</th>
-                            <th className="text-left py-3 px-2 font-medium text-gray-600 text-sm">Real Name</th>
-                            <th className="text-left py-3 px-2 font-medium text-gray-600 text-sm">Age</th>
-                            <th className="text-left py-3 px-2 font-medium text-gray-600 text-sm">Season</th>
-                            <th className="text-left py-3 px-2 font-medium text-gray-600 text-sm">Hometown</th>
-                            <th className="text-left py-3 px-2 font-medium text-gray-600 text-sm">Outcome</th>
-                            <th className="text-left py-3 px-2 font-medium text-gray-600 text-sm">Actions</th>
+                          <tr className="border-b border-border">
+                            <th className="text-left py-3 px-2 font-medium text-muted-foreground text-sm">Photo</th>
+                            <th className="text-left py-3 px-2 font-medium text-muted-foreground text-sm">Drag Name</th>
+                            <th className="text-left py-3 px-2 font-medium text-muted-foreground text-sm">Real Name</th>
+                            <th className="text-left py-3 px-2 font-medium text-muted-foreground text-sm">Age</th>
+                            <th className="text-left py-3 px-2 font-medium text-muted-foreground text-sm">Season</th>
+                            <th className="text-left py-3 px-2 font-medium text-muted-foreground text-sm">Hometown</th>
+                            <th className="text-left py-3 px-2 font-medium text-muted-foreground text-sm">Outcome</th>
+                            <th className="text-left py-3 px-2 font-medium text-muted-foreground text-sm">Actions</th>
                           </tr>
                         </thead>
-                        <tbody className="divide-y divide-gray-200">
+                        <tbody className="divide-y divide-border">
                           {franchiseContestants.map((contestant) => (
-                            <tr key={contestant.id} className="hover:bg-gray-50">
+                            <tr key={contestant.id} className="hover:bg-muted/50">
                               <td className="py-4 px-2">
                                 {contestant.photoUrl ? (
                                   <img
@@ -173,28 +169,22 @@ export default function Contestants() {
                                     className="w-12 h-12 rounded-lg object-cover"
                                   />
                                 ) : (
-                                  <div className="w-12 h-12 bg-gray-200 rounded-lg flex items-center justify-center">
-                                    <span className="text-gray-400 text-xs">No Photo</span>
+                                  <div className="w-12 h-12 bg-muted rounded-lg flex items-center justify-center">
+                                    <span className="text-muted-foreground text-xs">No Photo</span>
                                   </div>
                                 )}
                               </td>
                               <td className="py-4 px-2">
-                                <div className="font-semibold text-gray-900">{contestant.dragName}</div>
+                                <div className="font-semibold text-foreground">{contestant.dragName}</div>
                               </td>
-                              <td className="py-4 px-2 text-gray-600">{contestant.realName || "—"}</td>
-                              <td className="py-4 px-2 text-gray-600">{contestant.age || "—"}</td>
+                              <td className="py-4 px-2 text-muted-foreground">{contestant.realName || "—"}</td>
+                              <td className="py-4 px-2 text-muted-foreground">—</td>
                               <td className="py-4 px-2">
-                                <Badge variant="secondary">{contestant.season}</Badge>
+                                <Badge variant="secondary">—</Badge>
                               </td>
-                              <td className="py-4 px-2 text-gray-600">{contestant.hometown || "—"}</td>
+                              <td className="py-4 px-2 text-muted-foreground">{contestant.hometown || "—"}</td>
                               <td className="py-4 px-2">
-                                {contestant.outcome ? (
-                                  <Badge variant={getOutcomeVariant(contestant.outcome)}>
-                                    {contestant.outcome}
-                                  </Badge>
-                                ) : (
-                                  <span className="text-gray-400">—</span>
-                                )}
+                                <span className="text-muted-foreground">—</span>
                               </td>
                               <td className="py-4 px-2">
                                 <div className="flex space-x-2">
@@ -211,7 +201,7 @@ export default function Contestants() {
                                     onClick={() => handleDeleteContestant(contestant)}
                                     disabled={deleteMutation.isPending}
                                   >
-                                    <Trash2 className="h-4 w-4 text-red-600" />
+                                    <Trash2 className="h-4 w-4 text-destructive" />
                                   </Button>
                                 </div>
                               </td>

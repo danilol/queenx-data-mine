@@ -77,7 +77,7 @@ export default function Scraper() {
           subtitle="Configure and monitor your data scraping operations"
         />
 
-        <div className="p-6 space-y-6">
+        <div className="p-6 space-y-8 max-w-7xl mx-auto">
           {/* Demo Mode Notice */}
           <Card className="bg-accent">
             <CardContent className="p-4">

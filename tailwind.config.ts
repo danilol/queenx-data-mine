@@ -45,6 +45,10 @@ export default {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
+        "sidebar-bg": "hsl(var(--sidebar-bg))",
+        "sidebar-border": "hsl(var(--sidebar-border))",
+        "replit-accent": "hsl(var(--replit-accent))",
+        "replit-accent-foreground": "hsl(var(--replit-accent-foreground))",
       },
       keyframes: {
         "accordion-down": {

@@ -51,29 +51,34 @@ export interface IStorage {
 }
 
 export class DrizzleStorage implements IStorage {
-  private contestantWithDetails = db.select({
-    id: contestants.id,
-    dragName: contestants.dragName,
-    realName: contestants.realName,
-    hometown: contestants.hometown,
-    biography: contestants.biography,
-    photoUrl: contestants.photoUrl,
-    age: appearances.age,
-    outcome: appearances.outcome,
-    season: seasons.name,
-    franchise: franchises.name,
-    wikipediaUrl: seasons.wikipediaUrl,
-    createdAt: contestants.createdAt,
-    updatedAt: contestants.updatedAt,
-  })
-  .from(contestants)
-  .leftJoin(appearances, eq(contestants.id, appearances.contestantId))
-  .leftJoin(seasons, eq(appearances.seasonId, seasons.id))
-  .leftJoin(franchises, eq(seasons.franchiseId, franchises.id))
-  .as('contestantWithDetails');
-
   async getContestants(): Promise<FullContestant[]> {
-    return db.select().from(this.contestantWithDetails).orderBy(desc(this.contestantWithDetails.createdAt));
+    try {
+      const result = await db.select({
+        id: contestants.id,
+        dragName: contestants.dragName,
+        realName: contestants.realName,
+        hometown: contestants.hometown,
+        biography: contestants.biography,
+        photoUrl: contestants.photoUrl,
+        age: appearances.age,
+        outcome: appearances.outcome,
+        season: seasons.name,
+        franchise: franchises.name,
+        wikipediaUrl: seasons.wikipediaUrl,
+        createdAt: contestants.createdAt,
+        updatedAt: contestants.updatedAt,
+      })
+      .from(contestants)
+      .leftJoin(appearances, eq(contestants.id, appearances.contestantId))
+      .leftJoin(seasons, eq(appearances.seasonId, seasons.id))
+      .leftJoin(franchises, eq(seasons.franchiseId, franchises.id))
+      .orderBy(desc(contestants.createdAt));
+      
+      return result;
+    } catch (error) {
+      console.error('Error fetching contestants:', error);
+      return [];
+    }
   }
 
   async getContestant(id: string): Promise<Contestant | undefined> {
@@ -82,11 +87,36 @@ export class DrizzleStorage implements IStorage {
   }
 
   async getContestantsBySearch(search: string): Promise<FullContestant[]> {
-    return db.select().from(this.contestantWithDetails)
+    try {
+      const result = await db.select({
+        id: contestants.id,
+        dragName: contestants.dragName,
+        realName: contestants.realName,
+        hometown: contestants.hometown,
+        biography: contestants.biography,
+        photoUrl: contestants.photoUrl,
+        age: appearances.age,
+        outcome: appearances.outcome,
+        season: seasons.name,
+        franchise: franchises.name,
+        wikipediaUrl: seasons.wikipediaUrl,
+        createdAt: contestants.createdAt,
+        updatedAt: contestants.updatedAt,
+      })
+      .from(contestants)
+      .leftJoin(appearances, eq(contestants.id, appearances.contestantId))
+      .leftJoin(seasons, eq(appearances.seasonId, seasons.id))
+      .leftJoin(franchises, eq(seasons.franchiseId, franchises.id))
       .where(or(
-        ilike(this.contestantWithDetails.dragName, `%${search}%`),
-        ilike(this.contestantWithDetails.realName, `%${search}%`)
+        ilike(contestants.dragName, `%${search}%`),
+        ilike(contestants.realName, `%${search}%`)
       ));
+      
+      return result;
+    } catch (error) {
+      console.error('Error searching contestants:', error);
+      return [];
+    }
   }
 
   async getContestantByDragName(dragName: string): Promise<Contestant | undefined> {
@@ -105,7 +135,34 @@ export class DrizzleStorage implements IStorage {
   }
 
   async getRecentContestants(limit: number): Promise<FullContestant[]> {
-    return db.select().from(this.contestantWithDetails).orderBy(desc(this.contestantWithDetails.createdAt)).limit(limit);
+    try {
+      const result = await db.select({
+        id: contestants.id,
+        dragName: contestants.dragName,
+        realName: contestants.realName,
+        hometown: contestants.hometown,
+        biography: contestants.biography,
+        photoUrl: contestants.photoUrl,
+        age: appearances.age,
+        outcome: appearances.outcome,
+        season: seasons.name,
+        franchise: franchises.name,
+        wikipediaUrl: seasons.wikipediaUrl,
+        createdAt: contestants.createdAt,
+        updatedAt: contestants.updatedAt,
+      })
+      .from(contestants)
+      .leftJoin(appearances, eq(contestants.id, appearances.contestantId))
+      .leftJoin(seasons, eq(appearances.seasonId, seasons.id))
+      .leftJoin(franchises, eq(seasons.franchiseId, franchises.id))
+      .orderBy(desc(contestants.createdAt))
+      .limit(limit);
+      
+      return result;
+    } catch (error) {
+      console.error('Error fetching recent contestants:', error);
+      return [];
+    }
   }
 
   async deleteContestant(id: string): Promise<boolean> {
