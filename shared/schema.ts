@@ -17,7 +17,7 @@ export const contestants = pgTable("contestants", {
   hometown: text("hometown"),
   biography: text("biography"),
   photoUrl: text("photo_url"),
-  detailsUrl: text("details_url"), // URL for contestant details scraping
+  sourceUrl: text("source_url"), // Source URL for contestant data scraping
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
@@ -25,7 +25,7 @@ export const contestants = pgTable("contestants", {
 export const franchises = pgTable("franchises", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   name: text("name").notNull().unique(),
-  franchiseUrl: text("franchise_url"), // URL for franchise scraping
+  sourceUrl: text("source_url"), // Source URL for franchise data scraping
   createdAt: timestamp("created_at").defaultNow(),
 });
 
@@ -34,7 +34,7 @@ export const seasons = pgTable("seasons", {
   name: text("name").notNull().unique(),
   franchiseId: varchar("franchise_id").notNull(),
   year: integer("year"),
-  wikipediaUrl: text("wikipedia_url"), // Season page URL for season scraping
+  sourceUrl: text("source_url"), // Source URL for season data scraping
   isScraped: boolean("is_scraped").default(false),
   createdAt: timestamp("created_at").defaultNow(),
 });
@@ -102,7 +102,7 @@ export type FullContestant = Contestant & {
   outcome: string | null;
   season: string | null;
   franchise: string | null;
-  wikipediaUrl: string | null;
+  seasonSourceUrl: string | null;
 };
 
 export type Franchise = typeof franchises.$inferSelect;
@@ -161,11 +161,7 @@ export interface ScrapingRequest {
   franchiseId?: string;
   seasonId?: string;
   contestantId?: string;
-  urls?: {
-    franchiseUrl?: string;
-    seasonUrl?: string;
-    contestantUrl?: string;
-  };
+  sourceUrl?: string; // Generic source URL for any scraping level
 }
 
 export interface AppStats {
