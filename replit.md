@@ -4,12 +4,12 @@ This is a RuPaul's Drag Race contestant scraping and management system built as 
 
 ## Recent Changes (August 2025)
 
-- **Fixed 400 Browser Error**: Implemented mock scraper fallback when Playwright system dependencies are unavailable
-- **Production README**: Created comprehensive setup guide with detailed TODOs for production deployment
-- **Demo Mode**: Added clear notifications about demo functionality vs production browser automation
-- **Real-time Scraping**: Verified WebSocket progress tracking works perfectly with sample data
-- **Data Export**: Confirmed CSV/JSON export functionality works with scraped data
-- **Documentation**: Added comprehensive debugging guide and instructions for adding new scraping sources
+- **Multi-Level Scraping Interface**: Added comprehensive scraping controls with dropdown selector for Full/Franchise/Season/Contestant levels
+- **Flexible Database Schema**: Updated all tables to use generic `sourceUrl` field instead of hardcoded `wikipediaUrl` for maximum flexibility across data sources
+- **Custom URL Input**: Added dynamic URL input field for targeted scraping at specific levels with validation
+- **Enhanced UX**: Button text updates dynamically based on selected scraping level, clear descriptions for each option
+- **Fixed Database Migration**: Successfully renamed all URL fields across franchises, seasons, and contestants tables
+- **Demo Mode**: Mock scraper demonstrates multi-level functionality with sample data when Playwright dependencies unavailable
 
 # User Preferences
 
