@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Play, Square, Bug, Settings, Monitor } from "lucide-react";
+import { Play, Square, Bug, Settings, Monitor, Globe, Calendar, Users } from "lucide-react";
 import { Header } from "@/components/layout/header";
 import { ScrapingProgress } from "@/components/scraping-progress";
 import { FranchiseProgress } from "@/components/franchise-progress";
@@ -9,6 +9,8 @@ import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { useWebSocket } from "@/hooks/use-websocket";
 import { api } from "@/lib/api";
@@ -16,6 +18,8 @@ import { api } from "@/lib/api";
 export default function Scraper() {
   const [headlessMode, setHeadlessMode] = useState(true);
   const [screenshotsEnabled, setScreenshotsEnabled] = useState(true);
+  const [selectedScrapingLevel, setSelectedScrapingLevel] = useState<'full' | 'franchise' | 'season' | 'contestant'>('full');
+  const [customSourceUrl, setCustomSourceUrl] = useState('');
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const { isConnected } = useWebSocket();
@@ -32,11 +36,16 @@ export default function Scraper() {
   });
 
   const startScrapingMutation = useMutation({
-    mutationFn: () => api.startScraping({ headless: headlessMode, screenshotsEnabled }),
+    mutationFn: () => api.startScraping({ 
+      headless: headlessMode, 
+      screenshotsEnabled,
+      level: selectedScrapingLevel,
+      sourceUrl: customSourceUrl || undefined
+    }),
     onSuccess: () => {
       toast({
         title: "Scraping Started",
-        description: "Web scraping has begun. Monitor progress below.",
+        description: `${selectedScrapingLevel.charAt(0).toUpperCase() + selectedScrapingLevel.slice(1)} scraping has begun. Monitor progress below.`,
       });
       queryClient.invalidateQueries({ queryKey: ["/api/scraping/status"] });
     },
@@ -125,6 +134,67 @@ export default function Scraper() {
               </CardHeader>
               <CardContent className="space-y-6">
                 <div className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="scraping-level">Scraping Level</Label>
+                    <Select 
+                      value={selectedScrapingLevel} 
+                      onValueChange={(value: 'full' | 'franchise' | 'season' | 'contestant') => setSelectedScrapingLevel(value)}
+                      disabled={isRunning}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select scraping level" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="full">
+                          <div className="flex items-center">
+                            <Globe className="h-4 w-4 mr-2" />
+                            Full Scrape (All Data)
+                          </div>
+                        </SelectItem>
+                        <SelectItem value="franchise">
+                          <div className="flex items-center">
+                            <Monitor className="h-4 w-4 mr-2" />
+                            Franchise Level
+                          </div>
+                        </SelectItem>
+                        <SelectItem value="season">
+                          <div className="flex items-center">
+                            <Calendar className="h-4 w-4 mr-2" />
+                            Season Level
+                          </div>
+                        </SelectItem>
+                        <SelectItem value="contestant">
+                          <div className="flex items-center">
+                            <Users className="h-4 w-4 mr-2" />
+                            Contestant Level
+                          </div>
+                        </SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <p className="text-sm text-gray-500">
+                      {selectedScrapingLevel === 'full' && "Scrape all franchises, seasons, and contestants"}
+                      {selectedScrapingLevel === 'franchise' && "Scrape specific franchise and its seasons/contestants"}
+                      {selectedScrapingLevel === 'season' && "Scrape specific season and its contestants"}
+                      {selectedScrapingLevel === 'contestant' && "Scrape individual contestant details"}
+                    </p>
+                  </div>
+
+                  {selectedScrapingLevel !== 'full' && (
+                    <div className="space-y-2">
+                      <Label htmlFor="source-url">Source URL</Label>
+                      <Input
+                        id="source-url"
+                        placeholder={`Enter ${selectedScrapingLevel} source URL (e.g., Wikipedia page)`}
+                        value={customSourceUrl}
+                        onChange={(e) => setCustomSourceUrl(e.target.value)}
+                        disabled={isRunning}
+                      />
+                      <p className="text-sm text-gray-500">
+                        URL to the {selectedScrapingLevel} page you want to scrape
+                      </p>
+                    </div>
+                  )}
+
                   <div className="flex items-center justify-between">
                     <div className="space-y-1">
                       <Label htmlFor="headless">Headless Mode</Label>
@@ -160,11 +230,11 @@ export default function Scraper() {
                   <div className="flex space-x-3">
                     <Button
                       onClick={() => startScrapingMutation.mutate()}
-                      disabled={startScrapingMutation.isPending || isRunning}
+                      disabled={startScrapingMutation.isPending || isRunning || (selectedScrapingLevel !== 'full' && !customSourceUrl.trim())}
                       className="flex-1"
                     >
                       <Play className="h-4 w-4 mr-2" />
-                      {startScrapingMutation.isPending ? "Starting..." : "Start Demo Scraping"}
+                      {startScrapingMutation.isPending ? "Starting..." : `Start ${selectedScrapingLevel.charAt(0).toUpperCase() + selectedScrapingLevel.slice(1)} Scraping`}
                     </Button>
                     
                     <Button
@@ -179,11 +249,11 @@ export default function Scraper() {
                 </div>
 
                 <div className="text-sm text-gray-600 space-y-1">
-                  <p><strong>Data Sources:</strong></p>
+                  <p><strong>Supported Sources:</strong></p>
                   <ul className="list-disc pl-4 space-y-1">
                     <li>Wikipedia (Primary)</li>
                     <li>RuPaul's Drag Race Fandom Wiki</li>
-                    <li>Official franchise websites (Future)</li>
+                    <li>Official franchise websites</li>
                   </ul>
                 </div>
               </CardContent>
