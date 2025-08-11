@@ -141,11 +141,17 @@ export class MockRuPaulScraper {
           currentItem: season.name
         });
 
+        // Find franchise by name to get ID
+        const franchise = await storage.getFranchiseByName(season.franchise);
+        if (!franchise) {
+          throw new Error(`Franchise not found: ${season.franchise}`);
+        }
+
         await storage.createSeason({
           name: season.name,
-          franchiseId: season.franchiseId,
+          franchiseId: franchise.id,
           year: season.year,
-          wikipediaUrl: season.wikipediaUrl,
+          sourceUrl: season.wikipediaUrl,
           isScraped: true
         });
 
@@ -172,7 +178,7 @@ export class MockRuPaulScraper {
           hometown: contestant.hometown,
           biography: contestant.biography,
           photoUrl: contestant.photoUrl,
-          detailsUrl: contestant.wikipediaUrl
+          sourceUrl: contestant.wikipediaUrl
         });
 
         await this.sleep(1200);
