@@ -143,7 +143,7 @@ export class MockRuPaulScraper {
 
         await storage.createSeason({
           name: season.name,
-          franchise: season.franchise,
+          franchiseId: season.franchiseId,
           year: season.year,
           wikipediaUrl: season.wikipediaUrl,
           isScraped: true
@@ -169,15 +169,10 @@ export class MockRuPaulScraper {
         await storage.createContestant({
           dragName: contestant.dragName,
           realName: contestant.realName,
-          age: contestant.age,
           hometown: contestant.hometown,
-          season: contestant.season,
-          franchise: contestant.franchise,
-          outcome: contestant.outcome,
           biography: contestant.biography,
           photoUrl: contestant.photoUrl,
-          wikipediaUrl: contestant.wikipediaUrl,
-          isScraped: true
+          detailsUrl: contestant.wikipediaUrl
         });
 
         await this.sleep(1200);
@@ -224,13 +219,13 @@ export class MockRuPaulScraper {
     }
 
     await storage.updateScrapingJob(this.currentJobId, {
-      status: "stopped",
+      status: "failed",
       completedAt: new Date(),
     });
 
     broadcastProgress({
       jobId: this.currentJobId,
-      status: "stopped",
+      status: "failed",
       progress: 0,
       totalItems: 0,
       message: "Scraping stopped by user",

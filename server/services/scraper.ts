@@ -6,7 +6,7 @@ import fs from "fs/promises";
 import path from "path";
 import { FRANCHISES, SEASONS } from '../data/franchises';
 import 'dotenv/config';
-import { Season, ScrapingJobPayload, seasonStatusSchema } from "@shared/schema";
+import { Season, ScrapingJobPayload, seasonStatusSchema, ScrapingRequest, ScrapingLevel } from "@shared/schema";
 import { z } from "zod";
 
 export interface ScrapingOptions {
@@ -43,15 +43,33 @@ export class RuPaulScraper {
     }
   }
 
-  public async startScraping(options: ScrapingOptions = {}): Promise<ScrapingJobPayload> {
+  public getStatus(): ScrapingJobPayload | null {
+    return this.scrapingJob;
+  }
 
-    console.log('[scraper] Starting scraping process...');
+  public async startScraping(request: ScrapingRequest, options: ScrapingOptions = {}): Promise<ScrapingJobPayload> {
+    console.log(`[scraper] Starting ${request.level} scraping process...`);
     if (this.scrapingJob?.status === 'running') {
       return this.scrapingJob;
     }
 
     await this.initialize(options);
 
+    switch (request.level) {
+      case 'full':
+        return this.startFullScraping(options);
+      case 'franchise':
+        return this.startFranchiseScraping(request, options);
+      case 'season':
+        return this.startSeasonScraping(request, options);
+      case 'contestant':
+        return this.startContestantScraping(request, options);
+      default:
+        throw new Error(`Unsupported scraping level: ${request.level}`);
+    }
+  }
+
+  private async startFullScraping(options: ScrapingOptions = {}): Promise<ScrapingJobPayload> {
     await this.seedDatabase();
     const allSeasons = await storage.getAllSeasons();
     console.log(`[scraper] Found ${allSeasons.length} seasons in the database.`);
@@ -70,6 +88,121 @@ export class RuPaulScraper {
 
     this.runScrapingProcess(allSeasons, options);
     return this.scrapingJob;
+  }
+
+  private async startFranchiseScraping(request: ScrapingRequest, options: ScrapingOptions = {}): Promise<ScrapingJobPayload> {
+    console.log(`[scraper] Starting franchise scraping for franchise ID: ${request.franchiseId}`);
+    
+    if (!request.franchiseId) {
+      throw new Error('Franchise ID is required for franchise scraping');
+    }
+
+    const franchiseSeasons = await storage.getAllSeasons();
+    const filteredSeasons = franchiseSeasons.filter(season => season.franchiseId === request.franchiseId);
+    
+    this.seasonStatuses = filteredSeasons.map(season => ({
+      name: season.name,
+      franchiseName: season.franchiseName,
+      status: 'pending',
+    }));
+
+    this.scrapingJob = {
+      id: randomUUID(),
+      status: 'running',
+      seasons: this.seasonStatuses,
+    };
+
+    this.runScrapingProcess(filteredSeasons, options);
+    return this.scrapingJob;
+  }
+
+  private async startSeasonScraping(request: ScrapingRequest, options: ScrapingOptions = {}): Promise<ScrapingJobPayload> {
+    console.log(`[scraper] Starting season scraping for season ID: ${request.seasonId}`);
+    
+    if (!request.seasonId) {
+      throw new Error('Season ID is required for season scraping');
+    }
+
+    const season = await storage.getSeason(request.seasonId);
+    if (!season) {
+      throw new Error(`Season not found: ${request.seasonId}`);
+    }
+
+    this.seasonStatuses = [{
+      name: season.name,
+      franchiseName: 'Unknown', // Will be resolved during scraping
+      status: 'pending',
+    }];
+
+    this.scrapingJob = {
+      id: randomUUID(),
+      status: 'running',
+      seasons: this.seasonStatuses,
+    };
+
+    this.runScrapingProcess([season], options);
+    return this.scrapingJob;
+  }
+
+  private async startContestantScraping(request: ScrapingRequest, options: ScrapingOptions = {}): Promise<ScrapingJobPayload> {
+    console.log(`[scraper] Starting contestant scraping for contestant ID: ${request.contestantId}`);
+    
+    if (!request.contestantId) {
+      throw new Error('Contestant ID is required for contestant scraping');
+    }
+
+    const contestant = await storage.getContestant(request.contestantId);
+    if (!contestant) {
+      throw new Error(`Contestant not found: ${request.contestantId}`);
+    }
+
+    this.seasonStatuses = [{
+      name: `Contestant: ${contestant.dragName}`,
+      franchiseName: 'Individual',
+      status: 'pending',
+    }];
+
+    this.scrapingJob = {
+      id: randomUUID(),
+      status: 'running',
+      seasons: this.seasonStatuses,
+    };
+
+    this.runContestantScraping(contestant, options);
+    return this.scrapingJob;
+  }
+
+  private async runContestantScraping(contestant: any, options: ScrapingOptions) {
+    // Individual contestant scraping logic
+    console.log(`[scraper] Scraping contestant: ${contestant.dragName}`);
+    
+    broadcastProgress({
+      jobId: this.scrapingJob?.id || null,
+      status: 'running',
+      progress: 50,
+      totalItems: 1,
+      currentItem: contestant.dragName,
+      message: `Scraping details for ${contestant.dragName}`,
+      seasons: this.seasonStatuses,
+    });
+
+    // Simulate scraping delay
+    await new Promise(resolve => setTimeout(resolve, 2000));
+    
+    this.scrapingJob = {
+      ...this.scrapingJob!,
+      status: 'completed',
+    };
+
+    broadcastProgress({
+      jobId: this.scrapingJob?.id || null,
+      status: 'completed',
+      progress: 100,
+      totalItems: 1,
+      currentItem: contestant.dragName,
+      message: `Completed scraping for ${contestant.dragName}`,
+      seasons: this.seasonStatuses.map(s => ({ ...s, status: 'completed' })),
+    });
   }
 
   private async seedDatabase() {

@@ -90,10 +90,13 @@ apiRouter.get("/franchises", async (req, res) => {
 
 apiRouter.post("/scraping/start", async (req, res) => {
   try {
-    const job = await scraper.startScraping(req.body);
+    // Default to full scraping if no level specified for backward compatibility
+    const request = req.body.level ? req.body : { level: 'full', ...req.body };
+    const job = await scraper.startScraping(request);
     res.json({ ...job, message: "Scraping started" });
   } catch (error) {
-    res.status(500).json({ error: "Failed to start scraping" });
+    console.error('Scraping start error:', error);
+    res.status(500).json({ error: error instanceof Error ? error.message : "Failed to start scraping" });
   }
 });
 
@@ -103,6 +106,15 @@ apiRouter.post("/scraping/stop", async (req, res) => {
     res.json({ message: "Scraping stopped" });
   } catch (error) {
     res.status(500).json({ error: "Failed to stop scraping" });
+  }
+});
+
+apiRouter.get("/scraping/status", async (req, res) => {
+  try {
+    const status = scraper.getStatus();
+    res.json(status);
+  } catch (error) {
+    res.status(500).json({ error: "Failed to fetch scraping status" });
   }
 });
 

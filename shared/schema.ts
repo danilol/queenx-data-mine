@@ -17,6 +17,7 @@ export const contestants = pgTable("contestants", {
   hometown: text("hometown"),
   biography: text("biography"),
   photoUrl: text("photo_url"),
+  detailsUrl: text("details_url"), // URL for contestant details scraping
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
@@ -24,6 +25,7 @@ export const contestants = pgTable("contestants", {
 export const franchises = pgTable("franchises", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   name: text("name").notNull().unique(),
+  franchiseUrl: text("franchise_url"), // URL for franchise scraping
   createdAt: timestamp("created_at").defaultNow(),
 });
 
@@ -32,7 +34,7 @@ export const seasons = pgTable("seasons", {
   name: text("name").notNull().unique(),
   franchiseId: varchar("franchise_id").notNull(),
   year: integer("year"),
-  wikipediaUrl: text("wikipedia_url"),
+  wikipediaUrl: text("wikipedia_url"), // Season page URL for season scraping
   isScraped: boolean("is_scraped").default(false),
   createdAt: timestamp("created_at").defaultNow(),
 });
@@ -149,6 +151,21 @@ export interface OldScrapingProgress {
   message?: string;
   screenshot?: string;
   seasons?: z.infer<typeof seasonStatusSchema>[];
+}
+
+// Scraping level types for hierarchical scraping
+export type ScrapingLevel = 'full' | 'franchise' | 'season' | 'contestant';
+
+export interface ScrapingRequest {
+  level: ScrapingLevel;
+  franchiseId?: string;
+  seasonId?: string;
+  contestantId?: string;
+  urls?: {
+    franchiseUrl?: string;
+    seasonUrl?: string;
+    contestantUrl?: string;
+  };
 }
 
 export interface AppStats {
