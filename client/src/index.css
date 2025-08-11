@@ -27,6 +27,8 @@
     --sidebar-border: hsl(220, 13%, 91%);
     --gradient-start: hsl(262, 83%, 58%);
     --gradient-end: hsl(295, 85%, 68%);
+    --replit-accent: hsl(262, 83%, 58%);
+    --replit-accent-foreground: hsl(210, 20%, 98%);
     --radius: 0.75rem;
   }
 
@@ -54,6 +56,8 @@
     --sidebar-border: hsl(215, 27.9%, 16.9%);
     --gradient-start: hsl(263, 70%, 50%);
     --gradient-end: hsl(295, 85%, 68%);
+    --replit-accent: hsl(263, 70%, 50%);
+    --replit-accent-foreground: hsl(210, 20%, 98%);
   }
 }
 
