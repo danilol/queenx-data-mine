@@ -1,5 +1,5 @@
 import { apiRequest } from "./queryClient";
-import { Contestant, InsertContestant, UpdateContestant, AppStats, ScrapingJob, Season, FullContestant } from "@shared/schema";
+import { Contestant, InsertContestant, UpdateContestant, AppStats, ScrapingJob, Season, FullContestant, Franchise } from "@shared/schema";
 
 export const api = {
   // Stats
@@ -35,6 +35,18 @@ export const api = {
 
   deleteContestant: async (id: string): Promise<void> => {
     await apiRequest("DELETE", `/api/contestants/${id}`);
+  },
+
+  // Franchises
+  getFranchises: async (): Promise<Franchise[]> => {
+    const response = await apiRequest("GET", "/api/franchises");
+    return response.json();
+  },
+
+  // Seasons
+  getSeasons: async (): Promise<Season[]> => {
+    const response = await apiRequest("GET", "/api/seasons");
+    return response.json();
   },
 
   // Scraping

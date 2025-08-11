@@ -1,5 +1,5 @@
 import { Link, useLocation } from "wouter";
-import { Crown, Gauge, Worm, Users, Calendar, Download, Settings } from "lucide-react";
+import { Crown, Gauge, Worm, Users, Calendar, Download, Settings, Globe } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 
@@ -7,6 +7,7 @@ const navigation = [
   { name: "Dashboard", href: "/", icon: Gauge, active: true },
   { name: "Scraper", href: "/scraper", icon: Worm },
   { name: "Contestants", href: "/contestants", icon: Users },
+  { name: "Franchise", href: "/franchises", icon: Globe },
   { name: "Seasons", href: "/seasons", icon: Calendar },
   { name: "Export Data", href: "/export", icon: Download },
   { name: "Settings", href: "/settings", icon: Settings },

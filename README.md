@@ -98,45 +98,35 @@ The application will be available at `http://localhost:3000`
 
 ### Available Scripts
 
-```bash
-# Start development server with hot reload
-npm run dev
-
-# Build for production
-npm run build
-
-# Run type checking
-npm run type-check
-
-# Database operations (if using PostgreSQL)
-npm run db:generate  # Generate migrations
-npm run db:push      # Push schema to database
-npm run db:studio    # Open Drizzle Studio
-```
+- `npm run dev`: Starts the development server with hot-reloading.
+- `npm run build`: Bundles the app for production.
+- `npm run start`: Runs the production build.
+- `npm run check`: Type-checks the project.
+- `npm run db:push`: Pushes schema changes to the database.
 
 ### Project Structure
 
 ```
-├── client/                 # React frontend
-│   ├── src/
-│   │   ├── components/     # Reusable UI components
-│   │   ├── pages/         # Route components
-│   │   ├── hooks/         # Custom React hooks
-│   │   ├── lib/           # Utilities and API client
-│   │   └── main.tsx       # Application entry point
-│   └── index.html
-├── server/                # Express backend
-│   ├── services/          # Business logic
-│   │   ├── scraper.ts     # Playwright scraper
-│   │   ├── mock-scraper.ts # Demo data generator
-│   │   └── websocket.ts   # Real-time communications
-│   ├── storage.ts         # Data persistence layer
-│   ├── routes.ts          # API route definitions
-│   └── index.ts          # Server entry point
-├── shared/               # Shared types and schemas
-│   └── schema.ts         # Database schema and types
-└── screenshots/          # Captured screenshots (auto-created)
+.env                # Environment variables
+drizzle.config.ts   # Drizzle ORM configuration
+package.json        # Project dependencies and scripts
+postcss.config.js     # PostCSS configuration
+tailwind.config.ts  # Tailwind CSS configuration
+tsconfig.json       # TypeScript configuration
+vite.config.ts      # Vite configuration
+client/             # Frontend React application
+server/             # Backend Express.js application
+shared/             # Code shared between client and server
 ```
+
+## 🤝 Contributing
+
+Contributions are welcome! Please open an issue or submit a pull request.
+
+## 📜 License
+
+This project is licensed under the MIT License.
+
 
 ## 🎯 Usage
 

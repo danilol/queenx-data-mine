@@ -5,12 +5,14 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { ThemeProvider } from "@/components/theme-provider";
 import { ThemeToggle } from "@/components/theme-toggle";
-import { LayoutDashboard, Bot, Users, Download } from "lucide-react";
+import { LayoutDashboard, Bot, Users, Download, Globe, Tv } from "lucide-react";
 
 import Dashboard from "@/pages/dashboard";
 import Scraper from "@/pages/scraper";
 import Contestants from "@/pages/contestants";
 import Export from "@/pages/export";
+import Franchises from "@/pages/franchises";
+import Seasons from "@/pages/seasons";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -20,6 +22,8 @@ function Router() {
       <Route path="/scraper" component={Scraper} />
       <Route path="/contestants" component={Contestants} />
       <Route path="/export" component={Export} />
+      <Route path="/franchises" component={Franchises} />
+      <Route path="/seasons" component={Seasons} />
       <Route component={NotFound} />
     </Switch>
   );
@@ -29,7 +33,9 @@ const navigationItems = [
   { path: "/", label: "Dashboard", icon: LayoutDashboard },
   { path: "/scraper", label: "Scraper", icon: Bot },
   { path: "/contestants", label: "Contestants", icon: Users },
-  { path: "/export", label: "Export", icon: Download }
+  { path: "/export", label: "Export", icon: Download },
+  { path: "/franchises", label: "Franchises", icon: Globe },
+  { path: "/seasons", label: "Seasons", icon: Tv }
 ];
 
 function Navigation() {
