@@ -55,7 +55,7 @@ export const api = {
     return response.json();
   },
 
-  startScraping: async (options: { headless?: boolean; screenshotsEnabled?: boolean } = {}) => {
+  startScraping: async (options: { headless?: boolean; screenshotsEnabled?: boolean; level?: string; franchiseId?: string; seasonId?: string; contestantId?: string; sourceUrl?: string } = {}) => {
     const response = await apiRequest("POST", "/api/scraping/start", options);
     return response.json();
   },
