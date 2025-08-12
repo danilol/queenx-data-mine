@@ -177,8 +177,17 @@ export class MockRuPaulScraper {
           progress,
           totalItems,
           message: `Processing season: ${season.name}`,
-          currentItem: season.name
+          currentItem: season.name,
+          franchises: this.franchiseStatuses,
+          seasons: this.seasonStatuses
         });
+
+        // Update franchise progress
+        const franchiseStatus = this.franchiseStatuses.find(f => f.name === season.franchise);
+        if (franchiseStatus) {
+          franchiseStatus.status = 'running';
+          franchiseStatus.progress = Math.round((i / SAMPLE_SEASONS.length) * 50); // 50% for seasons
+        }
 
         // Find franchise by name to get ID, or create it if it doesn't exist
         let franchise = await storage.getFranchiseByName(season.franchise);
@@ -206,13 +215,30 @@ export class MockRuPaulScraper {
         const contestant = SAMPLE_CONTESTANTS[i];
         progress = Math.round(((SAMPLE_SEASONS.length + i + 1) / totalItems) * 100);
 
+        // Update contestant progress
+        const seasonForContestant = this.franchiseStatuses
+          .flatMap(f => f.seasons || [])
+          .find(s => s.name.includes("Season 6")); // Most contestants are from Season 6
+        if (seasonForContestant) {
+          seasonForContestant.status = 'running';
+          seasonForContestant.progress = Math.round(((i + 1) / SAMPLE_CONTESTANTS.length) * 100);
+          
+          // Update specific contestant status
+          const contestantStatus = seasonForContestant.contestants?.find(c => c.name === contestant.dragName);
+          if (contestantStatus) {
+            contestantStatus.status = 'running';
+          }
+        }
+
         broadcastProgress({
           jobId,
           status: "running",
           progress,
           totalItems,
           message: `Processing contestant: ${contestant.dragName}`,
-          currentItem: contestant.dragName
+          currentItem: contestant.dragName,
+          franchises: this.franchiseStatuses,
+          seasons: this.seasonStatuses
         });
 
         await storage.createContestant({
@@ -234,13 +260,28 @@ export class MockRuPaulScraper {
         completedAt: new Date(),
       });
 
+      // Mark everything as completed
+      this.franchiseStatuses.forEach(franchise => {
+        franchise.status = 'completed';
+        franchise.progress = 100;
+        franchise.seasons?.forEach(season => {
+          season.status = 'completed';
+          season.progress = 100;
+          season.contestants?.forEach(contestant => {
+            contestant.status = 'completed';
+          });
+        });
+      });
+
       broadcastProgress({
         jobId,
         status: "completed",
         progress: 100,
         totalItems,
         message: `Scraping completed successfully! Found ${SAMPLE_CONTESTANTS.length} contestants and ${SAMPLE_SEASONS.length} seasons.`,
-        currentItem: "Finished"
+        currentItem: "Finished",
+        franchises: this.franchiseStatuses,
+        seasons: this.seasonStatuses
       });
 
     } catch (error) {
