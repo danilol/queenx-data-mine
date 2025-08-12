@@ -4,7 +4,7 @@ import { broadcastProgress } from "./websocket.js";
 import { randomUUID } from "crypto";
 import fs from "fs/promises";
 import path from "path";
-import { FRANCHISES, SEASONS } from '../data/franchises';
+import { FRANCHISES, FRANCHISES_WITH_URLS, SEASONS } from '../data/franchises';
 import 'dotenv/config';
 import { Season, ScrapingJobPayload, seasonStatusSchema, ScrapingRequest, ScrapingLevel } from "@shared/schema";
 import { z } from "zod";
@@ -207,8 +207,8 @@ export class RuPaulScraper {
 
   private async seedDatabase() {
     console.log('[scraper] Seeding database...');
-    for (const franchiseName of FRANCHISES) {
-      const newFranchise = await storage.createFranchise(franchiseName);
+    for (const franchise of FRANCHISES_WITH_URLS) {
+      const newFranchise = await storage.createFranchise(franchise.name);
       console.log(`Franchise '${newFranchise.name}' seeded`);
     }
 
@@ -221,7 +221,7 @@ export class RuPaulScraper {
             name: season.name,
             franchiseId: franchise.id,
             year: season.year,
-            wikipediaUrl: season.wikipediaUrl,
+            sourceUrl: season.sourceUrl,
           });
           if (newSeason) {
             console.log(`[scraper] Created season: ${newSeason.name}`);
@@ -286,12 +286,12 @@ export class RuPaulScraper {
 
   private async scrapeSeason(page: Page, seasonData: Season, screenshotsEnabled: boolean) {
     try {
-      if (!seasonData.wikipediaUrl) {
-        console.log(`[scraper] Skipping season ${seasonData.name} due to missing Wikipedia URL.`);
+      if (!seasonData.sourceUrl) {
+        console.log(`[scraper] Skipping season ${seasonData.name} due to missing source URL.`);
         return;
       }
-      console.log(`[scraper] Navigating to ${seasonData.wikipediaUrl} for season: ${seasonData.name}`);
-      await page.goto(seasonData.wikipediaUrl, { waitUntil: 'networkidle' });
+      console.log(`[scraper] Navigating to ${seasonData.sourceUrl} for season: ${seasonData.name}`);
+      await page.goto(seasonData.sourceUrl, { waitUntil: 'networkidle' });
 
       if (screenshotsEnabled) {
         await this.takeScreenshot(page, `season_${seasonData.name.replace(/\s/g, '_')}`);

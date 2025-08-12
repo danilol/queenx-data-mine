@@ -56,7 +56,7 @@ const SAMPLE_CONTESTANTS = [
     outcome: "Runner-up",
     biography: "Adore Delano is the drag persona of Danny Noriega, an American drag queen, singer-songwriter and television personality.",
     photoUrl: null,
-    wikipediaUrl: "https://en.wikipedia.org/wiki/Adore_Delano"
+    sourceUrl: "https://en.wikipedia.org/wiki/Adore_Delano"
   },
   {
     dragName: "Courtney Act",
@@ -68,7 +68,7 @@ const SAMPLE_CONTESTANTS = [
     outcome: "Runner-up",
     biography: "Courtney Act is the drag persona of Shane Gilberto Jenek, an Australian drag queen, pop singer, entertainer and reality television personality.",
     photoUrl: null,
-    wikipediaUrl: "https://en.wikipedia.org/wiki/Courtney_Act"
+    sourceUrl: "https://en.wikipedia.org/wiki/Courtney_Act"
   }
 ];
 
@@ -77,13 +77,13 @@ const SAMPLE_SEASONS = [
     name: "RuPaul's Drag Race Season 1",
     franchise: "US",
     year: 2009,
-    wikipediaUrl: "https://en.wikipedia.org/wiki/RuPaul%27s_Drag_Race_(season_1)"
+    sourceUrl: "https://en.wikipedia.org/wiki/RuPaul%27s_Drag_Race_(season_1)"
   },
   {
     name: "RuPaul's Drag Race Season 6",
     franchise: "US", 
     year: 2014,
-    wikipediaUrl: "https://en.wikipedia.org/wiki/RuPaul%27s_Drag_Race_(season_6)"
+    sourceUrl: "https://en.wikipedia.org/wiki/RuPaul%27s_Drag_Race_(season_6)"
   }
 ];
 
@@ -151,7 +151,7 @@ export class MockRuPaulScraper {
           name: season.name,
           franchiseId: franchise.id,
           year: season.year,
-          sourceUrl: season.wikipediaUrl,
+          sourceUrl: season.sourceUrl,
           isScraped: true
         });
 
@@ -178,7 +178,7 @@ export class MockRuPaulScraper {
           hometown: contestant.hometown,
           biography: contestant.biography,
           photoUrl: contestant.photoUrl,
-          sourceUrl: contestant.wikipediaUrl
+          sourceUrl: contestant.sourceUrl
         });
 
         await this.sleep(1200);
