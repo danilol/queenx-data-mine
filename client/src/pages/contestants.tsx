@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Search, Plus, Edit, Trash2 } from "lucide-react";
+import { Search, Plus, Edit, Trash2, Play, Loader2 } from "lucide-react";
 import { Header } from "@/components/layout/header";
 import { ContestantEditModal } from "@/components/contestant-edit-modal";
 import { Card, CardContent } from "@/components/ui/card";
@@ -23,6 +23,12 @@ export default function Contestants() {
     queryFn: () => api.getContestants(searchQuery || undefined),
   });
 
+  const { data: scrapingStatus } = useQuery({
+    queryKey: ["/api/scraping/status"],
+    queryFn: api.getScrapingStatus,
+    refetchInterval: 3000,
+  });
+
   const deleteMutation = useMutation({
     mutationFn: (id: string) => api.deleteContestant(id),
     onSuccess: () => {
@@ -36,6 +42,28 @@ export default function Contestants() {
       toast({
         title: "Delete Failed",
         description: error instanceof Error ? error.message : "Failed to delete contestant",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const startContestantScraping = useMutation({
+    mutationFn: (contestant: Contestant) => api.startScraping({
+      level: "contestant",
+      contestantId: contestant.id,
+      sourceUrl: contestant.sourceUrl || undefined
+    }),
+    onSuccess: () => {
+      toast({
+        title: "Scraping Started",
+        description: "Contestant scraping has started successfully",
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/scraping/status"] });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error?.message || "Failed to start scraping",
         variant: "destructive",
       });
     },
@@ -73,6 +101,8 @@ export default function Contestants() {
     if (lower.includes("runner-up")) return "secondary";
     return "outline";
   };
+
+  const isScrapingRunning = scrapingStatus && 'status' in scrapingStatus && scrapingStatus.status === 'running';
 
   const groupedContestants = contestants.reduce((groups, contestant) => {
     const franchise = contestant.franchise || "US";
@@ -188,6 +218,19 @@ export default function Contestants() {
                               </td>
                               <td className="py-4 px-2">
                                 <div className="flex space-x-2">
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
+                                    disabled={isScrapingRunning || startContestantScraping.isPending}
+                                    onClick={() => startContestantScraping.mutate(contestant)}
+                                    title="Scrape this contestant"
+                                  >
+                                    {startContestantScraping.isPending ? (
+                                      <Loader2 className="h-4 w-4 animate-spin" />
+                                    ) : (
+                                      <Play className="h-4 w-4" />
+                                    )}
+                                  </Button>
                                   <Button
                                     size="sm"
                                     variant="ghost"

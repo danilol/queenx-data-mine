@@ -4,6 +4,7 @@ This is a RuPaul's Drag Race contestant scraping and management system built as 
 
 ## Recent Changes (August 2025)
 
+- **Contestant-Level Scraping Buttons**: Added individual "Scrape Contestant" buttons to each contestant row in the contestants list page for targeted scraping
 - **Season-Level Scraping Buttons**: Added individual "Scrape Season" buttons to each season row in the seasons list page for targeted scraping
 - **Hierarchical Progress Display**: Implemented detailed franchise → season → contestant progress tracking with collapsible tree view
 - **Mock Scraper Integration**: Automatically falls back to mock scraper when Playwright dependencies are unavailable, ensuring functionality in all environments
