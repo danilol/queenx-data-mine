@@ -121,12 +121,27 @@ export type ScrapingJobPayload = {
   id: string;
   status: 'running' | 'completed' | 'failed' | 'idle';
   seasons: z.infer<typeof seasonStatusSchema>[];
+  franchises?: z.infer<typeof franchiseStatusSchema>[];
 };
+
+export const contestantStatusSchema = z.object({
+  name: z.string(),
+  status: z.enum(["pending", "running", "completed", "failed"]),
+});
 
 export const seasonStatusSchema = z.object({
   name: z.string(),
   franchiseName: z.string(),
   status: z.enum(["pending", "running", "completed", "failed"]),
+  progress: z.number().default(0), // 0-100 percentage
+  contestants: z.array(contestantStatusSchema).optional(),
+});
+
+export const franchiseStatusSchema = z.object({
+  name: z.string(),
+  status: z.enum(["pending", "running", "completed", "failed"]),
+  progress: z.number().default(0), // 0-100 percentage
+  seasons: z.array(seasonStatusSchema).optional(),
 });
 
 export const progressMessageSchema = z.object({
@@ -138,6 +153,7 @@ export const progressMessageSchema = z.object({
   message: z.string().optional(),
   screenshot: z.string().optional(),
   seasons: z.array(seasonStatusSchema).optional(),
+  franchises: z.array(franchiseStatusSchema).optional(),
 });
 
 export type ScrapingProgress = z.infer<typeof progressMessageSchema>;

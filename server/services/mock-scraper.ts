@@ -1,6 +1,8 @@
 import { storage } from "../storage";
 import { broadcastProgress } from "./websocket.js";
 import { randomUUID } from "crypto";
+import { seasonStatusSchema, franchiseStatusSchema } from "@shared/schema";
+import { z } from "zod";
 
 export interface MockScrapingOptions {
   headless?: boolean;
@@ -89,6 +91,8 @@ const SAMPLE_SEASONS = [
 
 export class MockRuPaulScraper {
   private currentJobId: string | null = null;
+  private seasonStatuses: z.infer<typeof seasonStatusSchema>[] = [];
+  private franchiseStatuses: z.infer<typeof franchiseStatusSchema>[] = [];
 
   async startScraping(options: MockScrapingOptions = {}): Promise<string> {
     if (this.currentJobId) {
@@ -115,6 +119,39 @@ export class MockRuPaulScraper {
       let progress = 0;
       const totalItems = SAMPLE_CONTESTANTS.length + SAMPLE_SEASONS.length;
 
+      // Build hierarchical structure for mock data
+      const franchiseMap = new Map();
+      SAMPLE_SEASONS.forEach(season => {
+        if (!franchiseMap.has(season.franchise)) {
+          franchiseMap.set(season.franchise, {
+            name: season.franchise,
+            status: 'pending' as const,
+            progress: 0,
+            seasons: []
+          });
+        }
+        franchiseMap.get(season.franchise).seasons.push({
+          name: season.name,
+          franchiseName: season.franchise,
+          status: 'pending' as const,
+          progress: 0,
+          contestants: SAMPLE_CONTESTANTS
+            .filter(c => c.season === season.name)
+            .map(c => ({
+              name: c.dragName,
+              status: 'pending' as const
+            }))
+        });
+      });
+      
+      this.franchiseStatuses = Array.from(franchiseMap.values());
+      this.seasonStatuses = SAMPLE_SEASONS.map(season => ({
+        name: season.name,
+        franchiseName: season.franchise,
+        status: 'pending' as const,
+        progress: 0
+      }));
+
       // Simulate scraping seasons first
       broadcastProgress({
         jobId,
@@ -122,7 +159,9 @@ export class MockRuPaulScraper {
         progress: 0,
         totalItems,
         message: "Initializing scraper...",
-        currentItem: "Starting scraping process"
+        currentItem: "Starting scraping process",
+        franchises: this.franchiseStatuses,
+        seasons: this.seasonStatuses
       });
 
       await this.sleep(1000);

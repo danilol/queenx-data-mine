@@ -1,5 +1,5 @@
 import { apiRequest } from "./queryClient";
-import { Contestant, InsertContestant, UpdateContestant, AppStats, ScrapingJob, Season, FullContestant, Franchise } from "@shared/schema";
+import { Contestant, InsertContestant, UpdateContestant, AppStats, ScrapingJob, Season, FullContestant, Franchise, ScrapingProgress } from "@shared/schema";
 
 export const api = {
   // Stats
@@ -50,7 +50,7 @@ export const api = {
   },
 
   // Scraping
-  getScrapingStatus: async (): Promise<ScrapingJob | { status: string }> => {
+  getScrapingStatus: async (): Promise<ScrapingProgress | { status: string }> => {
     const response = await apiRequest("GET", "/api/scraping/status");
     return response.json();
   },

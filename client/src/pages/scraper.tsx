@@ -4,6 +4,7 @@ import { Play, Square, Bug, Settings, Monitor, Globe, Calendar, Users } from "lu
 import { Header } from "@/components/layout/header";
 import { ScrapingProgress } from "@/components/scraping-progress";
 import { FranchiseProgress } from "@/components/franchise-progress";
+import { HierarchicalProgress } from "@/components/hierarchical-progress";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
@@ -309,8 +310,17 @@ export default function Scraper() {
           {/* Scraping Progress */}
           <ScrapingProgress />
 
-          {/* Detailed Franchise Progress */}
-          {scrapingStatus && 'seasons' in scrapingStatus && Array.isArray(scrapingStatus.seasons) && (
+          {/* Hierarchical Progress for Full Scraping */}
+          {scrapingStatus && 'franchises' in scrapingStatus && Array.isArray(scrapingStatus.franchises) && scrapingStatus.franchises.length > 0 && (
+            <HierarchicalProgress 
+              franchises={scrapingStatus.franchises as any} 
+              overallProgress={(scrapingStatus as any).progress || 0}
+            />
+          )}
+
+          {/* Detailed Franchise Progress (fallback for other scraping types) */}
+          {scrapingStatus && 'seasons' in scrapingStatus && Array.isArray(scrapingStatus.seasons) && 
+           (!(scrapingStatus as any).franchises || (scrapingStatus as any).franchises.length === 0) && (
             <FranchiseProgress seasons={scrapingStatus.seasons} />
           )}
 

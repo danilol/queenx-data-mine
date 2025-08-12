@@ -72,21 +72,52 @@ export class RuPaulScraper {
   private async startFullScraping(options: ScrapingOptions = {}): Promise<ScrapingJobPayload> {
     await this.seedDatabase();
     const allSeasons = await storage.getAllSeasons();
-    console.log(`[scraper] Found ${allSeasons.length} seasons in the database.`);
+    const allFranchises = await storage.getAllFranchises();
+    console.log(`[scraper] Found ${allSeasons.length} seasons across ${allFranchises.length} franchises.`);
+
+    // Build hierarchical franchise structure
+    const franchiseStatuses = allFranchises.map(franchise => ({
+      name: franchise.name,
+      status: 'pending' as const,
+      progress: 0,
+      seasons: allSeasons
+        .filter(season => season.franchiseName === franchise.name)
+        .map(season => ({
+          name: season.name,
+          franchiseName: season.franchiseName,
+          status: 'pending' as const,
+          progress: 0,
+          contestants: [] // Will be populated when scraping starts
+        }))
+    }));
 
     this.seasonStatuses = allSeasons.map(season => ({
       name: season.name,
       franchiseName: season.franchiseName,
-      status: 'pending',
+      status: 'pending' as const,
+      progress: 0
     }));
 
     this.scrapingJob = {
       id: randomUUID(),
       status: 'running',
       seasons: this.seasonStatuses,
+      franchises: franchiseStatuses
     };
 
+    broadcastProgress({
+      jobId: this.scrapingJob.id,
+      status: 'running',
+      progress: 0,
+      totalItems: allSeasons.length,
+      message: `Starting full scraping of ${allSeasons.length} seasons across ${allFranchises.length} franchises`,
+      seasons: this.seasonStatuses,
+      franchises: franchiseStatuses
+    });
+
+    // Process seasons asynchronously
     this.runScrapingProcess(allSeasons, options);
+
     return this.scrapingJob;
   }
 
@@ -103,7 +134,8 @@ export class RuPaulScraper {
     this.seasonStatuses = filteredSeasons.map(season => ({
       name: season.name,
       franchiseName: season.franchiseName,
-      status: 'pending',
+      status: 'pending' as const,
+      progress: 0
     }));
 
     this.scrapingJob = {
@@ -131,7 +163,8 @@ export class RuPaulScraper {
     this.seasonStatuses = [{
       name: season.name,
       franchiseName: 'Unknown', // Will be resolved during scraping
-      status: 'pending',
+      status: 'pending' as const,
+      progress: 0
     }];
 
     this.scrapingJob = {
@@ -159,7 +192,8 @@ export class RuPaulScraper {
     this.seasonStatuses = [{
       name: `Contestant: ${contestant.dragName}`,
       franchiseName: 'Individual',
-      status: 'pending',
+      status: 'pending' as const,
+      progress: 0
     }];
 
     this.scrapingJob = {
