@@ -141,10 +141,14 @@ export class MockRuPaulScraper {
           currentItem: season.name
         });
 
-        // Find franchise by name to get ID
-        const franchise = await storage.getFranchiseByName(season.franchise);
+        // Find franchise by name to get ID, or create it if it doesn't exist
+        let franchise = await storage.getFranchiseByName(season.franchise);
         if (!franchise) {
-          throw new Error(`Franchise not found: ${season.franchise}`);
+          // Create franchise with a basic sourceUrl (mock data doesn't have specific franchise URLs)
+          franchise = await storage.createFranchise({
+            name: season.franchise,
+            sourceUrl: `https://en.wikipedia.org/wiki/${encodeURIComponent(season.franchise.replace(/\s+/g, '_'))}`
+          });
         }
 
         await storage.createSeason({

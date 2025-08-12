@@ -208,8 +208,11 @@ export class RuPaulScraper {
   private async seedDatabase() {
     console.log('[scraper] Seeding database...');
     for (const franchise of FRANCHISES_WITH_URLS) {
-      const newFranchise = await storage.createFranchise(franchise.name);
-      console.log(`Franchise '${newFranchise.name}' seeded`);
+      const newFranchise = await storage.createFranchise({
+        name: franchise.name,
+        sourceUrl: franchise.sourceUrl
+      });
+      console.log(`Franchise '${newFranchise.name}' seeded with source URL: ${newFranchise.sourceUrl}`);
     }
 
     const allDbFranchises = await storage.getAllFranchises();

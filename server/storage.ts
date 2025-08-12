@@ -26,7 +26,7 @@ export interface IStorage {
   // Franchises
   getAllFranchises(): Promise<Franchise[]>;
   getFranchiseByName(name: string): Promise<Franchise | undefined>;
-  createFranchise(name: string): Promise<Franchise>;
+  createFranchise(franchise: InsertFranchise): Promise<Franchise>;
 
   // Seasons
   getAllSeasons(): Promise<Season[]>;
@@ -184,10 +184,16 @@ export class DrizzleStorage implements IStorage {
     return result[0];
   }
 
-  async createFranchise(name: string): Promise<Franchise> {
+  async createFranchise(franchise: InsertFranchise): Promise<Franchise> {
     const result = await db.insert(franchises)
-      .values({ name })
-      .onConflictDoUpdate({ target: franchises.name, set: { name } })
+      .values(franchise)
+      .onConflictDoUpdate({ 
+        target: franchises.name, 
+        set: { 
+          name: franchise.name,
+          sourceUrl: franchise.sourceUrl 
+        } 
+      })
       .returning();
     return result[0];
   }
