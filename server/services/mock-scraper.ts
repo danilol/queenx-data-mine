@@ -336,3 +336,5 @@ export class MockRuPaulScraper {
     return this.currentJobId !== null;
   }
 }
+
+export const mockScraper = new MockRuPaulScraper();
