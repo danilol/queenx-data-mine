@@ -103,7 +103,7 @@ apiRouter.post("/scraping/start", async (req, res) => {
       job = await mockScraper.startScraping(request);
     }
     
-    res.json({ ...job, message: "Scraping started" });
+    res.json({ jobId: job, message: "Scraping started" });
   } catch (error) {
     console.error('Scraping start error:', error);
     res.status(500).json({ error: error instanceof Error ? error.message : "Failed to start scraping" });
