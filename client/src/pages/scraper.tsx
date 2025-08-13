@@ -5,6 +5,7 @@ import { Header } from "@/components/layout/header";
 import { ScrapingProgress } from "@/components/scraping-progress";
 import { FranchiseProgress } from "@/components/franchise-progress";
 import { HierarchicalProgress } from "@/components/hierarchical-progress";
+import { EnhancedProgress } from "@/components/enhanced-progress";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
@@ -307,21 +308,37 @@ export default function Scraper() {
             </Card>
           </div>
 
-          {/* Scraping Progress */}
-          <ScrapingProgress />
-
-          {/* Hierarchical Progress for Full Scraping */}
-          {scrapingStatus && 'franchises' in scrapingStatus && Array.isArray(scrapingStatus.franchises) && scrapingStatus.franchises.length > 0 && (
-            <HierarchicalProgress 
-              franchises={scrapingStatus.franchises as any} 
-              overallProgress={(scrapingStatus as any).progress || 0}
-            />
-          )}
-
-          {/* Detailed Franchise Progress (fallback for other scraping types) */}
-          {scrapingStatus && 'seasons' in scrapingStatus && Array.isArray(scrapingStatus.seasons) && 
-           (!(scrapingStatus as any).franchises || (scrapingStatus as any).franchises.length === 0) && (
-            <FranchiseProgress seasons={scrapingStatus.seasons} />
+          {/* Enhanced Progress Visualization */}
+          {scrapingStatus && 'status' in scrapingStatus && (
+            <div>
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Settings className="w-5 h-5" />
+                    Current Scraping Progress
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="p-6">
+                  <EnhancedProgress 
+                    scrapingStatus={{
+                      status: scrapingStatus.status as "idle" | "running" | "completed" | "failed",
+                      level: (scrapingStatus as any).level || 'full',
+                      progress: (scrapingStatus as any).progress || 0,
+                      currentFranchise: (scrapingStatus as any).currentFranchise,
+                      currentSeason: (scrapingStatus as any).currentSeason,
+                      currentContestant: (scrapingStatus as any).currentContestant,
+                      franchises: (scrapingStatus as any).franchises || [],
+                      totalFranchises: (scrapingStatus as any).totalFranchises || 0,
+                      completedFranchises: (scrapingStatus as any).completedFranchises || 0,
+                      totalSeasons: (scrapingStatus as any).totalSeasons || 0,
+                      completedSeasons: (scrapingStatus as any).completedSeasons || 0,
+                      totalContestants: (scrapingStatus as any).totalContestants || 0,
+                      completedContestants: (scrapingStatus as any).completedContestants || 0,
+                    }}
+                  />
+                </CardContent>
+              </Card>
+            </div>
           )}
 
           {/* Data Sources Status */}

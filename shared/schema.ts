@@ -154,6 +154,17 @@ export const progressMessageSchema = z.object({
   screenshot: z.string().optional(),
   seasons: z.array(seasonStatusSchema).optional(),
   franchises: z.array(franchiseStatusSchema).optional(),
+  // Enhanced progress fields
+  level: z.enum(["full", "franchise", "season", "contestant"]).optional(),
+  totalFranchises: z.number().optional(),
+  completedFranchises: z.number().optional(),
+  totalSeasons: z.number().optional(),
+  completedSeasons: z.number().optional(),
+  totalContestants: z.number().optional(),
+  completedContestants: z.number().optional(),
+  currentFranchise: z.string().optional(),
+  currentSeason: z.string().optional(),
+  currentContestant: z.string().optional(),
 });
 
 export type ScrapingProgress = z.infer<typeof progressMessageSchema>;

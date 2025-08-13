@@ -93,6 +93,16 @@ export class MockRuPaulScraper {
   private currentJobId: string | null = null;
   private seasonStatuses: z.infer<typeof seasonStatusSchema>[] = [];
   private franchiseStatuses: z.infer<typeof franchiseStatusSchema>[] = [];
+  private scrapingLevel: "full" | "franchise" | "season" | "contestant" = "full";
+  private totalFranchises = 0;
+  private totalSeasons = 0;
+  private totalContestants = 0;
+  private completedFranchises = 0;
+  private completedSeasons = 0;
+  private completedContestants = 0;
+  private currentFranchise?: string;
+  private currentSeason?: string;
+  private currentContestant?: string;
 
   async startScraping(options: MockScrapingOptions = {}): Promise<string> {
     if (this.currentJobId) {
@@ -144,12 +154,23 @@ export class MockRuPaulScraper {
         });
       });
       
-      this.franchiseStatuses = Array.from(franchiseMap.values());
+      // Initialize counts
+      this.totalFranchises = franchiseMap.size;
+      this.totalSeasons = SAMPLE_SEASONS.length;
+      this.totalContestants = SAMPLE_CONTESTANTS.length;
+      
+      this.franchiseStatuses = Array.from(franchiseMap.values()).map(f => ({
+        ...f,
+        totalSeasons: f.seasons?.length || 0,
+        completedSeasons: 0
+      }));
       this.seasonStatuses = SAMPLE_SEASONS.map(season => ({
         name: season.name,
         franchiseName: season.franchise,
         status: 'pending' as const,
-        progress: 0
+        progress: 0,
+        totalContestants: SAMPLE_CONTESTANTS.filter(c => c.season === season.name).length,
+        completedContestants: 0
       }));
 
       // Simulate scraping seasons first
@@ -161,7 +182,17 @@ export class MockRuPaulScraper {
         message: "Initializing scraper...",
         currentItem: "Starting scraping process",
         franchises: this.franchiseStatuses,
-        seasons: this.seasonStatuses
+        seasons: this.seasonStatuses,
+        level: this.scrapingLevel,
+        totalFranchises: this.totalFranchises,
+        completedFranchises: this.completedFranchises,
+        totalSeasons: this.totalSeasons,
+        completedSeasons: this.completedSeasons,
+        totalContestants: this.totalContestants,
+        completedContestants: this.completedContestants,
+        currentFranchise: this.currentFranchise,
+        currentSeason: this.currentSeason,
+        currentContestant: this.currentContestant
       });
 
       await this.sleep(1000);
@@ -171,6 +202,9 @@ export class MockRuPaulScraper {
         const season = SAMPLE_SEASONS[i];
         progress = Math.round(((i + 1) / totalItems) * 100);
 
+        this.currentFranchise = season.franchise;
+        this.currentSeason = season.name;
+        
         broadcastProgress({
           jobId,
           status: "running", 
@@ -179,7 +213,17 @@ export class MockRuPaulScraper {
           message: `Processing season: ${season.name}`,
           currentItem: season.name,
           franchises: this.franchiseStatuses,
-          seasons: this.seasonStatuses
+          seasons: this.seasonStatuses,
+          level: this.scrapingLevel,
+          totalFranchises: this.totalFranchises,
+          completedFranchises: this.completedFranchises,
+          totalSeasons: this.totalSeasons,
+          completedSeasons: i,
+          totalContestants: this.totalContestants,
+          completedContestants: this.completedContestants,
+          currentFranchise: this.currentFranchise,
+          currentSeason: this.currentSeason,
+          currentContestant: this.currentContestant
         });
 
         // Update franchise progress
@@ -230,6 +274,9 @@ export class MockRuPaulScraper {
           }
         }
 
+        this.currentContestant = contestant.dragName;
+        this.completedContestants = i;
+        
         broadcastProgress({
           jobId,
           status: "running",
@@ -238,7 +285,17 @@ export class MockRuPaulScraper {
           message: `Processing contestant: ${contestant.dragName}`,
           currentItem: contestant.dragName,
           franchises: this.franchiseStatuses,
-          seasons: this.seasonStatuses
+          seasons: this.seasonStatuses,
+          level: this.scrapingLevel,
+          totalFranchises: this.totalFranchises,
+          completedFranchises: this.completedFranchises,
+          totalSeasons: this.totalSeasons,
+          completedSeasons: this.completedSeasons,
+          totalContestants: this.totalContestants,
+          completedContestants: this.completedContestants,
+          currentFranchise: this.currentFranchise,
+          currentSeason: this.currentSeason,
+          currentContestant: this.currentContestant
         });
 
         await storage.createContestant({
@@ -273,6 +330,10 @@ export class MockRuPaulScraper {
         });
       });
 
+      this.completedFranchises = this.totalFranchises;
+      this.completedSeasons = this.totalSeasons;
+      this.completedContestants = this.totalContestants;
+      
       broadcastProgress({
         jobId,
         status: "completed",
@@ -281,7 +342,17 @@ export class MockRuPaulScraper {
         message: `Scraping completed successfully! Found ${SAMPLE_CONTESTANTS.length} contestants and ${SAMPLE_SEASONS.length} seasons.`,
         currentItem: "Finished",
         franchises: this.franchiseStatuses,
-        seasons: this.seasonStatuses
+        seasons: this.seasonStatuses,
+        level: this.scrapingLevel,
+        totalFranchises: this.totalFranchises,
+        completedFranchises: this.completedFranchises,
+        totalSeasons: this.totalSeasons,
+        completedSeasons: this.completedSeasons,
+        totalContestants: this.totalContestants,
+        completedContestants: this.completedContestants,
+        currentFranchise: this.currentFranchise,
+        currentSeason: this.currentSeason,
+        currentContestant: this.currentContestant
       });
 
     } catch (error) {
