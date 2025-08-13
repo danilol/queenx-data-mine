@@ -32,10 +32,10 @@ function Router() {
 const navigationItems = [
   { path: "/", label: "Dashboard", icon: LayoutDashboard },
   { path: "/scraper", label: "Scraper", icon: Bot },
-  { path: "/contestants", label: "Contestants", icon: Users },
-  { path: "/export", label: "Export", icon: Download },
   { path: "/franchises", label: "Franchises", icon: Globe },
-  { path: "/seasons", label: "Seasons", icon: Tv }
+  { path: "/seasons", label: "Seasons", icon: Tv },
+  { path: "/contestants", label: "Contestants", icon: Users },
+  { path: "/export", label: "Export", icon: Download }
 ];
 
 function Navigation() {
