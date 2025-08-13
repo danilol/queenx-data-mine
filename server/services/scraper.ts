@@ -207,36 +207,35 @@ export class RuPaulScraper {
   }
 
   private async runContestantScraping(contestant: any, options: ScrapingOptions) {
-    // Individual contestant scraping logic
+    if (!this.browser) {
+      console.error("Browser not initialized, stopping scraping process.");
+      return;
+    }
+
     console.log(`[scraper] Scraping contestant: ${contestant.dragName}`);
-    
-    broadcastProgress({
-      jobId: this.scrapingJob?.id || null,
-      status: 'running',
-      progress: 50,
-      totalItems: 1,
-      currentItem: contestant.dragName,
-      message: `Scraping details for ${contestant.dragName}`,
-      seasons: this.seasonStatuses,
-    });
+    this.updateSeasonStatus(`Contestant: ${contestant.dragName}`, 'running');
 
-    // Simulate scraping delay
-    await new Promise(resolve => setTimeout(resolve, 2000));
-    
-    this.scrapingJob = {
-      ...this.scrapingJob!,
-      status: 'completed',
-    };
+    try {
+      const page = await this.browser.newPage();
+      if (contestant.sourceUrl) {
+        console.log(`[scraper] Navigating to ${contestant.sourceUrl} for contestant: ${contestant.dragName}`);
+        await page.goto(contestant.sourceUrl, { waitUntil: 'networkidle' });
+        // Here you would add logic to find and process the contestant's data on their own page.
+        // For now, we'll assume the necessary data is on a season page and this is a placeholder.
+        // This part can be expanded to scrape more details from a contestant-specific page.
+      }
+      this.updateSeasonStatus(`Contestant: ${contestant.dragName}`, 'completed');
+      await page.close();
+    } catch (error) {
+      this.updateSeasonStatus(`Contestant: ${contestant.dragName}`, 'failed');
+      console.error(`Failed to scrape ${contestant.dragName}:`, error);
+    }
 
-    broadcastProgress({
-      jobId: this.scrapingJob?.id || null,
-      status: 'completed',
-      progress: 100,
-      totalItems: 1,
-      currentItem: contestant.dragName,
-      message: `Completed scraping for ${contestant.dragName}`,
-      seasons: this.seasonStatuses.map(s => ({ ...s, status: 'completed' })),
-    });
+    if (this.scrapingJob) {
+      this.scrapingJob.status = 'completed';
+      this.broadcastScrapingProgress();
+    }
+    await this.stopScraping();
   }
 
   private async seedDatabase() {
@@ -321,6 +320,47 @@ export class RuPaulScraper {
     });
   }
 
+  private async scrapeContestantFromRow(row: any, seasonData: Season) {
+    const name = await row.locator('th').all();
+    const cells = await row.locator('td').all();
+    if (cells.length < 3) return;
+
+    try {
+      const dragName = (await name[0]?.textContent())?.trim() || '';
+      if (!dragName || dragName.toLowerCase() === 'contestant') return;
+      const age = cells.length > 2 ? this.extractAge(await cells[0]?.textContent() || '') : null;
+      const hometown = (await cells[1]?.textContent())?.trim() || undefined;
+      const realName = (await cells[2]?.textContent())?.trim() || undefined;
+
+
+      let contestant = await storage.getContestantByDragName(dragName);
+      if (!contestant) {
+        contestant = await storage.createContestant({
+          age,
+          dragName,
+          realName,
+          hometown,
+          sourceUrl: seasonData.sourceUrl, // This might be better as a contestant-specific URL if available
+        });
+      }
+
+      const season = await storage.getSeasonByName(seasonData.name);
+      if (contestant && season) {
+        const existingAppearance = await storage.getAppearance(contestant.id, season.id);
+        if (!existingAppearance) {
+          await storage.createAppearance({
+            contestantId: contestant.id,
+            seasonId: season.id,
+            age: age,
+            outcome: this.extractOutcome(await cells[cells.length - 1]?.textContent() || ""),
+          });
+        }
+      }
+    } catch (error) {
+      console.error(`[scraper] Error processing row for season ${seasonData.name}:`, error);
+    }
+  }
+
   private async scrapeSeason(page: Page, seasonData: Season, screenshotsEnabled: boolean) {
     try {
       if (!seasonData.sourceUrl) {
@@ -344,42 +384,7 @@ export class RuPaulScraper {
 
       for (let i = 1; i < contestantRows.length; i++) {
         const row = contestantRows[i];
-        const cells = await row.locator('td').all();
-        if (cells.length < 3) continue;
-
-        try {
-          const dragName = (await cells[0]?.textContent())?.trim() || '';
-          if (!dragName || dragName.toLowerCase() === 'contestant') continue;
-
-          const realName = (await cells[1]?.textContent())?.trim() || undefined;
-          const hometown = (await cells[2]?.textContent())?.trim() || undefined;
-          const age = cells.length > 3 ? this.extractAge(await cells[3]?.textContent() || '') : null;
-
-          let contestant = await storage.getContestantByDragName(dragName);
-          if (!contestant) {
-            contestant = await storage.createContestant({
-              dragName,
-              realName,
-              hometown,
-            });
-          }
-
-          const season = await storage.getSeasonByName(seasonData.name);
-          if (contestant && season) {
-            const existingAppearance = await storage.getAppearance(contestant.id, season.id);
-            if (!existingAppearance) {
-              await storage.createAppearance({
-                contestantId: contestant.id,
-                seasonId: season.id,
-                age: age,
-                outcome: this.extractOutcome(await cells[cells.length - 1]?.textContent() || ""),
-              });
-            }
-          }
-        } catch (error) {
-          console.error(`[scraper] Error processing row ${i} for season ${seasonData.name}:`, error);
-          continue;
-        }
+        await this.scrapeContestantFromRow(row, seasonData);
       }
     } catch (error) {
       console.error(`[scraper] Critical error scraping season ${seasonData.name}:`, error);

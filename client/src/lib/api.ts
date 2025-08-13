@@ -44,8 +44,19 @@ export const api = {
   },
 
   // Seasons
-  getSeasons: async (): Promise<Season[]> => {
-    const response = await apiRequest("GET", "/api/seasons");
+  getSeasons: async (options: {
+    franchiseId?: string;
+    sortBy?: string;
+    sortOrder?: 'asc' | 'desc';
+    search?: string;
+  } = {}): Promise<Season[]> => {
+    const params = new URLSearchParams();
+    if (options.franchiseId) params.set("franchiseId", options.franchiseId);
+    if (options.sortBy) params.set("sortBy", options.sortBy);
+    if (options.sortOrder) params.set("sortOrder", options.sortOrder);
+    if (options.search) params.set("search", options.search);
+    
+    const response = await apiRequest("GET", `/api/seasons${params.toString() ? `?${params}` : ""}`);
     return response.json();
   },
 
