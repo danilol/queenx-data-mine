@@ -1,6 +1,6 @@
 import { type Contestant, type InsertContestant, type UpdateContestant, type Season, type InsertSeason, type ScrapingJob, type InsertScrapingJob, type AppStats, type Appearance, type InsertAppearance, type Franchise, type InsertFranchise, contestants, seasons, appearances, scrapingJobs, franchises, FullContestant } from "@shared/schema";
 import { drizzle } from 'drizzle-orm/postgres-js';
-import { eq, ilike, or, and, desc, count, sql, getTableColumns } from 'drizzle-orm';
+import { eq, ilike, or, and, desc, asc, count, sql, getTableColumns } from 'drizzle-orm';
 import postgres from 'postgres';
 import 'dotenv/config';
 
@@ -29,7 +29,7 @@ export interface IStorage {
   createFranchise(franchise: InsertFranchise): Promise<Franchise>;
 
   // Seasons
-  getAllSeasons(): Promise<Season[]>;
+  getAllSeasons(options?: { franchiseId?: string; sortBy?: keyof Season | 'franchiseName'; sortOrder?: 'asc' | 'desc'; search?: string }): Promise<(Season & { franchiseName: string })[]>;
   getSeason(id: string): Promise<Season | undefined>;
   getSeasonByName(name: string): Promise<Season | undefined>;
   createSeason(season: InsertSeason): Promise<Season>;
@@ -173,8 +173,6 @@ export class DrizzleStorage implements IStorage {
     return result.length > 0;
   }
 
-
-
   async getAllFranchises(): Promise<Franchise[]> {
     return db.select().from(franchises).orderBy(franchises.name);
   }
@@ -198,15 +196,43 @@ export class DrizzleStorage implements IStorage {
     return result[0];
   }
 
-  async getAllSeasons(): Promise<(Season & { franchiseName: string; })[]> {
-    const result = await db
+  async getAllSeasons(options: {
+    franchiseId?: string;
+    sortBy?: keyof Season | 'franchiseName';
+    sortOrder?: 'asc' | 'desc';
+    search?: string;
+  } = {}): Promise<(Season & { franchiseName: string })[]> {
+    const { franchiseId, sortBy = 'year', sortOrder = 'desc', search } = options;
+
+    const sortColumnMap: Record<string, any> = {
+      name: seasons.name,
+      franchiseName: franchises.name,
+      year: seasons.year,
+      createdAt: seasons.createdAt,
+    };
+
+    const sortColumn = sortColumnMap[sortBy] || seasons.year;
+    const orderByClause = sortOrder === 'asc' ? asc(sortColumn) : desc(sortColumn);
+
+    const conditions = [];
+    if (franchiseId) {
+      conditions.push(eq(seasons.franchiseId, franchiseId));
+    }
+    if (search) {
+      conditions.push(ilike(seasons.name, `%${search}%`));
+    }
+
+    const query = db
       .select({
         ...getTableColumns(seasons),
         franchiseName: franchises.name,
       })
       .from(seasons)
       .leftJoin(franchises, eq(seasons.franchiseId, franchises.id))
-      .orderBy(desc(seasons.year));
+      .where(and(...conditions))
+      .orderBy(orderByClause);
+
+    const result = await query;
 
     return result.map(r => ({ ...r, franchiseName: r.franchiseName || 'Unknown' }));
   }
@@ -217,11 +243,20 @@ export class DrizzleStorage implements IStorage {
   }
 
   async createSeason(insertSeason: InsertSeason): Promise<Season> {
-    const result = await db.insert(seasons).values(insertSeason).onConflictDoNothing().returning();
-    if (result[0]) {
-      return result[0];
-    }
-    return (await db.select().from(seasons).where(eq(seasons.name, insertSeason.name)))[0];
+    const [result] = await db
+      .insert(seasons)
+      .values(insertSeason)
+      .onConflictDoUpdate({
+        target: seasons.name,
+        set: {
+          franchiseId: insertSeason.franchiseId,
+          year: insertSeason.year,
+          sourceUrl: insertSeason.sourceUrl,
+          isScraped: insertSeason.isScraped,
+        },
+      })
+      .returning();
+    return result;
   }
 
   async getSeasonByName(name: string): Promise<Season | undefined> {
@@ -269,19 +304,19 @@ export class DrizzleStorage implements IStorage {
   }
 
   async getAppStats(): Promise<AppStats> {
-    const contestantsCount = await db.select({ count: count() }).from(contestants);
-    const seasonsCount = await db.select({ count: count() }).from(seasons);
-    const franchisesCount = await db.select({ count: count() }).from(franchises);
-    const photosCount = await db.select({ count: count() }).from(contestants).where(sql`${contestants.photoUrl} is not null`);
+    const [contestantsCount] = await db.select({ count: count() }).from(contestants);
+    const [seasonsCount] = await db.select({ count: count() }).from(seasons);
+    const [franchisesCount] = await db.select({ count: count() }).from(franchises);
+    const [photosCount] = await db.select({ count: count() }).from(contestants).where(sql`${contestants.photoUrl} is not null`);
 
-    const recentJob = await db.select().from(scrapingJobs).where(eq(scrapingJobs.status, 'completed')).orderBy(desc(scrapingJobs.completedAt)).limit(1);
-    const lastSync = recentJob[0]?.completedAt ? this.formatTimeAgo(new Date(recentJob[0].completedAt)) : undefined;
+    const [recentJob] = await db.select().from(scrapingJobs).where(eq(scrapingJobs.status, 'completed')).orderBy(desc(scrapingJobs.completedAt)).limit(1);
+    const lastSync = recentJob?.completedAt ? this.formatTimeAgo(new Date(recentJob.completedAt)) : undefined;
 
     return {
-      contestants: contestantsCount[0].count,
-      seasons: seasonsCount[0].count,
-      franchises: Number(franchisesCount[0].count),
-      photos: photosCount[0].count,
+      contestants: contestantsCount.count,
+      seasons: seasonsCount.count,
+      franchises: Number(franchisesCount.count),
+      photos: photosCount.count,
       lastSync,
     };
   }
@@ -302,6 +337,7 @@ export class DrizzleStorage implements IStorage {
     if (diffInWeeks === 1) return "1 week ago";
     return `${diffInWeeks} weeks ago`;
   }
+
 }
 
 export const storage = new DrizzleStorage();

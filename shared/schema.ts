@@ -17,6 +17,10 @@ export const contestants = pgTable("contestants", {
   hometown: text("hometown"),
   biography: text("biography"),
   photoUrl: text("photo_url"),
+  age: integer("age"),
+  twitter: text("twitter"),
+  instagram: text("instagram"),
+  tiktok: text("tiktok"),
   sourceUrl: text("source_url"), // Source URL for contestant data scraping
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),

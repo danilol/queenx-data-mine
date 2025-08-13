@@ -61,17 +61,13 @@ apiRouter.delete("/contestants/:id", async (req, res) => {
 // Seasons endpoints
 apiRouter.get("/seasons", async (req, res) => {
   try {
-    const seasons = await storage.getAllSeasons();
-    res.json(seasons);
-  } catch (error) {
-    res.status(500).json({ error: "Failed to fetch seasons" });
-  }
-});
-
-// Franchises endpoints
-apiRouter.get("/seasons", async (req, res) => {
-  try {
-    const seasons = await storage.getAllSeasons();
+    const { franchiseId, sortBy, sortOrder, search } = req.query;
+    const seasons = await storage.getAllSeasons({
+      franchiseId: franchiseId as string | undefined,
+      sortBy: sortBy as any,
+      sortOrder: sortOrder as 'asc' | 'desc' | undefined,
+      search: search as string | undefined,
+    });
     res.json(seasons);
   } catch (error) {
     res.status(500).json({ error: "Failed to fetch seasons" });
