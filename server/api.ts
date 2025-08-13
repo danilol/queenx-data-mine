@@ -121,7 +121,22 @@ apiRouter.post("/scraping/stop", async (req, res) => {
 
 apiRouter.get("/scraping/status", async (req, res) => {
   try {
-    const status = scraper.getStatus();
+    // Check both real scraper and mock scraper for status
+    let status;
+    try {
+      status = scraper.getStatus();
+      // If real scraper is not running, check mock scraper
+      if (!status || status.status === "idle") {
+        const mockStatus = mockScraper.getScrapingStatus();
+        if (mockStatus.status !== "idle") {
+          status = mockStatus;
+        }
+      }
+    } catch (error) {
+      // If real scraper fails, use mock scraper status
+      status = mockScraper.getScrapingStatus();
+    }
+    
     res.json(status);
   } catch (error) {
     res.status(500).json({ error: "Failed to fetch scraping status" });

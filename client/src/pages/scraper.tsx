@@ -310,35 +310,90 @@ export default function Scraper() {
 
           {/* Enhanced Progress Visualization */}
           {scrapingStatus && 'status' in scrapingStatus && (
-            <div>
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Settings className="w-5 h-5" />
-                    Current Scraping Progress
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="p-6">
-                  <EnhancedProgress 
-                    scrapingStatus={{
-                      status: scrapingStatus.status as "idle" | "running" | "completed" | "failed",
-                      level: (scrapingStatus as any).level || 'full',
-                      progress: (scrapingStatus as any).progress || 0,
-                      currentFranchise: (scrapingStatus as any).currentFranchise,
-                      currentSeason: (scrapingStatus as any).currentSeason,
-                      currentContestant: (scrapingStatus as any).currentContestant,
-                      franchises: (scrapingStatus as any).franchises || [],
-                      totalFranchises: (scrapingStatus as any).totalFranchises || 0,
-                      completedFranchises: (scrapingStatus as any).completedFranchises || 0,
-                      totalSeasons: (scrapingStatus as any).totalSeasons || 0,
-                      completedSeasons: (scrapingStatus as any).completedSeasons || 0,
-                      totalContestants: (scrapingStatus as any).totalContestants || 0,
-                      completedContestants: (scrapingStatus as any).completedContestants || 0,
-                    }}
-                  />
-                </CardContent>
-              </Card>
-            </div>
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Settings className="w-5 h-5" />
+                  Enhanced Progress Visualization
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-6">
+                <div className="space-y-6">
+                  {/* Level Information */}
+                  <div className="flex items-center justify-between p-4 bg-blue-50 rounded-lg">
+                    <span className="text-sm font-medium text-blue-800">
+                      Scraping Level: {(scrapingStatus as any).level || 'full'}
+                    </span>
+                    <Badge variant="secondary">
+                      Status: {scrapingStatus.status}
+                    </Badge>
+                  </div>
+
+                  {/* Overall Progress */}
+                  <div className="space-y-2">
+                    <div className="flex justify-between text-sm">
+                      <span>Overall Progress</span>
+                      <span>{(scrapingStatus as any).progress || 0}%</span>
+                    </div>
+                    <div className="w-full bg-gray-200 rounded-full h-3">
+                      <div 
+                        className="bg-blue-600 h-3 rounded-full transition-all duration-300" 
+                        style={{ width: `${(scrapingStatus as any).progress || 0}%` }}
+                      />
+                    </div>
+                  </div>
+
+                  {/* Detailed Counts */}
+                  <div className="grid grid-cols-3 gap-4">
+                    <div className="text-center p-3 bg-green-50 rounded-lg">
+                      <div className="text-2xl font-bold text-green-600">
+                        {(scrapingStatus as any).completedFranchises || 0}/{(scrapingStatus as any).totalFranchises || 0}
+                      </div>
+                      <div className="text-sm text-green-700">Franchises</div>
+                    </div>
+                    <div className="text-center p-3 bg-yellow-50 rounded-lg">
+                      <div className="text-2xl font-bold text-yellow-600">
+                        {(scrapingStatus as any).completedSeasons || 0}/{(scrapingStatus as any).totalSeasons || 0}
+                      </div>
+                      <div className="text-sm text-yellow-700">Seasons</div>
+                    </div>
+                    <div className="text-center p-3 bg-purple-50 rounded-lg">
+                      <div className="text-2xl font-bold text-purple-600">
+                        {(scrapingStatus as any).completedContestants || 0}/{(scrapingStatus as any).totalContestants || 0}
+                      </div>
+                      <div className="text-sm text-purple-700">Contestants</div>
+                    </div>
+                  </div>
+
+                  {/* Current Activity */}
+                  {((scrapingStatus as any).currentFranchise || (scrapingStatus as any).currentSeason || (scrapingStatus as any).currentContestant) && (
+                    <div className="p-4 bg-gray-50 rounded-lg">
+                      <h4 className="font-medium mb-2">Currently Processing:</h4>
+                      <div className="space-y-1 text-sm">
+                        {(scrapingStatus as any).currentFranchise && (
+                          <div className="flex items-center gap-2">
+                            <Globe className="w-4 h-4 text-blue-600" />
+                            <span>Franchise: {(scrapingStatus as any).currentFranchise}</span>
+                          </div>
+                        )}
+                        {(scrapingStatus as any).currentSeason && (
+                          <div className="flex items-center gap-2">
+                            <Calendar className="w-4 h-4 text-yellow-600" />
+                            <span>Season: {(scrapingStatus as any).currentSeason}</span>
+                          </div>
+                        )}
+                        {(scrapingStatus as any).currentContestant && (
+                          <div className="flex items-center gap-2">
+                            <Users className="w-4 h-4 text-purple-600" />
+                            <span>Contestant: {(scrapingStatus as any).currentContestant}</span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
           )}
 
           {/* Data Sources Status */}

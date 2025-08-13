@@ -406,6 +406,43 @@ export class MockRuPaulScraper {
   isRunning(): boolean {
     return this.currentJobId !== null;
   }
+
+  getScrapingStatus() {
+    if (!this.currentJobId) {
+      return {
+        status: "idle" as const,
+        progress: 0,
+        totalItems: 0,
+        level: this.scrapingLevel,
+        totalFranchises: 0,
+        completedFranchises: 0,
+        totalSeasons: 0,
+        completedSeasons: 0,
+        totalContestants: 0,
+        completedContestants: 0,
+        franchises: [],
+        seasons: []
+      };
+    }
+
+    return {
+      status: "running" as const,
+      progress: Math.round((this.completedSeasons / Math.max(this.totalSeasons, 1) + this.completedContestants / Math.max(this.totalContestants, 1)) * 50),
+      totalItems: this.totalSeasons + this.totalContestants,
+      level: this.scrapingLevel,
+      totalFranchises: this.totalFranchises,
+      completedFranchises: this.completedFranchises,
+      totalSeasons: this.totalSeasons,
+      completedSeasons: this.completedSeasons,
+      totalContestants: this.totalContestants,
+      completedContestants: this.completedContestants,
+      currentFranchise: this.currentFranchise,
+      currentSeason: this.currentSeason,
+      currentContestant: this.currentContestant,
+      franchises: this.franchiseStatuses,
+      seasons: this.seasonStatuses
+    };
+  }
 }
 
 export const mockScraper = new MockRuPaulScraper();
