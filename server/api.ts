@@ -75,12 +75,105 @@ apiRouter.get("/seasons", async (req, res) => {
   }
 });
 
+// Franchises endpoints
 apiRouter.get("/franchises", async (req, res) => {
   try {
     const franchises = await storage.getAllFranchises();
     res.json(franchises);
   } catch (error) {
     res.status(500).json({ error: "Failed to fetch franchises" });
+  }
+});
+
+apiRouter.post("/franchises", async (req, res) => {
+  try {
+    const newFranchise = await storage.createFranchise(req.body);
+    res.status(201).json(newFranchise);
+  } catch (error) {
+    res.status(500).json({ error: "Failed to create franchise" });
+  }
+});
+
+apiRouter.patch("/franchises/:id", async (req, res) => {
+  try {
+    const updatedFranchise = await storage.updateFranchise(req.params.id, req.body);
+    res.json(updatedFranchise);
+  } catch (error) {
+    res.status(500).json({ error: "Failed to update franchise" });
+  }
+});
+
+apiRouter.delete("/franchises/:id", async (req, res) => {
+  try {
+    await storage.deleteFranchise(req.params.id);
+    res.status(204).send();
+  } catch (error) {
+    res.status(500).json({ error: "Failed to delete franchise" });
+  }
+});
+
+// Additional seasons endpoints
+apiRouter.post("/seasons", async (req, res) => {
+  try {
+    const newSeason = await storage.createSeason(req.body);
+    res.status(201).json(newSeason);
+  } catch (error) {
+    res.status(500).json({ error: "Failed to create season" });
+  }
+});
+
+apiRouter.patch("/seasons/:id", async (req, res) => {
+  try {
+    const updatedSeason = await storage.updateSeason(req.params.id, req.body);
+    res.json(updatedSeason);
+  } catch (error) {
+    res.status(500).json({ error: "Failed to update season" });
+  }
+});
+
+apiRouter.delete("/seasons/:id", async (req, res) => {
+  try {
+    await storage.deleteSeason(req.params.id);
+    res.status(204).send();
+  } catch (error) {
+    res.status(500).json({ error: "Failed to delete season" });
+  }
+});
+
+// Appearances endpoints
+apiRouter.get("/appearances", async (req, res) => {
+  try {
+    const appearances = await storage.getAllAppearances();
+    res.json(appearances);
+  } catch (error) {
+    res.status(500).json({ error: "Failed to fetch appearances" });
+  }
+});
+
+apiRouter.post("/appearances", async (req, res) => {
+  try {
+    const newAppearance = await storage.createAppearance(req.body);
+    res.status(201).json(newAppearance);
+  } catch (error) {
+    res.status(500).json({ error: "Failed to create appearance" });
+  }
+});
+
+apiRouter.patch("/appearances/:id", async (req, res) => {
+  try {
+    const updatedAppearance = await storage.updateAppearance(req.params.id, req.body);
+    res.json(updatedAppearance);
+  } catch (error) {
+    res.status(500).json({ error: "Failed to update appearance" });
+  }
+});
+
+apiRouter.delete("/appearances/:id", async (req, res) => {
+  try {
+    await storage.deleteAppearance(req.params.id);
+    res.status(204).send();
+  } catch (error) {
+    res.status(500).json({ error: "Failed to delete appearance" });
   }
 });
 

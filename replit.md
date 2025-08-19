@@ -4,6 +4,10 @@ This is a RuPaul's Drag Race contestant scraping and management system built as 
 
 ## Recent Changes (August 2025)
 
+- **Comprehensive CMS Implementation**: Transformed application into full content management system with CRUD operations for all entities (Franchises, Seasons, Contestants, Appearances)
+- **Unified Navigation**: Simplified menu structure by consolidating view and management pages into single unified entries without duplication
+- **Management Pages**: Created dedicated management interfaces for all data entities with inline editing, search, and batch operations
+- **Enhanced Database Operations**: Added complete CRUD API endpoints and storage methods for all entities with proper validation
 - **Contestant-Level Scraping Buttons**: Added individual "Scrape Contestant" buttons to each contestant row in the contestants list page for targeted scraping
 - **Season-Level Scraping Buttons**: Added individual "Scrape Season" buttons to each season row in the seasons list page for targeted scraping
 - **Hierarchical Progress Display**: Implemented detailed franchise → season → contestant progress tracking with collapsible tree view

@@ -1,0 +1,316 @@
+import { useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { Plus, Edit, Trash2, Save, X, Calendar } from "lucide-react";
+import { Header } from "@/components/layout/header";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { useToast } from "@/hooks/use-toast";
+import { apiRequest } from "@/lib/queryClient";
+import type { Season, InsertSeason, Franchise } from "@shared/schema";
+
+interface SeasonWithFranchise extends Season {
+  franchiseName: string;
+}
+
+export default function ManageSeasons() {
+  const [editingSeason, setEditingSeason] = useState<SeasonWithFranchise | null>(null);
+  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+  const [formData, setFormData] = useState<Partial<InsertSeason>>({});
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+
+  const { data: seasons = [], isLoading } = useQuery({
+    queryKey: ["/api/seasons"],
+    queryFn: async () => {
+      const response = await fetch("/api/seasons");
+      if (!response.ok) throw new Error("Failed to fetch seasons");
+      return response.json() as Promise<SeasonWithFranchise[]>;
+    },
+  });
+
+  const { data: franchises = [] } = useQuery({
+    queryKey: ["/api/franchises"],
+    queryFn: async () => {
+      const response = await fetch("/api/franchises");
+      if (!response.ok) throw new Error("Failed to fetch franchises");
+      return response.json() as Promise<Franchise[]>;
+    },
+  });
+
+  const createMutation = useMutation({
+    mutationFn: (data: InsertSeason) => apiRequest("/api/seasons", "POST", data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/seasons"] });
+      setIsCreateDialogOpen(false);
+      setFormData({});
+      toast({ title: "Season created successfully" });
+    },
+    onError: () => {
+      toast({ title: "Failed to create season", variant: "destructive" });
+    },
+  });
+
+  const updateMutation = useMutation({
+    mutationFn: ({ id, data }: { id: string; data: Partial<InsertSeason> }) =>
+      apiRequest(`/api/seasons/${id}`, "PATCH", data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/seasons"] });
+      setEditingSeason(null);
+      toast({ title: "Season updated successfully" });
+    },
+    onError: () => {
+      toast({ title: "Failed to update season", variant: "destructive" });
+    },
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: (id: string) => apiRequest(`/api/seasons/${id}`, "DELETE"),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/seasons"] });
+      toast({ title: "Season deleted successfully" });
+    },
+    onError: () => {
+      toast({ title: "Failed to delete season", variant: "destructive" });
+    },
+  });
+
+  const handleCreate = () => {
+    if (!formData.name?.trim() || !formData.franchiseId) {
+      toast({ title: "Name and franchise are required", variant: "destructive" });
+      return;
+    }
+    createMutation.mutate(formData as InsertSeason);
+  };
+
+  const handleUpdate = () => {
+    if (!editingSeason) return;
+    updateMutation.mutate({ id: editingSeason.id, data: formData });
+  };
+
+  const handleDelete = (id: string) => {
+    if (confirm("Are you sure you want to delete this season?")) {
+      deleteMutation.mutate(id);
+    }
+  };
+
+  const startEdit = (season: SeasonWithFranchise) => {
+    setEditingSeason(season);
+    setFormData({
+      name: season.name,
+      franchiseId: season.franchiseId,
+      year: season.year || undefined,
+      sourceUrl: season.sourceUrl || "",
+      isScraped: season.isScraped,
+    });
+  };
+
+  const cancelEdit = () => {
+    setEditingSeason(null);
+    setFormData({});
+  };
+
+  return (
+    <div className="min-h-screen bg-gray-50">
+      <Header />
+      <div className="container mx-auto px-4 py-8">
+        <div className="flex justify-between items-center mb-6">
+          <h1 className="text-3xl font-bold text-gray-900">Manage Seasons</h1>
+          <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
+            <DialogTrigger asChild>
+              <Button>
+                <Plus className="h-4 w-4 mr-2" />
+                Add Season
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-md">
+              <DialogHeader>
+                <DialogTitle>Create New Season</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-4">
+                <Input
+                  placeholder="Season Name *"
+                  value={formData.name || ""}
+                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                />
+                <Select
+                  value={formData.franchiseId || ""}
+                  onValueChange={(value) => setFormData({ ...formData, franchiseId: value })}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select Franchise *" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {franchises.map((franchise) => (
+                      <SelectItem key={franchise.id} value={franchise.id}>
+                        {franchise.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Input
+                  type="number"
+                  placeholder="Year"
+                  value={formData.year || ""}
+                  onChange={(e) => setFormData({ ...formData, year: e.target.value ? parseInt(e.target.value) : undefined })}
+                />
+                <Input
+                  placeholder="Source URL"
+                  value={formData.sourceUrl || ""}
+                  onChange={(e) => setFormData({ ...formData, sourceUrl: e.target.value })}
+                />
+                <div className="flex gap-2">
+                  <Button onClick={handleCreate} disabled={createMutation.isPending} className="flex-1">
+                    <Save className="h-4 w-4 mr-2" />
+                    {createMutation.isPending ? "Creating..." : "Create"}
+                  </Button>
+                  <Button variant="outline" onClick={() => setIsCreateDialogOpen(false)}>
+                    Cancel
+                  </Button>
+                </div>
+              </div>
+            </DialogContent>
+          </Dialog>
+        </div>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Calendar className="h-5 w-5" />
+              Seasons ({seasons.length})
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {isLoading ? (
+              <div className="text-center py-8">Loading seasons...</div>
+            ) : seasons.length === 0 ? (
+              <div className="text-center py-8 text-muted-foreground">
+                No seasons found. Create your first season above.
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Name</TableHead>
+                      <TableHead>Franchise</TableHead>
+                      <TableHead>Year</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead>Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {seasons.map((season) => (
+                      <TableRow key={season.id}>
+                        <TableCell>
+                          {editingSeason?.id === season.id ? (
+                            <Input
+                              value={formData.name || ""}
+                              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                              className="w-48"
+                            />
+                          ) : (
+                            <div className="font-medium">{season.name}</div>
+                          )}
+                        </TableCell>
+                        <TableCell>
+                          {editingSeason?.id === season.id ? (
+                            <Select
+                              value={formData.franchiseId || ""}
+                              onValueChange={(value) => setFormData({ ...formData, franchiseId: value })}
+                            >
+                              <SelectTrigger className="w-32">
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {franchises.map((franchise) => (
+                                  <SelectItem key={franchise.id} value={franchise.id}>
+                                    {franchise.name}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          ) : (
+                            <Badge variant="secondary">{season.franchiseName}</Badge>
+                          )}
+                        </TableCell>
+                        <TableCell>
+                          {editingSeason?.id === season.id ? (
+                            <Input
+                              type="number"
+                              value={formData.year || ""}
+                              onChange={(e) => setFormData({ ...formData, year: e.target.value ? parseInt(e.target.value) : undefined })}
+                              className="w-20"
+                            />
+                          ) : (
+                            season.year || "-"
+                          )}
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant={season.isScraped ? "default" : "outline"}>
+                            {season.isScraped ? "Scraped" : "Not Scraped"}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex gap-2">
+                            {editingSeason?.id === season.id ? (
+                              <>
+                                <Button size="sm" onClick={handleUpdate} disabled={updateMutation.isPending}>
+                                  <Save className="h-4 w-4" />
+                                </Button>
+                                <Button size="sm" variant="outline" onClick={cancelEdit}>
+                                  <X className="h-4 w-4" />
+                                </Button>
+                              </>
+                            ) : (
+                              <>
+                                <Button size="sm" variant="outline" onClick={() => startEdit(season)}>
+                                  <Edit className="h-4 w-4" />
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  variant="destructive"
+                                  onClick={() => handleDelete(season.id)}
+                                  disabled={deleteMutation.isPending}
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
+                              </>
+                            )}
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+    </div>
+  );
+}

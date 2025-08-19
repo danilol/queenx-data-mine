@@ -5,14 +5,15 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { ThemeProvider } from "@/components/theme-provider";
 import { ThemeToggle } from "@/components/theme-toggle";
-import { LayoutDashboard, Bot, Users, Download, Globe, Tv } from "lucide-react";
+import { LayoutDashboard, Bot, Download, Globe, UserCog, Calendar, Trophy } from "lucide-react";
 
 import Dashboard from "@/pages/dashboard";
 import Scraper from "@/pages/scraper";
-import Contestants from "@/pages/contestants";
 import Export from "@/pages/export";
-import Franchises from "@/pages/franchises";
-import Seasons from "@/pages/seasons";
+import ManageContestants from "@/pages/manage-contestants";
+import ManageSeasons from "@/pages/manage-seasons";
+import ManageFranchises from "@/pages/manage-franchises";
+import ManageAppearances from "@/pages/manage-appearances";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -20,10 +21,12 @@ function Router() {
     <Switch>
       <Route path="/" component={Dashboard} />
       <Route path="/scraper" component={Scraper} />
-      <Route path="/contestants" component={Contestants} />
+
+      <Route path="/manage/franchises" component={ManageFranchises} />
+      <Route path="/manage/seasons" component={ManageSeasons} />
+      <Route path="/manage/contestants" component={ManageContestants} />
+      <Route path="/manage/appearances" component={ManageAppearances} />
       <Route path="/export" component={Export} />
-      <Route path="/franchises" component={Franchises} />
-      <Route path="/seasons" component={Seasons} />
       <Route component={NotFound} />
     </Switch>
   );
@@ -32,9 +35,10 @@ function Router() {
 const navigationItems = [
   { path: "/", label: "Dashboard", icon: LayoutDashboard },
   { path: "/scraper", label: "Scraper", icon: Bot },
-  { path: "/franchises", label: "Franchises", icon: Globe },
-  { path: "/seasons", label: "Seasons", icon: Tv },
-  { path: "/contestants", label: "Contestants", icon: Users },
+  { path: "/manage/franchises", label: "Franchises", icon: Globe },
+  { path: "/manage/seasons", label: "Seasons", icon: Calendar },
+  { path: "/manage/contestants", label: "Contestants", icon: UserCog },
+  { path: "/manage/appearances", label: "Appearances", icon: Trophy },
   { path: "/export", label: "Export", icon: Download }
 ];
 

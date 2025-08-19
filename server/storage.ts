@@ -27,6 +27,8 @@ export interface IStorage {
   getAllFranchises(): Promise<Franchise[]>;
   getFranchiseByName(name: string): Promise<Franchise | undefined>;
   createFranchise(franchise: InsertFranchise): Promise<Franchise>;
+  updateFranchise(id: string, franchise: Partial<InsertFranchise>): Promise<Franchise | undefined>;
+  deleteFranchise(id: string): Promise<boolean>;
 
   // Seasons
   getAllSeasons(options?: { franchiseId?: string; sortBy?: keyof Season | 'franchiseName'; sortOrder?: 'asc' | 'desc'; search?: string }): Promise<(Season & { franchiseName: string })[]>;
@@ -34,11 +36,14 @@ export interface IStorage {
   getSeasonByName(name: string): Promise<Season | undefined>;
   createSeason(season: InsertSeason): Promise<Season>;
   updateSeason(id: string, season: Partial<InsertSeason>): Promise<Season | undefined>;
+  deleteSeason(id: string): Promise<boolean>;
 
   // Appearances
-  getAllAppearances(): Promise<Appearance[]>;
+  getAllAppearances(): Promise<(Appearance & { contestantDragName: string; seasonName: string; franchiseName: string })[]>;
   getAppearance(contestantId: string, seasonId: string): Promise<Appearance | undefined>;
   createAppearance(appearance: InsertAppearance): Promise<Appearance>;
+  updateAppearance(id: string, appearance: Partial<InsertAppearance>): Promise<Appearance | undefined>;
+  deleteAppearance(id: string): Promise<boolean>;
 
   // Scraping Jobs
   getScrapingJobs(): Promise<ScrapingJob[]>;
@@ -289,8 +294,55 @@ export class DrizzleStorage implements IStorage {
     return result[0];
   }
 
-  async getAllAppearances(): Promise<Appearance[]> {
-    return db.select().from(appearances);
+  async getAllAppearances(): Promise<(Appearance & { contestantDragName: string; seasonName: string; franchiseName: string })[]> {
+    try {
+      const result = await db.select({
+        id: appearances.id,
+        contestantId: appearances.contestantId,
+        seasonId: appearances.seasonId,
+        age: appearances.age,
+        outcome: appearances.outcome,
+        createdAt: appearances.createdAt,
+        contestantDragName: contestants.dragName,
+        seasonName: seasons.name,
+        franchiseName: franchises.name,
+      })
+      .from(appearances)
+      .innerJoin(contestants, eq(appearances.contestantId, contestants.id))
+      .innerJoin(seasons, eq(appearances.seasonId, seasons.id))
+      .innerJoin(franchises, eq(seasons.franchiseId, franchises.id))
+      .orderBy(desc(appearances.createdAt));
+      
+      return result;
+    } catch (error) {
+      console.error('Error fetching appearances:', error);
+      return [];
+    }
+  }
+
+  async updateFranchise(id: string, updateData: Partial<InsertFranchise>): Promise<Franchise | undefined> {
+    const result = await db.update(franchises).set(updateData).where(eq(franchises.id, id)).returning();
+    return result[0];
+  }
+
+  async deleteFranchise(id: string): Promise<boolean> {
+    const result = await db.delete(franchises).where(eq(franchises.id, id)).returning({ id: franchises.id });
+    return result.length > 0;
+  }
+
+  async deleteSeason(id: string): Promise<boolean> {
+    const result = await db.delete(seasons).where(eq(seasons.id, id)).returning({ id: seasons.id });
+    return result.length > 0;
+  }
+
+  async updateAppearance(id: string, updateData: Partial<InsertAppearance>): Promise<Appearance | undefined> {
+    const result = await db.update(appearances).set(updateData).where(eq(appearances.id, id)).returning();
+    return result[0];
+  }
+
+  async deleteAppearance(id: string): Promise<boolean> {
+    const result = await db.delete(appearances).where(eq(appearances.id, id)).returning({ id: appearances.id });
+    return result.length > 0;
   }
 
   async getScrapingJobs(): Promise<ScrapingJob[]> {

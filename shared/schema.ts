@@ -69,6 +69,7 @@ export const scrapingJobs = pgTable("scraping_jobs", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+// Schema types for all tables
 export const insertContestantSchema = createInsertSchema(contestants).omit({
   id: true,
   createdAt: true,
