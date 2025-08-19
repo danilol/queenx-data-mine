@@ -80,7 +80,7 @@ export function SeasonsList({ franchiseId, franchiseName }: SeasonsListProps) {
                   <Badge variant="secondary">Scraped</Badge>
                 )}
               </div>
-              <Link to={`/manage/seasons`}>
+              <Link to={`/manage/seasons/${season.id}`}>
                 <Button variant="ghost" size="sm">
                   <ExternalLink className="h-4 w-4" />
                 </Button>
@@ -176,7 +176,7 @@ export function ContestantsList({ seasonId, seasonName }: ContestantsListProps) 
                   )}
                 </div>
               </div>
-              <Link to={`/manage/contestants`}>
+              <Link to={`/manage/contestants/${contestant.id}`}>
                 <Button variant="ghost" size="sm">
                   <ExternalLink className="h-4 w-4" />
                 </Button>
