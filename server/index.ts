@@ -60,10 +60,9 @@ app.use((req, res, next) => {
   }
 
   // ALWAYS serve the app on the port specified in the environment variable PORT
-  // Other ports are firewalled. Default to 3000 if not specified.
+  // The workflow expects port 5000, so we use that for compatibility
   // this serves both the API and the client.
-  // It is the only port that is not firewalled.
-  const port = parseInt(process.env.PORT || '3000', 10);
+  const port = 5000;
   server.listen({
     port,
     host: "0.0.0.0",
