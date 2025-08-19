@@ -32,7 +32,7 @@ export interface IStorage {
 
   // Seasons
   getAllSeasons(options?: { franchiseId?: string; sortBy?: keyof Season | 'franchiseName'; sortOrder?: 'asc' | 'desc'; search?: string }): Promise<(Season & { franchiseName: string })[]>;
-  getSeason(id: string): Promise<Season | undefined>;
+  getSeason(id: string): Promise<(Season & { franchise?: Franchise }) | undefined>;
   getSeasonByName(name: string): Promise<Season | undefined>;
   createSeason(season: InsertSeason): Promise<Season>;
   updateSeason(id: string, season: Partial<InsertSeason>): Promise<Season | undefined>;
@@ -258,21 +258,34 @@ export class DrizzleStorage implements IStorage {
   }
 
   async getSeason(id: string): Promise<(Season & { franchise?: Franchise }) | undefined> {
-    const result = await db.select({
-      ...getTableColumns(seasons),
-      franchise: {
-        id: franchises.id,
-        name: franchises.name,
-        sourceUrl: franchises.sourceUrl,
-        createdAt: franchises.createdAt,
-        updatedAt: franchises.updatedAt,
+    try {
+      console.log('getSeason called with ID:', id);
+      
+      // First get the season
+      const seasonResult = await db.select().from(seasons).where(eq(seasons.id, id));
+      console.log('Season query result:', seasonResult);
+      
+      if (seasonResult.length === 0) {
+        console.log('No season found');
+        return undefined;
       }
-    })
-    .from(seasons)
-    .leftJoin(franchises, eq(seasons.franchiseId, franchises.id))
-    .where(eq(seasons.id, id));
-    
-    return result[0];
+      
+      const season = seasonResult[0];
+      
+      // Then get the franchise if it exists
+      let franchise = undefined;
+      if (season.franchiseId) {
+        const franchiseResult = await db.select().from(franchises).where(eq(franchises.id, season.franchiseId));
+        franchise = franchiseResult[0] || undefined;
+      }
+      
+      console.log('Final result:', { ...season, franchise });
+      return { ...season, franchise };
+      
+    } catch (error) {
+      console.error('Error fetching season:', error);
+      return undefined;
+    }
   }
 
   async createSeason(insertSeason: InsertSeason): Promise<Season> {
