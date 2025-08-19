@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useLocation } from "wouter";
 import { Plus, Edit, Trash2, Save, X, Calendar, ChevronDown, ChevronRight } from "lucide-react";
 import { Header } from "@/components/layout/header";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -38,6 +39,8 @@ interface SeasonWithFranchise extends Season {
 }
 
 export default function ManageSeasons() {
+  const [, navigate] = useLocation();
+  const [searchTerm, setSearchTerm] = useState("");
   const [editingSeason, setEditingSeason] = useState<SeasonWithFranchise | null>(null);
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [formData, setFormData] = useState<Partial<InsertSeason>>({});
@@ -315,6 +318,13 @@ export default function ManageSeasons() {
                               </>
                             ) : (
                               <>
+                                <Button 
+                                  size="sm" 
+                                  variant="default" 
+                                  onClick={() => navigate(`/manage/seasons/${season.id}`)}
+                                >
+                                  View Details
+                                </Button>
                                 <Button size="sm" variant="outline" onClick={() => startEdit(season)}>
                                   <Edit className="h-4 w-4" />
                                 </Button>

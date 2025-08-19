@@ -4,6 +4,11 @@ This is a RuPaul's Drag Race contestant scraping and management system built as 
 
 ## Recent Changes (August 2025)
 
+- **Dedicated Detail Pages**: Implemented scalable detail/edit pages at `/manage/franchises/:id`, `/manage/seasons/:id`, and `/manage/contestants/:id` for comprehensive editing as forms grow with more fields
+- **Enhanced Navigation**: Added "View Details" buttons to all management pages linking to dedicated detail pages for better user experience
+- **Expandable Hierarchical Data**: Added expandable rows with chevron icons in management pages to show related data (franchises → seasons → contestants → appearances)
+- **Complete CRUD Operations**: Full create, read, update, delete operations across all entities with proper validation and error handling
+- **Related Data Display**: Shows seasons under franchises, contestants under seasons, and appearances under contestants with navigation links
 - **Comprehensive CMS Implementation**: Transformed application into full content management system with CRUD operations for all entities (Franchises, Seasons, Contestants, Appearances)
 - **Unified Navigation**: Simplified menu structure by consolidating view and management pages into single unified entries without duplication
 - **Management Pages**: Created dedicated management interfaces for all data entities with inline editing, search, and batch operations

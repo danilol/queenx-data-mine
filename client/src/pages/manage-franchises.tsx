@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useLocation } from "wouter";
 import { Plus, Edit, Trash2, Save, X, Globe, ChevronDown, ChevronRight } from "lucide-react";
 import { Header } from "@/components/layout/header";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -26,6 +27,8 @@ import { SeasonsList } from "@/components/related-data";
 import type { Franchise, InsertFranchise } from "@shared/schema";
 
 export default function ManageFranchises() {
+  const [, navigate] = useLocation();
+  const [searchTerm, setSearchTerm] = useState("");
   const [editingFranchise, setEditingFranchise] = useState<Franchise | null>(null);
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [formData, setFormData] = useState<Partial<InsertFranchise>>({});
@@ -260,6 +263,13 @@ export default function ManageFranchises() {
                               </>
                             ) : (
                               <>
+                                <Button 
+                                  size="sm" 
+                                  variant="default" 
+                                  onClick={() => navigate(`/manage/franchises/${franchise.id}`)}
+                                >
+                                  View Details
+                                </Button>
                                 <Button size="sm" variant="outline" onClick={() => startEdit(franchise)}>
                                   <Edit className="h-4 w-4" />
                                 </Button>

@@ -14,6 +14,9 @@ import ManageContestants from "@/pages/manage-contestants";
 import ManageSeasons from "@/pages/manage-seasons";
 import ManageFranchises from "@/pages/manage-franchises";
 import ManageAppearances from "@/pages/manage-appearances";
+import FranchiseDetail from "@/pages/franchise-detail";
+import SeasonDetail from "@/pages/season-detail";
+import ContestantDetail from "@/pages/contestant-detail";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -23,8 +26,11 @@ function Router() {
       <Route path="/scraper" component={Scraper} />
 
       <Route path="/manage/franchises" component={ManageFranchises} />
+      <Route path="/manage/franchises/:id" component={FranchiseDetail} />
       <Route path="/manage/seasons" component={ManageSeasons} />
+      <Route path="/manage/seasons/:id" component={SeasonDetail} />
       <Route path="/manage/contestants" component={ManageContestants} />
+      <Route path="/manage/contestants/:id" component={ContestantDetail} />
       <Route path="/manage/appearances" component={ManageAppearances} />
       <Route path="/export" component={Export} />
       <Route component={NotFound} />

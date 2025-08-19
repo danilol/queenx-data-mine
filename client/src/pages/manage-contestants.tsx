@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useLocation } from "wouter";
 import { Plus, Edit, Trash2, Search, Save, X, ChevronDown, ChevronRight } from "lucide-react";
 import { Header } from "@/components/layout/header";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -28,6 +29,7 @@ import { AppearancesList } from "@/components/related-data";
 import type { FullContestant, InsertContestant, UpdateContestant } from "@shared/schema";
 
 export default function ManageContestants() {
+  const [, navigate] = useLocation();
   const [searchTerm, setSearchTerm] = useState("");
   const [editingContestant, setEditingContestant] = useState<FullContestant | null>(null);
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
@@ -298,6 +300,13 @@ export default function ManageContestants() {
                               </>
                             ) : (
                               <>
+                                <Button 
+                                  size="sm" 
+                                  variant="default" 
+                                  onClick={() => navigate(`/manage/contestants/${contestant.id}`)}
+                                >
+                                  View Details
+                                </Button>
                                 <Button size="sm" variant="outline" onClick={() => startEdit(contestant)}>
                                   <Edit className="h-4 w-4" />
                                 </Button>
