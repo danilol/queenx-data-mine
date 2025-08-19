@@ -96,6 +96,43 @@ export default function ContestantDetail() {
     },
   });
 
+  const fandomLookupMutation = useMutation({
+    mutationFn: async () => {
+      const response = await fetch(`/api/contestants/${id}/lookup-fandom-url`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+      });
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || "Failed to lookup fandom URL");
+      }
+      return response.json();
+    },
+    onSuccess: (data) => {
+      if (data.success) {
+        queryClient.invalidateQueries({ queryKey: ["/api/contestants"] });
+        queryClient.invalidateQueries({ queryKey: ["/api/contestants", id] });
+        toast({
+          title: "Fandom URL Found",
+          description: `Successfully found and updated fandom URL for ${contestant?.dragName}`,
+        });
+      } else {
+        toast({
+          title: "No Fandom URL Found",
+          description: data.message,
+          variant: "destructive",
+        });
+      }
+    },
+    onError: (error) => {
+      toast({
+        title: "Failed to Lookup Fandom URL",
+        description: error instanceof Error ? error.message : "An unknown error occurred",
+        variant: "destructive",
+      });
+    },
+  });
+
   const imageScrapeMutation = useMutation({
     mutationFn: () => 
       api.scrapeContestantImages({
@@ -184,6 +221,16 @@ export default function ContestantDetail() {
                 <Download className="h-4 w-4 mr-2" />
                 {imageScrapeMutation.isPending ? "Downloading..." : "Download Images"}
               </Button>
+              {!contestant?.metadataSourceUrl && (
+                <Button 
+                  onClick={() => fandomLookupMutation.mutate()}
+                  disabled={fandomLookupMutation.isPending}
+                  variant="outline"
+                >
+                  <Download className="h-4 w-4 mr-2" />
+                  {fandomLookupMutation.isPending ? "Searching..." : "Find Fandom URL"}
+                </Button>
+              )}
             </>
           )}
         </div>

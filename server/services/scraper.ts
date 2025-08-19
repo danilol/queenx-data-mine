@@ -335,13 +335,15 @@ export class RuPaulScraper {
 
       let contestant = await storage.getContestantByDragName(dragName);
       if (!contestant) {
-        contestant = await storage.createContestant({
-          age,
+        console.log(`[scraper] Creating new contestant: ${dragName}`);
+        contestant = await storage.createContestantWithFandomUrl({
           dragName,
           realName,
           hometown,
-          sourceUrl: seasonData.sourceUrl, // This might be better as a contestant-specific URL if available
+          // Don't set metadataSourceUrl here - let createContestantWithFandomUrl find the fandom URL
         });
+      } else {
+        console.log(`[scraper] Contestant ${dragName} already exists, skipping`);
       }
 
       const season = await storage.getSeasonByName(seasonData.name);

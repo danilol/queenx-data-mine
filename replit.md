@@ -4,6 +4,11 @@ This is a RuPaul's Drag Race contestant scraping and management system built as 
 
 ## Recent Changes (August 2025)
 
+- **Fandom URL Auto-Population**: Implemented intelligent fandom URL lookup system that automatically populates `metadata_source_url` with RuPaul's Drag Race Fandom wiki URLs for new contestants during scraping
+- **Fallback URL Construction**: Added fallback mechanism to construct fandom URLs when browser automation is unavailable, ensuring functionality in all environments
+- **Manual Fandom URL Lookup**: Added API endpoint and frontend button to manually search and populate fandom URLs for existing contestants without metadata source URLs
+- **Smart Contestant Creation**: Enhanced scraping system to check if contestants already exist before attempting fandom URL lookup, preventing redundant processing
+
 - **Image Scraping Integration**: Successfully implemented intelligent contestant image downloading with S3 upload functionality and organized folder structure
 - **S3 File Upload Integration**: Successfully implemented complete AWS S3 upload functionality with secure credential management and testing interface on Dashboard - fully operational
 - **File Upload Endpoints**: Added `/api/s3/upload` for file uploads and `/api/s3/test` for connection testing with proper error handling - both endpoints working

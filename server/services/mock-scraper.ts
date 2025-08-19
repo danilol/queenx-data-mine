@@ -293,7 +293,7 @@ export class MockRuPaulScraper {
           currentContestant: this.currentContestant
         });
 
-        await storage.createContestant({
+        await storage.createContestantWithFandomUrl({
           dragName: contestant.dragName,
           realName: contestant.realName,
           hometown: contestant.hometown,

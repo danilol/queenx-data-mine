@@ -379,6 +379,62 @@ apiRouter.post("/s3/test", async (req, res) => {
   }
 });
 
+// Fandom URL lookup endpoint
+apiRouter.post("/contestants/:id/lookup-fandom-url", async (req, res) => {
+  try {
+    const contestantId = req.params.id;
+    const contestant = await storage.getContestant(contestantId);
+    
+    if (!contestant) {
+      return res.status(404).json({ error: "Contestant not found" });
+    }
+
+    // Only lookup if no metadata source URL exists
+    if (contestant.metadataSourceUrl) {
+      return res.json({ 
+        message: "Contestant already has a metadata source URL",
+        contestantId,
+        dragName: contestant.dragName,
+        currentUrl: contestant.metadataSourceUrl 
+      });
+    }
+
+    // Import and use fandom lookup
+    const { getFandomUrl } = await import('./services/fandom-lookup.js');
+    const fandomUrl = await getFandomUrl(contestant.dragName, { headless: true, timeout: 20000 });
+
+    if (fandomUrl) {
+      // Update the contestant with the found URL
+      const updatedContestant = await storage.updateContestant(contestantId, {
+        metadataSourceUrl: fandomUrl
+      });
+      
+      res.json({
+        success: true,
+        message: `Found and updated fandom URL for ${contestant.dragName}`,
+        contestantId,
+        dragName: contestant.dragName,
+        fandomUrl,
+        contestant: updatedContestant
+      });
+    } else {
+      res.json({
+        success: false,
+        message: `No fandom URL found for ${contestant.dragName}`,
+        contestantId,
+        dragName: contestant.dragName
+      });
+    }
+
+  } catch (error) {
+    console.error('Error looking up fandom URL:', error);
+    res.status(500).json({ 
+      error: "Failed to lookup fandom URL",
+      details: error instanceof Error ? error.message : 'Unknown error'
+    });
+  }
+});
+
 // Image scraping endpoint
 apiRouter.post("/images/scrape-contestant", async (req, res) => {
   try {

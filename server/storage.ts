@@ -18,6 +18,7 @@ export interface IStorage {
   getContestant(id: string): Promise<Contestant | undefined>;
   getContestantsBySearch(search: string): Promise<FullContestant[]>;
   getContestantByDragName(dragName: string): Promise<Contestant | undefined>;
+  createContestantWithFandomUrl(contestant: InsertContestant): Promise<Contestant>;
   createContestant(contestant: InsertContestant): Promise<Contestant>;
   updateContestant(id: string, contestant: UpdateContestant): Promise<Contestant | undefined>;
   deleteContestant(id: string): Promise<boolean>;
@@ -142,6 +143,37 @@ export class DrizzleStorage implements IStorage {
   }
 
   async createContestant(insertContestant: InsertContestant): Promise<Contestant> {
+    const result = await db.insert(contestants).values(insertContestant).returning();
+    return result[0];
+  }
+
+  async createContestantWithFandomUrl(insertContestant: InsertContestant): Promise<Contestant> {
+    // First check if contestant already exists
+    const existingContestant = await this.getContestantByDragName(insertContestant.dragName);
+    if (existingContestant) {
+      console.log(`[storage] Contestant ${insertContestant.dragName} already exists, skipping fandom URL lookup`);
+      return existingContestant;
+    }
+
+    // If no metadata source URL is provided and this is a new contestant, attempt to find fandom URL
+    if (!insertContestant.metadataSourceUrl) {
+      try {
+        const { getFandomUrl } = await import('./services/fandom-lookup.js');
+        console.log(`[storage] Attempting to find fandom URL for new contestant: ${insertContestant.dragName}`);
+        
+        const fandomUrl = await getFandomUrl(insertContestant.dragName, { headless: true, timeout: 15000 });
+        if (fandomUrl) {
+          console.log(`[storage] Found fandom URL for ${insertContestant.dragName}: ${fandomUrl}`);
+          insertContestant.metadataSourceUrl = fandomUrl;
+        } else {
+          console.log(`[storage] No fandom URL found for ${insertContestant.dragName}`);
+        }
+      } catch (error) {
+        console.error(`[storage] Error looking up fandom URL for ${insertContestant.dragName}:`, error);
+      }
+    }
+
+    // Create the contestant with or without the fandom URL
     const result = await db.insert(contestants).values(insertContestant).returning();
     return result[0];
   }
