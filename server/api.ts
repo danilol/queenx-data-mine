@@ -143,11 +143,8 @@ apiRouter.delete("/franchises/:id", async (req, res) => {
 // Additional seasons endpoints
 apiRouter.get("/seasons/:id", async (req, res) => {
   try {
-    console.log(`Fetching season with ID: ${req.params.id}`);
     const season = await storage.getSeason(req.params.id);
-    console.log(`Season result:`, season);
     if (!season) {
-      console.log(`Season not found for ID: ${req.params.id}`);
       return res.status(404).json({ error: "Season not found" });
     }
     res.json(season);

@@ -259,14 +259,10 @@ export class DrizzleStorage implements IStorage {
 
   async getSeason(id: string): Promise<(Season & { franchise?: Franchise }) | undefined> {
     try {
-      console.log('getSeason called with ID:', id);
-      
       // First get the season
       const seasonResult = await db.select().from(seasons).where(eq(seasons.id, id));
-      console.log('Season query result:', seasonResult);
       
       if (seasonResult.length === 0) {
-        console.log('No season found');
         return undefined;
       }
       
@@ -279,7 +275,6 @@ export class DrizzleStorage implements IStorage {
         franchise = franchiseResult[0] || undefined;
       }
       
-      console.log('Final result:', { ...season, franchise });
       return { ...season, franchise };
       
     } catch (error) {

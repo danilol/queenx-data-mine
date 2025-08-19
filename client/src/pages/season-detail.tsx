@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useParams, useLocation } from "wouter";
-import { ArrowLeft, Save, X, Edit } from "lucide-react";
+import { ArrowLeft, Save, X, Edit, Download } from "lucide-react";
 import { Header } from "@/components/layout/header";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
+import { api } from "@/lib/api";
 import { ContestantsList } from "@/components/related-data";
 import type { Season, Franchise, InsertSeason } from "@shared/schema";
 
@@ -78,6 +79,26 @@ export default function SeasonDetail() {
     setFormData({});
   };
 
+  const scrapeSeasonMutation = useMutation({
+    mutationFn: () => api.startScraping({ 
+      level: 'season', 
+      sourceUrl: season?.sourceUrl || undefined 
+    }),
+    onSuccess: () => {
+      toast({
+        title: "Season Scraping Started",
+        description: `Started scraping data for ${season?.name}. Check the Scraper page for progress.`,
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Failed to Start Scraping",
+        description: error instanceof Error ? error.message : "An unknown error occurred",
+        variant: "destructive",
+      });
+    },
+  });
+
   if (isLoading) {
     return (
       <div className="min-h-screen bg-gray-50">
@@ -122,10 +143,20 @@ export default function SeasonDetail() {
             Back to Seasons
           </Button>
           {!isEditing && (
-            <Button onClick={handleEdit}>
-              <Edit className="h-4 w-4 mr-2" />
-              Edit Season
-            </Button>
+            <>
+              <Button onClick={handleEdit}>
+                <Edit className="h-4 w-4 mr-2" />
+                Edit Season
+              </Button>
+              <Button 
+                onClick={() => scrapeSeasonMutation.mutate()}
+                disabled={scrapeSeasonMutation.isPending}
+                variant="secondary"
+              >
+                <Download className="h-4 w-4 mr-2" />
+                {scrapeSeasonMutation.isPending ? "Starting..." : "Scrape Season"}
+              </Button>
+            </>
           )}
         </div>
 
