@@ -54,6 +54,37 @@ export class S3Service {
     }
   }
 
+  async uploadContestantImage(
+    fileBuffer: Buffer,
+    contestantName: string,
+    imageName: string,
+    contentType: string = 'image/jpeg'
+  ): Promise<{ key: string; url: string }> {
+    try {
+      // Clean contestant name for safe file paths
+      const safeName = contestantName.replace(/[^a-zA-Z0-9]/g, '-').toLowerCase();
+      const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+      const key = `contestants/${safeName}/images/${timestamp}-${imageName}`;
+
+      const command = new PutObjectCommand({
+        Bucket: this.bucketName,
+        Key: key,
+        Body: fileBuffer,
+        ContentType: contentType,
+      });
+
+      await this.client.send(command);
+
+      // Return the key and constructed URL
+      const url = `https://${this.bucketName}.s3.amazonaws.com/${key}`;
+      
+      return { key, url };
+    } catch (error) {
+      console.error('S3 contestant image upload error:', error);
+      throw new Error(`Failed to upload contestant image to S3: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
+  }
+
   async uploadTestFile(): Promise<{ key: string; url: string }> {
     // Create a simple test file
     const testContent = JSON.stringify({

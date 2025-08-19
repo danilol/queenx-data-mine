@@ -112,4 +112,15 @@ export const api = {
     const response = await apiRequest("POST", "/api/s3/test");
     return response.json();
   },
+
+  // Image scraping functions
+  scrapeContestantImages: async (contestantData: {
+    contestantId?: string;
+    contestantName: string;
+    sourceUrl: string;
+    seasonName?: string;
+  }) => {
+    const response = await apiRequest("POST", "/api/images/scrape-contestant", contestantData);
+    return response.json();
+  },
 };

@@ -5,6 +5,7 @@ import { scraper } from "./services/scraper";
 import { mockScraper } from "./services/mock-scraper";
 import { exporter } from "./services/exporter";
 import { s3Service } from "./services/s3";
+import { imageScraper } from "./services/image-scraper";
 
 export const apiRouter = Router();
 
@@ -374,6 +375,35 @@ apiRouter.post("/s3/test", async (req, res) => {
     console.error("S3 test error:", error);
     res.status(500).json({ 
       error: error instanceof Error ? error.message : "S3 connection test failed" 
+    });
+  }
+});
+
+// Image scraping endpoint
+apiRouter.post("/images/scrape-contestant", async (req, res) => {
+  try {
+    const { contestantId, contestantName, sourceUrl, seasonName } = req.body;
+    
+    if (!contestantName || !sourceUrl) {
+      return res.status(400).json({ 
+        error: "contestantName and sourceUrl are required" 
+      });
+    }
+
+    const result = await imageScraper.scrapeContestantImages(
+      contestantName,
+      sourceUrl,
+      seasonName
+    );
+
+    res.json({
+      message: `Image scraping completed for ${contestantName}`,
+      result: result
+    });
+  } catch (error) {
+    console.error("Image scraping error:", error);
+    res.status(500).json({ 
+      error: error instanceof Error ? error.message : "Failed to scrape contestant images" 
     });
   }
 });
