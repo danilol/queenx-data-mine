@@ -4,6 +4,11 @@ This is a RuPaul's Drag Race contestant scraping and management system built as 
 
 ## Recent Changes (August 2025)
 
+- **S3 File Upload Integration**: Implemented complete AWS S3 upload functionality with secure credential management and testing interface on Dashboard
+- **File Upload Endpoints**: Added `/api/s3/upload` for file uploads and `/api/s3/test` for connection testing with proper error handling
+- **AWS SDK Integration**: Configured S3Service with AWS SDK client, supporting multiple file types with timestamped keys and organized folder structure
+- **Upload Testing UI**: Added interactive file upload interface to Dashboard with progress indicators, file selection, and success/error notifications
+- **Environment Security**: Properly configured AWS credentials (AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, S3_BUCKET_NAME, AWS_REGION) via Replit secrets
 - **Dedicated Detail Pages**: Implemented scalable detail/edit pages at `/manage/franchises/:id`, `/manage/seasons/:id`, and `/manage/contestants/:id` for comprehensive editing as forms grow with more fields
 - **Enhanced Navigation**: Added "View Details" buttons to all management pages linking to dedicated detail pages for better user experience
 - **Expandable Hierarchical Data**: Added expandable rows with chevron icons in management pages to show related data (franchises → seasons → contestants → appearances)
@@ -48,6 +53,10 @@ Currently, the application operates without authentication, designed for single-
 ### Database Services
 - **Neon Database**: Serverless PostgreSQL database hosting
 - **Drizzle ORM**: Type-safe database toolkit and query builder
+
+### File Storage
+- **AWS S3**: Object storage service for file uploads and management
+- **AWS SDK**: Official AWS JavaScript SDK for S3 operations
 
 ### Web Scraping
 - **Playwright**: Browser automation for web scraping with Chromium engine

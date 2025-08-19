@@ -89,4 +89,27 @@ export const api = {
   exportJSON: () => {
     window.open("/api/export/json", "_blank");
   },
+
+  // S3 upload functions
+  uploadFileToS3: (file: File) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    
+    return fetch('/api/s3/upload', {
+      method: 'POST',
+      body: formData,
+    }).then(res => {
+      if (!res.ok) {
+        return res.json().then(data => {
+          throw new Error(data.error || 'Upload failed');
+        });
+      }
+      return res.json();
+    });
+  },
+
+  testS3Connection: async () => {
+    const response = await apiRequest("POST", "/api/s3/test");
+    return response.json();
+  },
 };

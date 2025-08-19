@@ -1,6 +1,6 @@
-import { useQuery } from "@tanstack/react-query";
-import { Edit, Trash2, Settings, Download, Bug } from "lucide-react";
-import { useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { Edit, Trash2, Settings, Download, Bug, Upload, TestTube } from "lucide-react";
+import { useState, useRef } from "react";
 import { Header } from "@/components/layout/header";
 import { StatsCards } from "@/components/stats-cards";
 import { ScrapingProgress } from "@/components/scraping-progress";
@@ -16,7 +16,10 @@ import { Link } from "wouter";
 export default function Dashboard() {
   const [selectedContestant, setSelectedContestant] = useState<Contestant | null>(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
+  const queryClient = useQueryClient();
 
   const { data: stats, isLoading: statsLoading } = useQuery({
     queryKey: ["/api/stats"],
@@ -61,6 +64,58 @@ export default function Dashboard() {
     return "outline";
   };
 
+  // S3 upload mutations
+  const uploadFileMutation = useMutation({
+    mutationFn: (file: File) => api.uploadFileToS3(file),
+    onSuccess: (data) => {
+      toast({
+        title: "File Uploaded Successfully",
+        description: `${data.fileName} uploaded to S3. Size: ${(data.size / 1024).toFixed(1)}KB`,
+      });
+      setSelectedFile(null);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+    },
+    onError: (error) => {
+      toast({
+        title: "Upload Failed",
+        description: error instanceof Error ? error.message : "Failed to upload file",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const testS3Mutation = useMutation({
+    mutationFn: () => api.testS3Connection(),
+    onSuccess: (data) => {
+      toast({
+        title: "S3 Connection Test Successful",
+        description: `Test file uploaded successfully. Key: ${data.key}`,
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "S3 Connection Test Failed",
+        description: error instanceof Error ? error.message : "Failed to test S3 connection",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      setSelectedFile(file);
+    }
+  };
+
+  const handleUpload = () => {
+    if (selectedFile) {
+      uploadFileMutation.mutate(selectedFile);
+    }
+  };
+
   return (
     <div className="flex-1 overflow-hidden">
       <div className="h-full overflow-y-auto">
@@ -71,6 +126,61 @@ export default function Dashboard() {
         />
 
         <div className="p-6 space-y-8 max-w-7xl mx-auto">
+          {/* S3 Upload Testing Section */}
+          <Card className="card-enhanced">
+            <CardContent className="p-6">
+              <h3 className="text-xl font-semibold text-foreground mb-4">S3 Upload Testing</h3>
+              <div className="space-y-4">
+                <div className="flex flex-col sm:flex-row gap-4">
+                  <Button
+                    onClick={() => testS3Mutation.mutate()}
+                    disabled={testS3Mutation.isPending}
+                    variant="outline"
+                    className="flex items-center gap-2"
+                  >
+                    <TestTube className="h-4 w-4" />
+                    {testS3Mutation.isPending ? "Testing..." : "Test S3 Connection"}
+                  </Button>
+                  
+                  <div className="flex items-center gap-2">
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      onChange={handleFileSelect}
+                      className="hidden"
+                      id="file-upload"
+                    />
+                    <Button
+                      onClick={() => fileInputRef.current?.click()}
+                      variant="outline"
+                      className="flex items-center gap-2"
+                    >
+                      <Upload className="h-4 w-4" />
+                      Select File
+                    </Button>
+                    
+                    {selectedFile && (
+                      <Button
+                        onClick={handleUpload}
+                        disabled={uploadFileMutation.isPending}
+                        className="flex items-center gap-2"
+                      >
+                        <Upload className="h-4 w-4" />
+                        {uploadFileMutation.isPending ? "Uploading..." : "Upload to S3"}
+                      </Button>
+                    )}
+                  </div>
+                </div>
+                
+                {selectedFile && (
+                  <div className="text-sm text-muted-foreground">
+                    Selected: {selectedFile.name} ({(selectedFile.size / 1024).toFixed(1)}KB)
+                  </div>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+
           {/* Stats Cards */}
           <StatsCards stats={stats} isLoading={statsLoading} />
 

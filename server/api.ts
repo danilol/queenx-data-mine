@@ -1,10 +1,20 @@
 import { Router } from "express";
+import multer from "multer";
 import { storage } from "./storage";
 import { scraper } from "./services/scraper";
 import { mockScraper } from "./services/mock-scraper";
 import { exporter } from "./services/exporter";
+import { s3Service } from "./services/s3";
 
 export const apiRouter = Router();
+
+// Configure multer for file uploads (store in memory)
+const upload = multer({ 
+  storage: multer.memoryStorage(),
+  limits: {
+    fileSize: 10 * 1024 * 1024, // 10MB limit
+  }
+});
 
 // Stats endpoint
 apiRouter.get("/stats", async (req, res) => {
@@ -320,6 +330,51 @@ apiRouter.get("/export/csv", async (req, res) => {
   } catch (error) {
     console.error("Export error:", error);
     res.status(500).json({ error: "Failed to export data" });
+  }
+});
+
+// S3 upload endpoints
+apiRouter.post("/s3/upload", upload.single('file'), async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ error: "No file provided" });
+    }
+
+    const result = await s3Service.uploadFile(
+      req.file.buffer,
+      req.file.originalname,
+      req.file.mimetype
+    );
+
+    res.json({
+      message: "File uploaded successfully",
+      key: result.key,
+      url: result.url,
+      fileName: req.file.originalname,
+      size: req.file.size,
+    });
+  } catch (error) {
+    console.error("S3 upload error:", error);
+    res.status(500).json({ 
+      error: error instanceof Error ? error.message : "Failed to upload file to S3" 
+    });
+  }
+});
+
+apiRouter.post("/s3/test", async (req, res) => {
+  try {
+    const result = await s3Service.uploadTestFile();
+    
+    res.json({
+      message: "S3 connection test successful",
+      key: result.key,
+      url: result.url,
+    });
+  } catch (error) {
+    console.error("S3 test error:", error);
+    res.status(500).json({ 
+      error: error instanceof Error ? error.message : "S3 connection test failed" 
+    });
   }
 });
 
