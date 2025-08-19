@@ -59,8 +59,7 @@ export default function ContestantDetail() {
         realName: contestant.realName || "",
         hometown: contestant.hometown || "",
         biography: contestant.biography || "",
-        photoUrl: contestant.photoUrl || "",
-        sourceUrl: contestant.sourceUrl || "",
+        metadataSourceUrl: contestant.metadataSourceUrl || "",
       });
       setIsEditing(true);
     }
@@ -80,7 +79,7 @@ export default function ContestantDetail() {
   const scrapeContestantMutation = useMutation({
     mutationFn: () => api.startScraping({ 
       level: 'contestant', 
-      sourceUrl: contestant?.sourceUrl || undefined 
+      metadataSourceUrl: contestant?.metadataSourceUrl || undefined 
     }),
     onSuccess: () => {
       toast({
@@ -102,7 +101,7 @@ export default function ContestantDetail() {
       api.scrapeContestantImages({
         contestantId: id,
         contestantName: contestant?.dragName || '',
-        sourceUrl: contestant?.sourceUrl || '',
+        sourceUrl: contestant?.metadataSourceUrl || '',
         seasonName: contestant?.season || undefined
       }),
     onSuccess: (data) => {
@@ -179,7 +178,7 @@ export default function ContestantDetail() {
               </Button>
               <Button 
                 onClick={() => imageScrapeMutation.mutate()}
-                disabled={imageScrapeMutation.isPending || !contestant?.sourceUrl}
+                disabled={imageScrapeMutation.isPending || !contestant?.metadataSourceUrl}
                 variant="outline"
               >
                 <Download className="h-4 w-4 mr-2" />
@@ -195,7 +194,7 @@ export default function ContestantDetail() {
               <CardTitle className="flex items-center gap-4">
                 <Avatar className="h-16 w-16">
                   <AvatarImage 
-                    src={contestant.photoUrl || undefined} 
+                    src={undefined} 
                     alt={contestant.dragName} 
                   />
                   <AvatarFallback>
@@ -277,55 +276,27 @@ export default function ContestantDetail() {
 
                 <div>
                   <label className="text-sm font-medium text-gray-700 mb-2 block">
-                    Photo URL
+                    Metadata Source URL
                   </label>
                   {isEditing ? (
                     <Input
-                      value={formData.photoUrl || ""}
-                      onChange={(e) => setFormData({ ...formData, photoUrl: e.target.value })}
-                      placeholder="Photo URL"
+                      value={formData.metadataSourceUrl || ""}
+                      onChange={(e) => setFormData({ ...formData, metadataSourceUrl: e.target.value })}
+                      placeholder="Metadata Source URL"
                     />
                   ) : (
                     <p className="text-gray-600">
-                      {contestant.photoUrl ? (
+                      {contestant.metadataSourceUrl ? (
                         <a 
-                          href={contestant.photoUrl} 
+                          href={contestant.metadataSourceUrl} 
                           target="_blank" 
                           rel="noopener noreferrer"
                           className="text-blue-600 hover:underline"
                         >
-                          {contestant.photoUrl}
+                          {contestant.metadataSourceUrl}
                         </a>
                       ) : (
-                        "No photo URL"
-                      )}
-                    </p>
-                  )}
-                </div>
-
-                <div>
-                  <label className="text-sm font-medium text-gray-700 mb-2 block">
-                    Source URL
-                  </label>
-                  {isEditing ? (
-                    <Input
-                      value={formData.sourceUrl || ""}
-                      onChange={(e) => setFormData({ ...formData, sourceUrl: e.target.value })}
-                      placeholder="Source URL"
-                    />
-                  ) : (
-                    <p className="text-gray-600">
-                      {contestant.sourceUrl ? (
-                        <a 
-                          href={contestant.sourceUrl} 
-                          target="_blank" 
-                          rel="noopener noreferrer"
-                          className="text-blue-600 hover:underline"
-                        >
-                          {contestant.sourceUrl}
-                        </a>
-                      ) : (
-                        "No source URL"
+                        "No metadata source URL"
                       )}
                     </p>
                   )}

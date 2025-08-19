@@ -21,8 +21,7 @@ const SAMPLE_CONTESTANTS = [
     franchise: "US",
     outcome: "Host",
     biography: "RuPaul Andre Charles is an American drag queen, television judge, musician, and model. RuPaul has produced, hosted, and judged the reality competition series RuPaul's Drag Race since 2009.",
-    photoUrl: "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f0/RuPaul_by_Greg_Hernandez_2.jpg/220px-RuPaul_by_Greg_Hernandez_2.jpg",
-    wikipediaUrl: "https://en.wikipedia.org/wiki/RuPaul"
+    metadataSourceUrl: "https://en.wikipedia.org/wiki/RuPaul"
   },
   {
     dragName: "BenDeLaCreme",
@@ -33,8 +32,7 @@ const SAMPLE_CONTESTANTS = [
     franchise: "US",
     outcome: "4th Place",
     biography: "BenDeLaCreme is an American drag queen and performer based in Seattle, Washington. Known for her vintage aesthetic and comedic performances.",
-    photoUrl: "https://upload.wikimedia.org/wikipedia/commons/thumb/3/3f/BenDeLaCreme_2014.jpg/220px-BenDeLaCreme_2014.jpg",
-    wikipediaUrl: "https://en.wikipedia.org/wiki/BenDeLaCreme"
+    metadataSourceUrl: "https://en.wikipedia.org/wiki/BenDeLaCreme"
   },
   {
     dragName: "Bianca Del Rio",
@@ -45,8 +43,7 @@ const SAMPLE_CONTESTANTS = [
     franchise: "US",
     outcome: "Winner",
     biography: "Bianca Del Rio is the stage name of Roy Richard Haylock, an American drag queen, comedian, and author. Winner of the sixth season of RuPaul's Drag Race.",
-    photoUrl: null,
-    wikipediaUrl: "https://en.wikipedia.org/wiki/Bianca_Del_Rio"
+    metadataSourceUrl: "https://en.wikipedia.org/wiki/Bianca_Del_Rio"
   },
   {
     dragName: "Adore Delano",
@@ -57,8 +54,7 @@ const SAMPLE_CONTESTANTS = [
     franchise: "US",
     outcome: "Runner-up",
     biography: "Adore Delano is the drag persona of Danny Noriega, an American drag queen, singer-songwriter and television personality.",
-    photoUrl: null,
-    sourceUrl: "https://en.wikipedia.org/wiki/Adore_Delano"
+    metadataSourceUrl: "https://en.wikipedia.org/wiki/Adore_Delano"
   },
   {
     dragName: "Courtney Act",
@@ -69,8 +65,7 @@ const SAMPLE_CONTESTANTS = [
     franchise: "US",
     outcome: "Runner-up",
     biography: "Courtney Act is the drag persona of Shane Gilberto Jenek, an Australian drag queen, pop singer, entertainer and reality television personality.",
-    photoUrl: null,
-    sourceUrl: "https://en.wikipedia.org/wiki/Courtney_Act"
+    metadataSourceUrl: "https://en.wikipedia.org/wiki/Courtney_Act"
   }
 ];
 
@@ -79,13 +74,13 @@ const SAMPLE_SEASONS = [
     name: "RuPaul's Drag Race Season 1",
     franchise: "US",
     year: 2009,
-    sourceUrl: "https://en.wikipedia.org/wiki/RuPaul%27s_Drag_Race_(season_1)"
+    metadataSourceUrl: "https://en.wikipedia.org/wiki/RuPaul%27s_Drag_Race_(season_1)"
   },
   {
     name: "RuPaul's Drag Race Season 6",
     franchise: "US", 
     year: 2014,
-    sourceUrl: "https://en.wikipedia.org/wiki/RuPaul%27s_Drag_Race_(season_6)"
+    metadataSourceUrl: "https://en.wikipedia.org/wiki/RuPaul%27s_Drag_Race_(season_6)"
   }
 ];
 
@@ -239,7 +234,7 @@ export class MockRuPaulScraper {
           // Create franchise with a basic sourceUrl (mock data doesn't have specific franchise URLs)
           franchise = await storage.createFranchise({
             name: season.franchise,
-            sourceUrl: `https://en.wikipedia.org/wiki/${encodeURIComponent(season.franchise.replace(/\s+/g, '_'))}`
+            metadataSourceUrl: `https://en.wikipedia.org/wiki/${encodeURIComponent(season.franchise.replace(/\s+/g, '_'))}`
           });
         }
 
@@ -247,7 +242,7 @@ export class MockRuPaulScraper {
           name: season.name,
           franchiseId: franchise.id,
           year: season.year,
-          sourceUrl: season.sourceUrl,
+          metadataSourceUrl: season.metadataSourceUrl,
           isScraped: true
         });
 
@@ -303,8 +298,7 @@ export class MockRuPaulScraper {
           realName: contestant.realName,
           hometown: contestant.hometown,
           biography: contestant.biography,
-          photoUrl: contestant.photoUrl,
-          sourceUrl: contestant.sourceUrl
+          metadataSourceUrl: contestant.metadataSourceUrl
         });
 
         await this.sleep(1200);

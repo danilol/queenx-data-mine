@@ -24,6 +24,7 @@ This is a RuPaul's Drag Race contestant scraping and management system built as 
 - **Hierarchical Progress Display**: Implemented detailed franchise → season → contestant progress tracking with collapsible tree view
 - **Mock Scraper Integration**: Automatically falls back to mock scraper when Playwright dependencies are unavailable, ensuring functionality in all environments
 - **Multi-Level Scraping Interface**: Added comprehensive scraping controls with dropdown selector for Full/Franchise/Season/Contestant levels
+- **Database Schema Improvements**: Removed unused `photo_url` column and renamed all `source_url` columns to `metadata_source_url` for clarity and consistency
 - **Flexible Database Schema**: Updated all tables to use generic `sourceUrl` field instead of hardcoded `wikipediaUrl` for maximum flexibility across data sources
 - **Custom URL Input**: Added dynamic URL input field for targeted scraping at specific levels with validation
 - **Enhanced UX**: Button text updates dynamically based on selected scraping level, clear descriptions for each option

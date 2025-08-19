@@ -70,16 +70,15 @@ export class DrizzleStorage implements IStorage {
         realName: contestants.realName,
         hometown: contestants.hometown,
         biography: contestants.biography,
-        photoUrl: contestants.photoUrl,
         twitter: contestants.twitter,
         instagram: contestants.instagram,
         tiktok: contestants.tiktok,
-        sourceUrl: contestants.sourceUrl,
+        metadataSourceUrl: contestants.metadataSourceUrl,
         age: appearances.age,
         outcome: appearances.outcome,
         season: seasons.name,
         franchise: franchises.name,
-        seasonSourceUrl: seasons.sourceUrl,
+        seasonMetadataSourceUrl: seasons.metadataSourceUrl,
         createdAt: contestants.createdAt,
         updatedAt: contestants.updatedAt,
       })
@@ -109,16 +108,15 @@ export class DrizzleStorage implements IStorage {
         realName: contestants.realName,
         hometown: contestants.hometown,
         biography: contestants.biography,
-        photoUrl: contestants.photoUrl,
         twitter: contestants.twitter,
         instagram: contestants.instagram,
         tiktok: contestants.tiktok,
-        sourceUrl: contestants.sourceUrl,
+        metadataSourceUrl: contestants.metadataSourceUrl,
         age: appearances.age,
         outcome: appearances.outcome,
         season: seasons.name,
         franchise: franchises.name,
-        seasonSourceUrl: seasons.sourceUrl,
+        seasonMetadataSourceUrl: seasons.metadataSourceUrl,
         createdAt: contestants.createdAt,
         updatedAt: contestants.updatedAt,
       })
@@ -161,16 +159,15 @@ export class DrizzleStorage implements IStorage {
         realName: contestants.realName,
         hometown: contestants.hometown,
         biography: contestants.biography,
-        photoUrl: contestants.photoUrl,
         twitter: contestants.twitter,
         instagram: contestants.instagram,
         tiktok: contestants.tiktok,
-        sourceUrl: contestants.sourceUrl,
+        metadataSourceUrl: contestants.metadataSourceUrl,
         age: appearances.age,
         outcome: appearances.outcome,
         season: seasons.name,
         franchise: franchises.name,
-        seasonSourceUrl: seasons.sourceUrl,
+        seasonMetadataSourceUrl: seasons.metadataSourceUrl,
         createdAt: contestants.createdAt,
         updatedAt: contestants.updatedAt,
       })
@@ -209,7 +206,7 @@ export class DrizzleStorage implements IStorage {
         target: franchises.name, 
         set: { 
           name: franchise.name,
-          sourceUrl: franchise.sourceUrl 
+          metadataSourceUrl: franchise.metadataSourceUrl 
         } 
       })
       .returning();
@@ -399,7 +396,7 @@ export class DrizzleStorage implements IStorage {
     const [contestantsCount] = await db.select({ count: count() }).from(contestants);
     const [seasonsCount] = await db.select({ count: count() }).from(seasons);
     const [franchisesCount] = await db.select({ count: count() }).from(franchises);
-    const [photosCount] = await db.select({ count: count() }).from(contestants).where(sql`${contestants.photoUrl} is not null`);
+    const [photosCount] = await db.select({ count: count() }).from(contestants).where(sql`${contestants.age} is not null`);
 
     const [recentJob] = await db.select().from(scrapingJobs).where(eq(scrapingJobs.status, 'completed')).orderBy(desc(scrapingJobs.completedAt)).limit(1);
     const lastSync = recentJob?.completedAt ? this.formatTimeAgo(new Date(recentJob.completedAt)) : undefined;
@@ -440,16 +437,15 @@ export class DrizzleStorage implements IStorage {
         realName: contestants.realName,
         hometown: contestants.hometown,
         biography: contestants.biography,
-        photoUrl: contestants.photoUrl,
         twitter: contestants.twitter,
         instagram: contestants.instagram,
         tiktok: contestants.tiktok,
-        sourceUrl: contestants.sourceUrl,
+        metadataSourceUrl: contestants.metadataSourceUrl,
         age: appearances.age,
         outcome: appearances.outcome,
         season: seasons.name,
         franchise: franchises.name,
-        seasonSourceUrl: seasons.sourceUrl,
+        seasonMetadataSourceUrl: seasons.metadataSourceUrl,
         createdAt: contestants.createdAt,
         updatedAt: contestants.updatedAt,
       })

@@ -221,17 +221,9 @@ export default function Dashboard() {
                       {recentContestants.map((contestant) => (
                         <tr key={contestant.id} className="border-b hover:bg-muted/50">
                           <td className="py-4 px-2">
-                            {contestant.photoUrl ? (
-                              <img
-                                src={contestant.photoUrl}
-                                alt={contestant.dragName}
-                                className="w-12 h-12 rounded-lg object-cover"
-                              />
-                            ) : (
-                              <div className="w-12 h-12 bg-muted/50 rounded-lg flex items-center justify-center">
-                                <span className="text-muted-foreground text-xs">No Photo</span>
-                              </div>
-                            )}
+                            <div className="w-12 h-12 bg-muted/50 rounded-lg flex items-center justify-center">
+                              <span className="text-muted-foreground text-xs">No Photo</span>
+                            </div>
                           </td>
                           <td className="py-4 px-2">
                             <div className="font-medium text-foreground">{contestant.dragName}</div>

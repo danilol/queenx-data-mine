@@ -34,7 +34,7 @@ export function ContestantEditModal({ contestant, isOpen, onClose }: ContestantE
       franchise: contestant?.franchise || "US",
       outcome: contestant?.outcome || "",
       biography: contestant?.biography || "",
-      photoUrl: contestant?.photoUrl || "",
+
     },
   });
 

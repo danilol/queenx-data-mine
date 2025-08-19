@@ -157,13 +157,7 @@ export function ContestantsList({ seasonId, seasonName }: ContestantsListProps) 
               className="flex items-center justify-between p-3 border rounded-lg hover:bg-accent/50 transition-colors"
             >
               <div className="flex items-center gap-3">
-                {contestant.photoUrl && (
-                  <img
-                    src={contestant.photoUrl}
-                    alt={contestant.dragName}
-                    className="w-10 h-10 rounded-full object-cover"
-                  />
-                )}
+
                 <div>
                   <h4 className="font-medium">{contestant.dragName}</h4>
                   {contestant.realName && (

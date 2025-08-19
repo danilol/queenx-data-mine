@@ -16,12 +16,11 @@ export const contestants = pgTable("contestants", {
   realName: text("real_name"),
   hometown: text("hometown"),
   biography: text("biography"),
-  photoUrl: text("photo_url"),
   age: integer("age"),
   twitter: text("twitter"),
   instagram: text("instagram"),
   tiktok: text("tiktok"),
-  sourceUrl: text("source_url"), // Source URL for contestant data scraping
+  metadataSourceUrl: text("metadata_source_url"), // Source URL for contestant data scraping
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
@@ -29,7 +28,7 @@ export const contestants = pgTable("contestants", {
 export const franchises = pgTable("franchises", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   name: text("name").notNull().unique(),
-  sourceUrl: text("source_url"), // Source URL for franchise data scraping
+  metadataSourceUrl: text("metadata_source_url"), // Source URL for franchise data scraping
   createdAt: timestamp("created_at").defaultNow(),
 });
 
@@ -38,7 +37,7 @@ export const seasons = pgTable("seasons", {
   name: text("name").notNull().unique(),
   franchiseId: varchar("franchise_id").notNull(),
   year: integer("year"),
-  sourceUrl: text("source_url"), // Source URL for season data scraping
+  metadataSourceUrl: text("metadata_source_url"), // Source URL for season data scraping
   isScraped: boolean("is_scraped").default(false),
   createdAt: timestamp("created_at").defaultNow(),
 });
@@ -107,7 +106,7 @@ export type FullContestant = Contestant & {
   outcome: string | null;
   season: string | null;
   franchise: string | null;
-  seasonSourceUrl: string | null;
+  seasonMetadataSourceUrl: string | null;
 };
 
 export type Franchise = typeof franchises.$inferSelect;
@@ -193,7 +192,7 @@ export interface ScrapingRequest {
   franchiseId?: string;
   seasonId?: string;
   contestantId?: string;
-  sourceUrl?: string; // Generic source URL for any scraping level
+  metadataSourceUrl?: string; // Generic metadata source URL for any scraping level
 }
 
 export interface AppStats {
