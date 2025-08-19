@@ -103,7 +103,7 @@ export default function ContestantDetail() {
         contestantId: id,
         contestantName: contestant?.dragName || '',
         sourceUrl: contestant?.sourceUrl || '',
-        seasonName: contestant?.season
+        seasonName: contestant?.season || undefined
       }),
     onSuccess: (data) => {
       toast({
