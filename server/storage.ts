@@ -257,8 +257,21 @@ export class DrizzleStorage implements IStorage {
     return result.map(r => ({ ...r, franchiseName: r.franchiseName || 'Unknown' }));
   }
 
-  async getSeason(id: string): Promise<Season | undefined> {
-    const result = await db.select().from(seasons).where(eq(seasons.id, id));
+  async getSeason(id: string): Promise<(Season & { franchise?: Franchise }) | undefined> {
+    const result = await db.select({
+      ...getTableColumns(seasons),
+      franchise: {
+        id: franchises.id,
+        name: franchises.name,
+        sourceUrl: franchises.sourceUrl,
+        createdAt: franchises.createdAt,
+        updatedAt: franchises.updatedAt,
+      }
+    })
+    .from(seasons)
+    .leftJoin(franchises, eq(seasons.franchiseId, franchises.id))
+    .where(eq(seasons.id, id));
+    
     return result[0];
   }
 
