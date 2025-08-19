@@ -29,7 +29,6 @@ import type { Franchise, InsertFranchise } from "@shared/schema";
 export default function ManageFranchises() {
   const [, navigate] = useLocation();
   const [searchTerm, setSearchTerm] = useState("");
-  const [editingFranchise, setEditingFranchise] = useState<Franchise | null>(null);
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [formData, setFormData] = useState<Partial<InsertFranchise>>({});
   const [expandedFranchises, setExpandedFranchises] = useState<Set<string>>(new Set());
@@ -58,18 +57,7 @@ export default function ManageFranchises() {
     },
   });
 
-  const updateMutation = useMutation({
-    mutationFn: ({ id, data }: { id: string; data: Partial<InsertFranchise> }) =>
-      apiRequest(`/api/franchises/${id}`, "PATCH", data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/franchises"] });
-      setEditingFranchise(null);
-      toast({ title: "Franchise updated successfully" });
-    },
-    onError: () => {
-      toast({ title: "Failed to update franchise", variant: "destructive" });
-    },
-  });
+
 
   const deleteMutation = useMutation({
     mutationFn: (id: string) => apiRequest(`/api/franchises/${id}`, "DELETE"),
@@ -90,28 +78,10 @@ export default function ManageFranchises() {
     createMutation.mutate(formData as InsertFranchise);
   };
 
-  const handleUpdate = () => {
-    if (!editingFranchise) return;
-    updateMutation.mutate({ id: editingFranchise.id, data: formData });
-  };
-
   const handleDelete = (id: string) => {
     if (confirm("Are you sure you want to delete this franchise?")) {
       deleteMutation.mutate(id);
     }
-  };
-
-  const startEdit = (franchise: Franchise) => {
-    setEditingFranchise(franchise);
-    setFormData({
-      name: franchise.name,
-      sourceUrl: franchise.sourceUrl || "",
-    });
-  };
-
-  const cancelEdit = () => {
-    setEditingFranchise(null);
-    setFormData({});
   };
 
   const toggleExpanded = (franchiseId: string) => {
@@ -211,24 +181,9 @@ export default function ManageFranchises() {
                             </Button>
                           </TableCell>
                           <TableCell>
-                            {editingFranchise?.id === franchise.id ? (
-                              <Input
-                                value={formData.name || ""}
-                                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                                className="w-48"
-                              />
-                            ) : (
-                              <div className="font-medium">{franchise.name}</div>
-                            )}
+                            <div className="font-medium">{franchise.name}</div>
                           </TableCell>
-                        <TableCell>
-                          {editingFranchise?.id === franchise.id ? (
-                            <Input
-                              value={formData.sourceUrl || ""}
-                              onChange={(e) => setFormData({ ...formData, sourceUrl: e.target.value })}
-                              className="w-64"
-                            />
-                          ) : (
+                          <TableCell>
                             <div className="max-w-xs truncate text-sm">
                               {franchise.sourceUrl ? (
                                 <a 
@@ -243,8 +198,7 @@ export default function ManageFranchises() {
                                 "-"
                               )}
                             </div>
-                          )}
-                        </TableCell>
+                          </TableCell>
                         <TableCell>
                           <div className="text-sm text-muted-foreground">
                             {franchise.createdAt ? new Date(franchise.createdAt).toLocaleDateString() : "-"}
@@ -252,37 +206,21 @@ export default function ManageFranchises() {
                         </TableCell>
                         <TableCell>
                           <div className="flex gap-2">
-                            {editingFranchise?.id === franchise.id ? (
-                              <>
-                                <Button size="sm" onClick={handleUpdate} disabled={updateMutation.isPending}>
-                                  <Save className="h-4 w-4" />
-                                </Button>
-                                <Button size="sm" variant="outline" onClick={cancelEdit}>
-                                  <X className="h-4 w-4" />
-                                </Button>
-                              </>
-                            ) : (
-                              <>
-                                <Button 
-                                  size="sm" 
-                                  variant="default" 
-                                  onClick={() => navigate(`/manage/franchises/${franchise.id}`)}
-                                >
-                                  View Details
-                                </Button>
-                                <Button size="sm" variant="outline" onClick={() => startEdit(franchise)}>
-                                  <Edit className="h-4 w-4" />
-                                </Button>
-                                <Button
-                                  size="sm"
-                                  variant="destructive"
-                                  onClick={() => handleDelete(franchise.id)}
-                                  disabled={deleteMutation.isPending}
-                                >
-                                  <Trash2 className="h-4 w-4" />
-                                </Button>
-                              </>
-                            )}
+                            <Button 
+                              size="sm" 
+                              variant="outline" 
+                              onClick={() => navigate(`/manage/franchises/${franchise.id}`)}
+                            >
+                              <Edit className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="destructive"
+                              onClick={() => handleDelete(franchise.id)}
+                              disabled={deleteMutation.isPending}
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
                           </div>
                         </TableCell>
                       </TableRow>

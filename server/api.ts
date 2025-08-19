@@ -29,6 +29,19 @@ apiRouter.get("/contestants", async (req, res) => {
   }
 });
 
+// Individual contestant endpoint
+apiRouter.get("/contestants/:id", async (req, res) => {
+  try {
+    const contestant = await storage.getContestant(req.params.id);
+    if (!contestant) {
+      return res.status(404).json({ error: "Contestant not found" });
+    }
+    res.json(contestant);
+  } catch (error) {
+    res.status(500).json({ error: "Failed to fetch contestant" });
+  }
+});
+
 apiRouter.post("/contestants", async (req, res) => {
   try {
     const newContestant = await storage.createContestant(req.body);
@@ -85,6 +98,21 @@ apiRouter.get("/franchises", async (req, res) => {
   }
 });
 
+// Individual franchise endpoint
+apiRouter.get("/franchises/:id", async (req, res) => {
+  try {
+    const franchise = await storage.getAllFranchises().then(franchises => 
+      franchises.find(f => f.id === req.params.id)
+    );
+    if (!franchise) {
+      return res.status(404).json({ error: "Franchise not found" });
+    }
+    res.json(franchise);
+  } catch (error) {
+    res.status(500).json({ error: "Failed to fetch franchise" });
+  }
+});
+
 apiRouter.post("/franchises", async (req, res) => {
   try {
     const newFranchise = await storage.createFranchise(req.body);
@@ -113,6 +141,18 @@ apiRouter.delete("/franchises/:id", async (req, res) => {
 });
 
 // Additional seasons endpoints
+apiRouter.get("/seasons/:id", async (req, res) => {
+  try {
+    const season = await storage.getSeason(req.params.id);
+    if (!season) {
+      return res.status(404).json({ error: "Season not found" });
+    }
+    res.json(season);
+  } catch (error) {
+    res.status(500).json({ error: "Failed to fetch season" });
+  }
+});
+
 apiRouter.post("/seasons", async (req, res) => {
   try {
     const newSeason = await storage.createSeason(req.body);

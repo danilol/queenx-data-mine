@@ -31,7 +31,6 @@ import type { FullContestant, InsertContestant, UpdateContestant } from "@shared
 export default function ManageContestants() {
   const [, navigate] = useLocation();
   const [searchTerm, setSearchTerm] = useState("");
-  const [editingContestant, setEditingContestant] = useState<FullContestant | null>(null);
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [formData, setFormData] = useState<Partial<InsertContestant>>({});
   const [expandedContestants, setExpandedContestants] = useState<Set<string>>(new Set());
@@ -61,18 +60,7 @@ export default function ManageContestants() {
     },
   });
 
-  const updateMutation = useMutation({
-    mutationFn: ({ id, data }: { id: string; data: UpdateContestant }) =>
-      apiRequest(`/api/contestants/${id}`, "PATCH", data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/contestants"] });
-      setEditingContestant(null);
-      toast({ title: "Contestant updated successfully" });
-    },
-    onError: () => {
-      toast({ title: "Failed to update contestant", variant: "destructive" });
-    },
-  });
+
 
   const deleteMutation = useMutation({
     mutationFn: (id: string) => apiRequest(`/api/contestants/${id}`, "DELETE"),
@@ -93,32 +81,10 @@ export default function ManageContestants() {
     createMutation.mutate(formData as InsertContestant);
   };
 
-  const handleUpdate = () => {
-    if (!editingContestant) return;
-    updateMutation.mutate({ id: editingContestant.id, data: formData });
-  };
-
   const handleDelete = (id: string) => {
     if (confirm("Are you sure you want to delete this contestant?")) {
       deleteMutation.mutate(id);
     }
-  };
-
-  const startEdit = (contestant: FullContestant) => {
-    setEditingContestant(contestant);
-    setFormData({
-      dragName: contestant.dragName,
-      realName: contestant.realName || "",
-      hometown: contestant.hometown || "",
-      biography: contestant.biography || "",
-      photoUrl: contestant.photoUrl || "",
-      sourceUrl: contestant.sourceUrl || "",
-    });
-  };
-
-  const cancelEdit = () => {
-    setEditingContestant(null);
-    setFormData({});
   };
 
   const toggleExpanded = (contestantId: string) => {
@@ -239,37 +205,13 @@ export default function ManageContestants() {
                     {contestants.map((contestant) => (
                       <TableRow key={contestant.id}>
                         <TableCell>
-                          {editingContestant?.id === contestant.id ? (
-                            <Input
-                              value={formData.dragName || ""}
-                              onChange={(e) => setFormData({ ...formData, dragName: e.target.value })}
-                              className="w-32"
-                            />
-                          ) : (
-                            <div className="font-medium">{contestant.dragName}</div>
-                          )}
+                          <div className="font-medium">{contestant.dragName}</div>
                         </TableCell>
                         <TableCell>
-                          {editingContestant?.id === contestant.id ? (
-                            <Input
-                              value={formData.realName || ""}
-                              onChange={(e) => setFormData({ ...formData, realName: e.target.value })}
-                              className="w-32"
-                            />
-                          ) : (
-                            contestant.realName || "-"
-                          )}
+                          {contestant.realName || "-"}
                         </TableCell>
                         <TableCell>
-                          {editingContestant?.id === contestant.id ? (
-                            <Input
-                              value={formData.hometown || ""}
-                              onChange={(e) => setFormData({ ...formData, hometown: e.target.value })}
-                              className="w-32"
-                            />
-                          ) : (
-                            contestant.hometown || "-"
-                          )}
+                          {contestant.hometown || "-"}
                         </TableCell>
                         <TableCell>
                           {contestant.season ? (
@@ -289,37 +231,21 @@ export default function ManageContestants() {
                         </TableCell>
                         <TableCell>
                           <div className="flex gap-2">
-                            {editingContestant?.id === contestant.id ? (
-                              <>
-                                <Button size="sm" onClick={handleUpdate} disabled={updateMutation.isPending}>
-                                  <Save className="h-4 w-4" />
-                                </Button>
-                                <Button size="sm" variant="outline" onClick={cancelEdit}>
-                                  <X className="h-4 w-4" />
-                                </Button>
-                              </>
-                            ) : (
-                              <>
-                                <Button 
-                                  size="sm" 
-                                  variant="default" 
-                                  onClick={() => navigate(`/manage/contestants/${contestant.id}`)}
-                                >
-                                  View Details
-                                </Button>
-                                <Button size="sm" variant="outline" onClick={() => startEdit(contestant)}>
-                                  <Edit className="h-4 w-4" />
-                                </Button>
-                                <Button
-                                  size="sm"
-                                  variant="destructive"
-                                  onClick={() => handleDelete(contestant.id)}
-                                  disabled={deleteMutation.isPending}
-                                >
-                                  <Trash2 className="h-4 w-4" />
-                                </Button>
-                              </>
-                            )}
+                            <Button 
+                              size="sm" 
+                              variant="outline" 
+                              onClick={() => navigate(`/manage/contestants/${contestant.id}`)}
+                            >
+                              <Edit className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="destructive"
+                              onClick={() => handleDelete(contestant.id)}
+                              disabled={deleteMutation.isPending}
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
                           </div>
                         </TableCell>
                       </TableRow>

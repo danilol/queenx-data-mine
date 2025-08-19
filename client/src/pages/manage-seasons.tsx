@@ -41,7 +41,6 @@ interface SeasonWithFranchise extends Season {
 export default function ManageSeasons() {
   const [, navigate] = useLocation();
   const [searchTerm, setSearchTerm] = useState("");
-  const [editingSeason, setEditingSeason] = useState<SeasonWithFranchise | null>(null);
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [formData, setFormData] = useState<Partial<InsertSeason>>({});
   const [expandedSeasons, setExpandedSeasons] = useState<Set<string>>(new Set());
@@ -79,18 +78,7 @@ export default function ManageSeasons() {
     },
   });
 
-  const updateMutation = useMutation({
-    mutationFn: ({ id, data }: { id: string; data: Partial<InsertSeason> }) =>
-      apiRequest(`/api/seasons/${id}`, "PATCH", data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/seasons"] });
-      setEditingSeason(null);
-      toast({ title: "Season updated successfully" });
-    },
-    onError: () => {
-      toast({ title: "Failed to update season", variant: "destructive" });
-    },
-  });
+
 
   const deleteMutation = useMutation({
     mutationFn: (id: string) => apiRequest(`/api/seasons/${id}`, "DELETE"),
@@ -111,31 +99,10 @@ export default function ManageSeasons() {
     createMutation.mutate(formData as InsertSeason);
   };
 
-  const handleUpdate = () => {
-    if (!editingSeason) return;
-    updateMutation.mutate({ id: editingSeason.id, data: formData });
-  };
-
   const handleDelete = (id: string) => {
     if (confirm("Are you sure you want to delete this season?")) {
       deleteMutation.mutate(id);
     }
-  };
-
-  const startEdit = (season: SeasonWithFranchise) => {
-    setEditingSeason(season);
-    setFormData({
-      name: season.name,
-      franchiseId: season.franchiseId,
-      year: season.year || undefined,
-      sourceUrl: season.sourceUrl || "",
-      isScraped: season.isScraped,
-    });
-  };
-
-  const cancelEdit = () => {
-    setEditingSeason(null);
-    setFormData({});
   };
 
   const toggleExpanded = (seasonId: string) => {
@@ -257,49 +224,14 @@ export default function ManageSeasons() {
                             </Button>
                           </TableCell>
                           <TableCell>
-                          {editingSeason?.id === season.id ? (
-                            <Input
-                              value={formData.name || ""}
-                              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                              className="w-48"
-                            />
-                          ) : (
                             <div className="font-medium">{season.name}</div>
-                          )}
-                        </TableCell>
-                        <TableCell>
-                          {editingSeason?.id === season.id ? (
-                            <Select
-                              value={formData.franchiseId || ""}
-                              onValueChange={(value) => setFormData({ ...formData, franchiseId: value })}
-                            >
-                              <SelectTrigger className="w-32">
-                                <SelectValue />
-                              </SelectTrigger>
-                              <SelectContent>
-                                {franchises.map((franchise) => (
-                                  <SelectItem key={franchise.id} value={franchise.id}>
-                                    {franchise.name}
-                                  </SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-                          ) : (
+                          </TableCell>
+                          <TableCell>
                             <Badge variant="secondary">{season.franchiseName}</Badge>
-                          )}
-                        </TableCell>
-                        <TableCell>
-                          {editingSeason?.id === season.id ? (
-                            <Input
-                              type="number"
-                              value={formData.year || ""}
-                              onChange={(e) => setFormData({ ...formData, year: e.target.value ? parseInt(e.target.value) : undefined })}
-                              className="w-20"
-                            />
-                          ) : (
-                            season.year || "-"
-                          )}
-                        </TableCell>
+                          </TableCell>
+                          <TableCell>
+                            {season.year || "-"}
+                          </TableCell>
                         <TableCell>
                           <Badge variant={season.isScraped ? "default" : "outline"}>
                             {season.isScraped ? "Scraped" : "Not Scraped"}
@@ -307,37 +239,21 @@ export default function ManageSeasons() {
                         </TableCell>
                         <TableCell>
                           <div className="flex gap-2">
-                            {editingSeason?.id === season.id ? (
-                              <>
-                                <Button size="sm" onClick={handleUpdate} disabled={updateMutation.isPending}>
-                                  <Save className="h-4 w-4" />
-                                </Button>
-                                <Button size="sm" variant="outline" onClick={cancelEdit}>
-                                  <X className="h-4 w-4" />
-                                </Button>
-                              </>
-                            ) : (
-                              <>
-                                <Button 
-                                  size="sm" 
-                                  variant="default" 
-                                  onClick={() => navigate(`/manage/seasons/${season.id}`)}
-                                >
-                                  View Details
-                                </Button>
-                                <Button size="sm" variant="outline" onClick={() => startEdit(season)}>
-                                  <Edit className="h-4 w-4" />
-                                </Button>
-                                <Button
-                                  size="sm"
-                                  variant="destructive"
-                                  onClick={() => handleDelete(season.id)}
-                                  disabled={deleteMutation.isPending}
-                                >
-                                  <Trash2 className="h-4 w-4" />
-                                </Button>
-                              </>
-                            )}
+                            <Button 
+                              size="sm" 
+                              variant="outline" 
+                              onClick={() => navigate(`/manage/seasons/${season.id}`)}
+                            >
+                              <Edit className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="destructive"
+                              onClick={() => handleDelete(season.id)}
+                              disabled={deleteMutation.isPending}
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
                           </div>
                         </TableCell>
                       </TableRow>
