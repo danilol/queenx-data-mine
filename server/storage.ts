@@ -54,6 +54,11 @@ export interface IStorage {
 
   // Stats
   getAppStats(): Promise<AppStats>;
+
+  // Related data methods
+  getSeasonsByFranchise(franchiseId: string): Promise<(Season & { franchiseName: string })[]>;
+  getContestantsBySeason(seasonId: string): Promise<FullContestant[]>;
+  getAppearancesByContestant(contestantId: string): Promise<(Appearance & { seasonName: string; franchiseName: string })[]>;
 }
 
 export class DrizzleStorage implements IStorage {
@@ -385,6 +390,85 @@ export class DrizzleStorage implements IStorage {
       photos: photosCount.count,
       lastSync,
     };
+  }
+
+  // Related data methods
+  async getSeasonsByFranchise(franchiseId: string): Promise<(Season & { franchiseName: string })[]> {
+    try {
+      const result = await db.select({
+        ...getTableColumns(seasons),
+        franchiseName: franchises.name,
+      })
+      .from(seasons)
+      .innerJoin(franchises, eq(seasons.franchiseId, franchises.id))
+      .where(eq(seasons.franchiseId, franchiseId))
+      .orderBy(desc(seasons.year));
+      
+      return result.map(r => ({ ...r, franchiseName: r.franchiseName || 'Unknown' }));
+    } catch (error) {
+      console.error('Error fetching seasons by franchise:', error);
+      return [];
+    }
+  }
+
+  async getContestantsBySeason(seasonId: string): Promise<FullContestant[]> {
+    try {
+      const result = await db.select({
+        id: contestants.id,
+        dragName: contestants.dragName,
+        realName: contestants.realName,
+        hometown: contestants.hometown,
+        biography: contestants.biography,
+        photoUrl: contestants.photoUrl,
+        twitter: contestants.twitter,
+        instagram: contestants.instagram,
+        tiktok: contestants.tiktok,
+        sourceUrl: contestants.sourceUrl,
+        age: appearances.age,
+        outcome: appearances.outcome,
+        season: seasons.name,
+        franchise: franchises.name,
+        seasonSourceUrl: seasons.sourceUrl,
+        createdAt: contestants.createdAt,
+        updatedAt: contestants.updatedAt,
+      })
+      .from(contestants)
+      .innerJoin(appearances, eq(contestants.id, appearances.contestantId))
+      .innerJoin(seasons, eq(appearances.seasonId, seasons.id))
+      .innerJoin(franchises, eq(seasons.franchiseId, franchises.id))
+      .where(eq(appearances.seasonId, seasonId))
+      .orderBy(contestants.dragName);
+      
+      return result;
+    } catch (error) {
+      console.error('Error fetching contestants by season:', error);
+      return [];
+    }
+  }
+
+  async getAppearancesByContestant(contestantId: string): Promise<(Appearance & { seasonName: string; franchiseName: string })[]> {
+    try {
+      const result = await db.select({
+        id: appearances.id,
+        contestantId: appearances.contestantId,
+        seasonId: appearances.seasonId,
+        age: appearances.age,
+        outcome: appearances.outcome,
+        createdAt: appearances.createdAt,
+        seasonName: seasons.name,
+        franchiseName: franchises.name,
+      })
+      .from(appearances)
+      .innerJoin(seasons, eq(appearances.seasonId, seasons.id))
+      .innerJoin(franchises, eq(seasons.franchiseId, franchises.id))
+      .where(eq(appearances.contestantId, contestantId))
+      .orderBy(desc(seasons.year));
+      
+      return result;
+    } catch (error) {
+      console.error('Error fetching appearances by contestant:', error);
+      return [];
+    }
   }
 
   private formatTimeAgo(date: Date): string {

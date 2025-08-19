@@ -1,6 +1,6 @@
-import { useState } from "react";
+import React, { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Plus, Edit, Trash2, Save, X, Calendar } from "lucide-react";
+import { Plus, Edit, Trash2, Save, X, Calendar, ChevronDown, ChevronRight } from "lucide-react";
 import { Header } from "@/components/layout/header";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -30,6 +30,7 @@ import {
 } from "@/components/ui/table";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
+import { ContestantsList } from "@/components/related-data";
 import type { Season, InsertSeason, Franchise } from "@shared/schema";
 
 interface SeasonWithFranchise extends Season {
@@ -40,6 +41,7 @@ export default function ManageSeasons() {
   const [editingSeason, setEditingSeason] = useState<SeasonWithFranchise | null>(null);
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [formData, setFormData] = useState<Partial<InsertSeason>>({});
+  const [expandedSeasons, setExpandedSeasons] = useState<Set<string>>(new Set());
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -133,9 +135,19 @@ export default function ManageSeasons() {
     setFormData({});
   };
 
+  const toggleExpanded = (seasonId: string) => {
+    const newExpanded = new Set(expandedSeasons);
+    if (newExpanded.has(seasonId)) {
+      newExpanded.delete(seasonId);
+    } else {
+      newExpanded.add(seasonId);
+    }
+    setExpandedSeasons(newExpanded);
+  };
+
   return (
     <div className="min-h-screen bg-gray-50">
-      <Header />
+      <Header title="Manage Seasons" subtitle="Add, edit, and manage season information" />
       <div className="container mx-auto px-4 py-8">
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-3xl font-bold text-gray-900">Manage Seasons</h1>
@@ -215,6 +227,7 @@ export default function ManageSeasons() {
                 <Table>
                   <TableHeader>
                     <TableRow>
+                      <TableHead className="w-8"></TableHead>
                       <TableHead>Name</TableHead>
                       <TableHead>Franchise</TableHead>
                       <TableHead>Year</TableHead>
@@ -224,8 +237,23 @@ export default function ManageSeasons() {
                   </TableHeader>
                   <TableBody>
                     {seasons.map((season) => (
-                      <TableRow key={season.id}>
-                        <TableCell>
+                      <React.Fragment key={season.id}>
+                        <TableRow>
+                          <TableCell>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => toggleExpanded(season.id)}
+                              className="p-1 h-8 w-8"
+                            >
+                              {expandedSeasons.has(season.id) ? (
+                                <ChevronDown className="h-4 w-4" />
+                              ) : (
+                                <ChevronRight className="h-4 w-4" />
+                              )}
+                            </Button>
+                          </TableCell>
+                          <TableCell>
                           {editingSeason?.id === season.id ? (
                             <Input
                               value={formData.name || ""}
@@ -303,6 +331,16 @@ export default function ManageSeasons() {
                           </div>
                         </TableCell>
                       </TableRow>
+                      {expandedSeasons.has(season.id) && (
+                        <TableRow>
+                          <TableCell colSpan={6} className="p-0">
+                            <div className="px-4 py-2 bg-muted/20">
+                              <ContestantsList seasonId={season.id} seasonName={season.name} />
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      )}
+                    </React.Fragment>
                     ))}
                   </TableBody>
                 </Table>

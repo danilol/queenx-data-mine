@@ -1,6 +1,6 @@
-import { useState } from "react";
+import React, { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Plus, Edit, Trash2, Save, X, Globe } from "lucide-react";
+import { Plus, Edit, Trash2, Save, X, Globe, ChevronDown, ChevronRight } from "lucide-react";
 import { Header } from "@/components/layout/header";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -22,12 +22,14 @@ import {
 } from "@/components/ui/table";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
+import { SeasonsList } from "@/components/related-data";
 import type { Franchise, InsertFranchise } from "@shared/schema";
 
 export default function ManageFranchises() {
   const [editingFranchise, setEditingFranchise] = useState<Franchise | null>(null);
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [formData, setFormData] = useState<Partial<InsertFranchise>>({});
+  const [expandedFranchises, setExpandedFranchises] = useState<Set<string>>(new Set());
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -109,9 +111,19 @@ export default function ManageFranchises() {
     setFormData({});
   };
 
+  const toggleExpanded = (franchiseId: string) => {
+    const newExpanded = new Set(expandedFranchises);
+    if (newExpanded.has(franchiseId)) {
+      newExpanded.delete(franchiseId);
+    } else {
+      newExpanded.add(franchiseId);
+    }
+    setExpandedFranchises(newExpanded);
+  };
+
   return (
     <div className="min-h-screen bg-gray-50">
-      <Header />
+      <Header title="Manage Franchises" subtitle="Add, edit, and manage franchise information" />
       <div className="container mx-auto px-4 py-8">
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-3xl font-bold text-gray-900">Manage Franchises</h1>
@@ -170,6 +182,7 @@ export default function ManageFranchises() {
                 <Table>
                   <TableHeader>
                     <TableRow>
+                      <TableHead className="w-8"></TableHead>
                       <TableHead>Name</TableHead>
                       <TableHead>Source URL</TableHead>
                       <TableHead>Created</TableHead>
@@ -178,18 +191,33 @@ export default function ManageFranchises() {
                   </TableHeader>
                   <TableBody>
                     {franchises.map((franchise) => (
-                      <TableRow key={franchise.id}>
-                        <TableCell>
-                          {editingFranchise?.id === franchise.id ? (
-                            <Input
-                              value={formData.name || ""}
-                              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                              className="w-48"
-                            />
-                          ) : (
-                            <div className="font-medium">{franchise.name}</div>
-                          )}
-                        </TableCell>
+                      <React.Fragment key={franchise.id}>
+                        <TableRow>
+                          <TableCell>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => toggleExpanded(franchise.id)}
+                              className="p-1 h-8 w-8"
+                            >
+                              {expandedFranchises.has(franchise.id) ? (
+                                <ChevronDown className="h-4 w-4" />
+                              ) : (
+                                <ChevronRight className="h-4 w-4" />
+                              )}
+                            </Button>
+                          </TableCell>
+                          <TableCell>
+                            {editingFranchise?.id === franchise.id ? (
+                              <Input
+                                value={formData.name || ""}
+                                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                                className="w-48"
+                              />
+                            ) : (
+                              <div className="font-medium">{franchise.name}</div>
+                            )}
+                          </TableCell>
                         <TableCell>
                           {editingFranchise?.id === franchise.id ? (
                             <Input
@@ -248,6 +276,16 @@ export default function ManageFranchises() {
                           </div>
                         </TableCell>
                       </TableRow>
+                      {expandedFranchises.has(franchise.id) && (
+                        <TableRow>
+                          <TableCell colSpan={5} className="p-0">
+                            <div className="px-4 py-2 bg-muted/20">
+                              <SeasonsList franchiseId={franchise.id} franchiseName={franchise.name} />
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      )}
+                    </React.Fragment>
                     ))}
                   </TableBody>
                 </Table>

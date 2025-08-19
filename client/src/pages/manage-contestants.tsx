@@ -1,6 +1,6 @@
-import { useState } from "react";
+import React, { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Plus, Edit, Trash2, Search, Save, X } from "lucide-react";
+import { Plus, Edit, Trash2, Search, Save, X, ChevronDown, ChevronRight } from "lucide-react";
 import { Header } from "@/components/layout/header";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -24,6 +24,7 @@ import {
 } from "@/components/ui/table";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
+import { AppearancesList } from "@/components/related-data";
 import type { FullContestant, InsertContestant, UpdateContestant } from "@shared/schema";
 
 export default function ManageContestants() {
@@ -31,6 +32,7 @@ export default function ManageContestants() {
   const [editingContestant, setEditingContestant] = useState<FullContestant | null>(null);
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [formData, setFormData] = useState<Partial<InsertContestant>>({});
+  const [expandedContestants, setExpandedContestants] = useState<Set<string>>(new Set());
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -117,9 +119,19 @@ export default function ManageContestants() {
     setFormData({});
   };
 
+  const toggleExpanded = (contestantId: string) => {
+    const newExpanded = new Set(expandedContestants);
+    if (newExpanded.has(contestantId)) {
+      newExpanded.delete(contestantId);
+    } else {
+      newExpanded.add(contestantId);
+    }
+    setExpandedContestants(newExpanded);
+  };
+
   return (
     <div className="min-h-screen bg-gray-50">
-      <Header />
+      <Header title="Manage Contestants" subtitle="Add, edit, and manage contestant information" />
       <div className="container mx-auto px-4 py-8">
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-3xl font-bold text-gray-900">Manage Contestants</h1>

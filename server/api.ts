@@ -177,6 +177,34 @@ apiRouter.delete("/appearances/:id", async (req, res) => {
   }
 });
 
+// Related data endpoints
+apiRouter.get("/franchises/:id/seasons", async (req, res) => {
+  try {
+    const seasons = await storage.getSeasonsByFranchise(req.params.id);
+    res.json(seasons);
+  } catch (error) {
+    res.status(500).json({ error: "Failed to fetch seasons for franchise" });
+  }
+});
+
+apiRouter.get("/seasons/:id/contestants", async (req, res) => {
+  try {
+    const contestants = await storage.getContestantsBySeason(req.params.id);
+    res.json(contestants);
+  } catch (error) {
+    res.status(500).json({ error: "Failed to fetch contestants for season" });
+  }
+});
+
+apiRouter.get("/contestants/:id/appearances", async (req, res) => {
+  try {
+    const appearances = await storage.getAppearancesByContestant(req.params.id);
+    res.json(appearances);
+  } catch (error) {
+    res.status(500).json({ error: "Failed to fetch appearances for contestant" });
+  }
+});
+
 // Scraping endpoints
 
 apiRouter.post("/scraping/start", async (req, res) => {
