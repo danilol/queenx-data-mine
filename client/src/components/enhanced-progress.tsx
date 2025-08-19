@@ -29,7 +29,7 @@ interface FranchiseStatus {
 
 interface ScrapingStatusData {
   status: "idle" | "running" | "completed" | "failed";
-  level: "full" | "franchise" | "season" | "contestant";
+  level?: "full" | "franchise" | "season" | "contestant";
   progress: number;
   currentFranchise?: string;
   currentSeason?: string;
@@ -60,6 +60,25 @@ const StatusIcon = ({ status }: { status: string }) => {
       return <Clock className="w-4 h-4 text-gray-400" />;
   }
 };
+
+const OverallProgress = ({ scrapingStatus }: EnhancedProgressProps) => (
+  <Card>
+    <CardHeader>
+      <CardTitle>Overall Progress</CardTitle>
+    </CardHeader>
+    <CardContent>
+      <div className="flex items-center justify-between mb-2">
+        <span className="text-sm text-muted-foreground">Status</span>
+        <StatusBadge status={scrapingStatus.status} />
+      </div>
+      <div className="flex items-center justify-between mb-4">
+        <span className="text-sm text-muted-foreground">Progress</span>
+        <span className="font-medium">{(scrapingStatus.progress || 0).toFixed(1)}%</span>
+      </div>
+      <Progress value={scrapingStatus.progress || 0} />
+    </CardContent>
+  </Card>
+);
 
 const StatusBadge = ({ status }: { status: string }) => {
   const variants = {
@@ -126,7 +145,8 @@ const DonutChart = ({ completed, total, label, color = "blue" }: {
   );
 };
 
-export function EnhancedProgress({ scrapingStatus }: EnhancedProgressProps) {
+export const EnhancedProgress = ({ scrapingStatus }: EnhancedProgressProps) => {
+  const { level = 'full' } = scrapingStatus;
   if (scrapingStatus.status === "idle") {
     return (
       <Card>
@@ -530,14 +550,6 @@ export function EnhancedProgress({ scrapingStatus }: EnhancedProgressProps) {
     );
   }
 
-  // Default fallback
-  return (
-    <Card>
-      <CardContent className="p-6">
-        <div className="flex items-center justify-center text-sm text-muted-foreground">
-          Unknown scraping level: {scrapingStatus.level}
-        </div>
-      </CardContent>
-    </Card>
-  );
+  // Default fallback for unknown or general progress
+  return <OverallProgress scrapingStatus={scrapingStatus} />;
 }

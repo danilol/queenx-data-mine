@@ -2,6 +2,7 @@ import { Router } from "express";
 import { storage } from "./storage";
 import { scraper } from "./services/scraper";
 import { mockScraper } from "./services/mock-scraper";
+import { exporter } from "./services/exporter";
 
 export const apiRouter = Router();
 
@@ -145,6 +146,18 @@ apiRouter.get("/scraping/jobs", async (req, res) => {
     res.json(jobs);
   } catch (error) {
     res.status(500).json({ error: "Failed to fetch scraping jobs" });
+  }
+});
+
+apiRouter.get("/export/csv", async (req, res) => {
+  try {
+    const zipBuffer = await exporter.exportToCsv();
+    res.setHeader("Content-Disposition", 'attachment; filename="export.zip"');
+    res.setHeader("Content-Type", "application/zip");
+    res.send(zipBuffer);
+  } catch (error) {
+    console.error("Export error:", error);
+    res.status(500).json({ error: "Failed to export data" });
   }
 });
 

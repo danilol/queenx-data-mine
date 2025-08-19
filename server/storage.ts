@@ -36,6 +36,7 @@ export interface IStorage {
   updateSeason(id: string, season: Partial<InsertSeason>): Promise<Season | undefined>;
 
   // Appearances
+  getAllAppearances(): Promise<Appearance[]>;
   getAppearance(contestantId: string, seasonId: string): Promise<Appearance | undefined>;
   createAppearance(appearance: InsertAppearance): Promise<Appearance>;
 
@@ -60,6 +61,9 @@ export class DrizzleStorage implements IStorage {
         hometown: contestants.hometown,
         biography: contestants.biography,
         photoUrl: contestants.photoUrl,
+        twitter: contestants.twitter,
+        instagram: contestants.instagram,
+        tiktok: contestants.tiktok,
         sourceUrl: contestants.sourceUrl,
         age: appearances.age,
         outcome: appearances.outcome,
@@ -96,6 +100,9 @@ export class DrizzleStorage implements IStorage {
         hometown: contestants.hometown,
         biography: contestants.biography,
         photoUrl: contestants.photoUrl,
+        twitter: contestants.twitter,
+        instagram: contestants.instagram,
+        tiktok: contestants.tiktok,
         sourceUrl: contestants.sourceUrl,
         age: appearances.age,
         outcome: appearances.outcome,
@@ -145,6 +152,9 @@ export class DrizzleStorage implements IStorage {
         hometown: contestants.hometown,
         biography: contestants.biography,
         photoUrl: contestants.photoUrl,
+        twitter: contestants.twitter,
+        instagram: contestants.instagram,
+        tiktok: contestants.tiktok,
         sourceUrl: contestants.sourceUrl,
         age: appearances.age,
         outcome: appearances.outcome,
@@ -277,6 +287,10 @@ export class DrizzleStorage implements IStorage {
   async createAppearance(appearance: InsertAppearance): Promise<Appearance> {
     const result = await db.insert(appearances).values(appearance).onConflictDoNothing().returning();
     return result[0];
+  }
+
+  async getAllAppearances(): Promise<Appearance[]> {
+    return db.select().from(appearances);
   }
 
   async getScrapingJobs(): Promise<ScrapingJob[]> {

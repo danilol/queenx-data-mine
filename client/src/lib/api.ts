@@ -61,7 +61,7 @@ export const api = {
   },
 
   // Scraping
-  getScrapingStatus: async (): Promise<ScrapingProgress | { status: string }> => {
+  getScrapingStatus: async (): Promise<ScrapingProgress> => {
     const response = await apiRequest("GET", "/api/scraping/status");
     return response.json();
   },
