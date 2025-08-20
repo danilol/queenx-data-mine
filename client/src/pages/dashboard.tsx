@@ -86,6 +86,62 @@ export default function Dashboard() {
     },
   });
 
+  // Database reset mutation (DEV only)
+  const databaseResetMutation = useMutation({
+    mutationFn: async () => {
+      const response = await fetch('/api/database/reset', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+      });
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Failed to reset database');
+      }
+      return response.json();
+    },
+    onSuccess: (data) => {
+      // Invalidate all queries to refresh the UI
+      queryClient.invalidateQueries();
+      toast({
+        title: "Database Reset Complete",
+        description: `All data has been cleared. ${data.tablesCleared.length} tables reset.`,
+        variant: "default",
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Database Reset Failed",
+        description: error instanceof Error ? error.message : "Failed to reset database",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleDatabaseReset = () => {
+    const confirmed = window.confirm(
+      "⚠️ ARE YOU SURE?\n\n" +
+      "This will permanently delete ALL data from the database:\n" +
+      "• All contestants\n" +
+      "• All seasons\n" +
+      "• All franchises\n" +
+      "• All appearances\n" +
+      "• All scraping jobs\n\n" +
+      "This action cannot be undone!"
+    );
+
+    if (confirmed) {
+      const doubleConfirm = window.confirm(
+        "🚨 FINAL WARNING!\n\n" +
+        "You are about to erase the entire database.\n" +
+        "Click OK only if you're absolutely certain."
+      );
+      
+      if (doubleConfirm) {
+        databaseResetMutation.mutate();
+      }
+    }
+  };
+
   const testS3Mutation = useMutation({
     mutationFn: () => api.testS3Connection(),
     onSuccess: (data) => {
@@ -126,6 +182,34 @@ export default function Dashboard() {
         />
 
         <div className="p-6 space-y-8 max-w-7xl mx-auto">
+          {/* Development Tools Section */}
+          {process.env.NODE_ENV === 'development' && (
+            <Card className="card-enhanced border-red-200 bg-red-50 dark:border-red-800 dark:bg-red-950">
+              <CardContent className="p-6">
+                <h3 className="text-xl font-semibold text-red-800 dark:text-red-200 mb-4 flex items-center gap-2">
+                  <Bug className="h-5 w-5" />
+                  Development Tools
+                </h3>
+                <div className="space-y-4">
+                  <div className="bg-red-100 dark:bg-red-900 border border-red-300 dark:border-red-700 rounded-lg p-4">
+                    <p className="text-red-800 dark:text-red-200 text-sm mb-3">
+                      ⚠️ <strong>Danger Zone:</strong> These tools are only available in development mode.
+                    </p>
+                    <Button
+                      onClick={handleDatabaseReset}
+                      disabled={databaseResetMutation.isPending}
+                      variant="destructive"
+                      className="flex items-center gap-2"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                      {databaseResetMutation.isPending ? "Resetting Database..." : "Reset Database"}
+                    </Button>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
           {/* S3 Upload Testing Section */}
           <Card className="card-enhanced">
             <CardContent className="p-6">

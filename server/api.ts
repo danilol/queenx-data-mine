@@ -435,6 +435,56 @@ apiRouter.post("/contestants/:id/lookup-fandom-url", async (req, res) => {
   }
 });
 
+// Database reset endpoint (DEV only)
+apiRouter.post("/database/reset", async (req, res) => {
+  try {
+    // Only allow in development environment
+    if (process.env.NODE_ENV !== 'development') {
+      return res.status(403).json({ 
+        error: "Database reset is only allowed in development mode" 
+      });
+    }
+
+    // Import database connection and tables
+    const { db } = await import('./db.js');
+    const { appearances, contestants, seasons, franchises, scrapingJobs } = await import('../shared/schema.js');
+
+    console.log('[database-reset] Starting database reset...');
+    
+    // Delete all data in dependency order (foreign key constraints)
+    await db.delete(appearances); // Delete appearances first (has foreign keys)
+    console.log('[database-reset] Cleared appearances table');
+    
+    await db.delete(scrapingJobs); // Delete scraping jobs
+    console.log('[database-reset] Cleared scraping jobs table');
+    
+    await db.delete(contestants); // Delete contestants
+    console.log('[database-reset] Cleared contestants table');
+    
+    await db.delete(seasons); // Delete seasons
+    console.log('[database-reset] Cleared seasons table');
+    
+    await db.delete(franchises); // Delete franchises last
+    console.log('[database-reset] Cleared franchises table');
+
+    console.log('[database-reset] Database reset completed successfully');
+
+    res.json({
+      success: true,
+      message: "Database has been completely reset. All data has been cleared.",
+      resetAt: new Date().toISOString(),
+      tablesCleared: ['appearances', 'contestants', 'seasons', 'franchises', 'scrapingJobs']
+    });
+
+  } catch (error) {
+    console.error('Database reset error:', error);
+    res.status(500).json({ 
+      error: "Failed to reset database",
+      details: error instanceof Error ? error.message : 'Unknown error'
+    });
+  }
+});
+
 // Image scraping endpoint
 apiRouter.post("/images/scrape-contestant", async (req, res) => {
   try {
