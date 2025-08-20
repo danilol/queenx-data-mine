@@ -133,28 +133,7 @@ export default function ContestantDetail() {
     },
   });
 
-  const imageScrapeMutation = useMutation({
-    mutationFn: () => 
-      api.scrapeContestantImages({
-        contestantId: id,
-        contestantName: contestant?.dragName || '',
-        sourceUrl: contestant?.metadataSourceUrl || '',
-        seasonName: contestant?.season || undefined
-      }),
-    onSuccess: (data) => {
-      toast({
-        title: "Image Scraping Completed",
-        description: `Downloaded ${data.result.imagesDownloaded} images for ${contestant?.dragName}`,
-      });
-    },
-    onError: (error) => {
-      toast({
-        title: "Image Scraping Failed",
-        description: error instanceof Error ? error.message : "Failed to scrape images",
-        variant: "destructive",
-      });
-    },
-  });
+
 
   if (isLoading) {
     return (
@@ -212,14 +191,6 @@ export default function ContestantDetail() {
               >
                 <Download className="h-4 w-4 mr-2" />
                 {scrapeContestantMutation.isPending ? "Starting..." : "Scrape Contestant"}
-              </Button>
-              <Button 
-                onClick={() => imageScrapeMutation.mutate()}
-                disabled={imageScrapeMutation.isPending || !contestant?.metadataSourceUrl}
-                variant="outline"
-              >
-                <Download className="h-4 w-4 mr-2" />
-                {imageScrapeMutation.isPending ? "Downloading..." : "Download Images"}
               </Button>
               {!contestant?.metadataSourceUrl && (
                 <Button 
