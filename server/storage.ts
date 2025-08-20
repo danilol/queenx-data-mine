@@ -3,6 +3,7 @@ import { drizzle } from 'drizzle-orm/postgres-js';
 import { eq, ilike, or, and, desc, asc, count, sql, getTableColumns } from 'drizzle-orm';
 import postgres from 'postgres';
 import 'dotenv/config';
+import { isImageScrapingEnabled } from './config';
 
 const connectionString = process.env.DATABASE_URL;
 if (!connectionString) {
@@ -178,7 +179,38 @@ export class DrizzleStorage implements IStorage {
 
     // Create the contestant with or without the fandom URL
     const result = await db.insert(contestants).values(insertContestant).returning();
-    return result[0];
+    const newContestant = result[0];
+
+    // If we found a fandom URL and image scraping is enabled, scrape images automatically
+    if (insertContestant.metadataSourceUrl && isImageScrapingEnabled()) {
+      console.log(`[storage] Image scraping is enabled. Starting image scraping for ${newContestant.dragName}`);
+      
+      try {
+        // Import and use image scraper
+        const { imageScraper } = await import('./services/image-scraper.js');
+        
+        // Get season name for context (if available)
+        const seasonName = undefined; // Season name not available in InsertContestant
+        
+        // Start image scraping asynchronously (don't block contestant creation)
+        imageScraper.scrapeContestantImages(
+          newContestant.dragName,
+          insertContestant.metadataSourceUrl,
+          seasonName
+        ).then((imageResult) => {
+          console.log(`[storage] Image scraping completed for ${newContestant.dragName}:`, imageResult);
+        }).catch((imageError) => {
+          console.error(`[storage] Image scraping failed for ${newContestant.dragName}:`, imageError);
+        });
+        
+      } catch (error) {
+        console.error(`[storage] Error initializing image scraper for ${newContestant.dragName}:`, error);
+      }
+    } else if (insertContestant.metadataSourceUrl) {
+      console.log(`[storage] Image scraping is disabled for ${newContestant.dragName}`);
+    }
+
+    return newContestant;
   }
 
   async updateContestant(id: string, updateData: UpdateContestant): Promise<Contestant | undefined> {

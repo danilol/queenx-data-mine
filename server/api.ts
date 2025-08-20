@@ -409,14 +409,42 @@ apiRouter.post("/contestants/:id/lookup-fandom-url", async (req, res) => {
       const updatedContestant = await storage.updateContestant(contestantId, {
         metadataSourceUrl: fandomUrl
       });
+
+      // If image scraping is enabled, start scraping images automatically
+      const { isImageScrapingEnabled } = await import('./config.js');
+      if (isImageScrapingEnabled()) {
+        console.log(`[api] Image scraping is enabled. Starting image scraping for ${contestant.dragName}`);
+        
+        try {
+          // Import and use image scraper
+          const { imageScraper } = await import('./services/image-scraper.js');
+          
+          // Start image scraping asynchronously (don't block the API response)
+          imageScraper.scrapeContestantImages(
+            contestant.dragName,
+            fandomUrl,
+            undefined // Season name not available in this context
+          ).then((imageResult) => {
+            console.log(`[api] Image scraping completed for ${contestant.dragName}:`, imageResult);
+          }).catch((imageError) => {
+            console.error(`[api] Image scraping failed for ${contestant.dragName}:`, imageError);
+          });
+          
+        } catch (error) {
+          console.error(`[api] Error initializing image scraper for ${contestant.dragName}:`, error);
+        }
+      } else {
+        console.log(`[api] Image scraping is disabled for ${contestant.dragName}`);
+      }
       
       res.json({
         success: true,
-        message: `Found and updated fandom URL for ${contestant.dragName}`,
+        message: `Found and updated fandom URL for ${contestant.dragName}${isImageScrapingEnabled() ? '. Image scraping started automatically.' : ''}`,
         contestantId,
         dragName: contestant.dragName,
         fandomUrl,
-        contestant: updatedContestant
+        contestant: updatedContestant,
+        imageScrapingTriggered: isImageScrapingEnabled()
       });
     } else {
       res.json({

@@ -4,6 +4,8 @@ This is a RuPaul's Drag Race contestant scraping and management system built as 
 
 ## Recent Changes (August 2025)
 
+- **Automatic Image Scraping Integration**: ✓ Implemented intelligent automatic image scraping that triggers whenever a fandom URL is successfully found and saved to the database, controlled by the image scraping configuration setting. Works for both new contestant creation (during scraping) and manual fandom URL lookup operations. Operates asynchronously without blocking API responses.
+- **Image Scraping Configuration System**: ✓ Complete configuration management system with API endpoints (/api/config) and dashboard UI controls for toggling image scraping on/off. Configuration persists across sessions and updates in real-time throughout the application.
 - **Code Cleanup Completed**: ✓ Removed all redundant and obsolete components including standalone view pages, unused modal components, and legacy progress visualization components while maintaining full functionality through management pages
 - **Schema Standardization**: ✓ Updated entire codebase to use consistent `metadataSourceUrl` field names across all components, services, and data files for better maintainability
 - **Component Architecture Cleanup**: ✓ Eliminated duplicated functionality by consolidating all CRUD operations into dedicated management pages with proper navigation structure
