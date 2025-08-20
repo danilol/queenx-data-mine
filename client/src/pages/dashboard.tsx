@@ -4,6 +4,7 @@ import { useState, useRef } from "react";
 import { Header } from "@/components/layout/header";
 import { StatsCards } from "@/components/stats-cards";
 import { ScrapingProgress } from "@/components/scraping-progress";
+import { ConfigSettings } from "@/components/config-settings";
 
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -263,6 +264,9 @@ export default function Dashboard() {
 
           {/* Stats Cards */}
           <StatsCards stats={stats} isLoading={statsLoading} />
+
+          {/* Configuration Settings */}
+          <ConfigSettings />
 
           {/* Scraping Progress */}
           <ScrapingProgress />

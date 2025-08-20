@@ -6,6 +6,7 @@ import { mockScraper } from "./services/mock-scraper";
 import { exporter } from "./services/exporter";
 import { s3Service } from "./services/s3";
 import { imageScraper } from "./services/image-scraper";
+import { getConfig, updateConfig, resetConfig } from "./config";
 
 export const apiRouter = Router();
 
@@ -493,6 +494,76 @@ apiRouter.post("/images/scrape-contestant", async (req, res) => {
     console.error("Image scraping error:", error);
     res.status(500).json({ 
       error: error instanceof Error ? error.message : "Failed to scrape contestant images" 
+    });
+  }
+});
+
+// Configuration endpoints
+apiRouter.get("/config", async (req, res) => {
+  try {
+    const config = getConfig();
+    res.json(config);
+  } catch (error) {
+    res.status(500).json({ error: "Failed to fetch configuration" });
+  }
+});
+
+apiRouter.patch("/config", async (req, res) => {
+  try {
+    const updatedConfig = updateConfig(req.body);
+    res.json({
+      message: "Configuration updated successfully",
+      config: updatedConfig
+    });
+  } catch (error) {
+    res.status(500).json({ 
+      error: "Failed to update configuration",
+      details: error instanceof Error ? error.message : 'Unknown error'
+    });
+  }
+});
+
+apiRouter.post("/config/reset", async (req, res) => {
+  try {
+    const defaultConfig = resetConfig();
+    res.json({
+      message: "Configuration reset to defaults",
+      config: defaultConfig
+    });
+  } catch (error) {
+    res.status(500).json({ 
+      error: "Failed to reset configuration",
+      details: error instanceof Error ? error.message : 'Unknown error'
+    });
+  }
+});
+
+// Image scraping toggle endpoint
+apiRouter.patch("/config/image-scraping", async (req, res) => {
+  try {
+    const { enabled } = req.body;
+    
+    if (typeof enabled !== 'boolean') {
+      return res.status(400).json({ error: "enabled must be a boolean value" });
+    }
+    
+    const currentConfig = getConfig();
+    const updatedConfig = updateConfig({
+      imageScraping: { 
+        ...currentConfig.imageScraping,
+        enabled 
+      }
+    });
+    
+    res.json({
+      message: `Image scraping ${enabled ? 'enabled' : 'disabled'}`,
+      imageScrapingEnabled: updatedConfig.imageScraping.enabled,
+      config: updatedConfig
+    });
+  } catch (error) {
+    res.status(500).json({ 
+      error: "Failed to update image scraping setting",
+      details: error instanceof Error ? error.message : 'Unknown error'
     });
   }
 });

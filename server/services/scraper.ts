@@ -8,6 +8,7 @@ import { FRANCHISES, FRANCHISES_WITH_URLS, SEASONS } from '../data/franchises';
 import 'dotenv/config';
 import { Season, ScrapingJobPayload, seasonStatusSchema, ScrapingRequest, ScrapingLevel } from "@shared/schema";
 import { z } from "zod";
+import { isImageScrapingEnabled, getConfig } from "../config";
 
 export interface ScrapingOptions {
   headless?: boolean;

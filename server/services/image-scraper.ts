@@ -1,6 +1,7 @@
 import { chromium, Browser, Page } from "playwright";
 import { s3Service } from "./s3";
 import { broadcastProgress } from "./websocket.js";
+import { isImageScrapingEnabled, getConfig } from "../config";
 
 export interface ImageScrapingResult {
   success: boolean;
@@ -46,6 +47,14 @@ export class ImageScraper {
       uploadedImages: [],
       errors: []
     };
+
+    // Check if image scraping is enabled
+    if (!isImageScrapingEnabled()) {
+      console.log(`[image-scraper] Image scraping is disabled. Skipping images for ${contestantName}`);
+      result.success = true; // Consider it successful since it's intentionally skipped
+      result.errors.push('Image scraping is disabled in configuration');
+      return result;
+    }
 
     if (!this.browser) {
       await this.initialize();
