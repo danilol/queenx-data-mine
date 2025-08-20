@@ -79,6 +79,10 @@ export class DrizzleStorage implements IStorage {
         instagram: contestants.instagram,
         tiktok: contestants.tiktok,
         metadataSourceUrl: contestants.metadataSourceUrl,
+        hasImages: contestants.hasImages,
+        imageCount: contestants.imageCount,
+        imageUrls: contestants.imageUrls,
+        lastImageScrapeAt: contestants.lastImageScrapeAt,
         age: appearances.age,
         outcome: appearances.outcome,
         season: seasons.name,
@@ -117,6 +121,10 @@ export class DrizzleStorage implements IStorage {
         instagram: contestants.instagram,
         tiktok: contestants.tiktok,
         metadataSourceUrl: contestants.metadataSourceUrl,
+        hasImages: contestants.hasImages,
+        imageCount: contestants.imageCount,
+        imageUrls: contestants.imageUrls,
+        lastImageScrapeAt: contestants.lastImageScrapeAt,
         age: appearances.age,
         outcome: appearances.outcome,
         season: seasons.name,
@@ -218,6 +226,25 @@ export class DrizzleStorage implements IStorage {
     return result[0];
   }
 
+  async updateContestantImages(dragName: string, imageUrls: string[]): Promise<void> {
+    try {
+      await db.update(contestants)
+        .set({
+          hasImages: imageUrls.length > 0,
+          imageCount: imageUrls.length,
+          imageUrls: imageUrls,
+          lastImageScrapeAt: new Date(),
+          updatedAt: new Date()
+        })
+        .where(eq(contestants.dragName, dragName));
+      
+      console.log(`[storage] Updated image information for ${dragName}: ${imageUrls.length} images`);
+    } catch (error) {
+      console.error(`[storage] Failed to update image information for ${dragName}:`, error);
+      throw error;
+    }
+  }
+
   async getRecentContestants(limit: number): Promise<FullContestant[]> {
     try {
       const result = await db.select({
@@ -230,6 +257,10 @@ export class DrizzleStorage implements IStorage {
         instagram: contestants.instagram,
         tiktok: contestants.tiktok,
         metadataSourceUrl: contestants.metadataSourceUrl,
+        hasImages: contestants.hasImages,
+        imageCount: contestants.imageCount,
+        imageUrls: contestants.imageUrls,
+        lastImageScrapeAt: contestants.lastImageScrapeAt,
         age: appearances.age,
         outcome: appearances.outcome,
         season: seasons.name,
@@ -508,6 +539,10 @@ export class DrizzleStorage implements IStorage {
         instagram: contestants.instagram,
         tiktok: contestants.tiktok,
         metadataSourceUrl: contestants.metadataSourceUrl,
+        hasImages: contestants.hasImages,
+        imageCount: contestants.imageCount,
+        imageUrls: contestants.imageUrls,
+        lastImageScrapeAt: contestants.lastImageScrapeAt,
         age: appearances.age,
         outcome: appearances.outcome,
         season: seasons.name,

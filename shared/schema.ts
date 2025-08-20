@@ -21,6 +21,10 @@ export const contestants = pgTable("contestants", {
   instagram: text("instagram"),
   tiktok: text("tiktok"),
   metadataSourceUrl: text("metadata_source_url"), // Source URL for contestant data scraping
+  hasImages: boolean("has_images").default(false), // Flag to indicate if images were successfully downloaded
+  imageCount: integer("image_count").default(0), // Number of images downloaded
+  imageUrls: text("image_urls").array(), // S3 URLs of downloaded images
+  lastImageScrapeAt: timestamp("last_image_scrape_at"), // When images were last scraped
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });

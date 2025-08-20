@@ -2,6 +2,9 @@ import { chromium, Browser, Page } from "playwright";
 import { s3Service } from "./s3";
 import { broadcastProgress } from "./websocket.js";
 import { isImageScrapingEnabled, getConfig } from "../config";
+import { db } from "../db";
+import { contestants } from "../../shared/schema";
+import { eq } from "drizzle-orm";
 
 export interface ImageScrapingResult {
   success: boolean;
@@ -218,6 +221,20 @@ export class ImageScraper {
       }
 
       result.success = result.imagesDownloaded > 0;
+
+      // Update database with image information
+      if (result.success) {
+        try {
+          const { DrizzleStorage } = await import('../storage.js');
+          const storage = new DrizzleStorage();
+          const imageUrls = result.uploadedImages.map(img => img.s3Url);
+          await storage.updateContestantImages(contestantName, imageUrls);
+          console.log(`[image-scraper] Updated database with ${imageUrls.length} image URLs for ${contestantName}`);
+        } catch (error) {
+          console.error(`[image-scraper] Failed to update database for ${contestantName}:`, error);
+          result.errors.push(`Failed to update database: ${error instanceof Error ? error.message : 'Unknown error'}`);
+        }
+      }
 
       broadcastProgress({
         jobId: null,

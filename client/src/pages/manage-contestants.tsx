@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useLocation } from "wouter";
-import { Plus, Edit, Trash2, Search, Save, X, ChevronDown, ChevronRight } from "lucide-react";
+import { Plus, Edit, Trash2, Search, Save, X, ChevronDown, ChevronRight, Image, ImageOff } from "lucide-react";
 import { Header } from "@/components/layout/header";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -137,14 +137,9 @@ export default function ManageContestants() {
                   rows={3}
                 />
                 <Input
-                  placeholder="Photo URL"
-                  value={formData.photoUrl || ""}
-                  onChange={(e) => setFormData({ ...formData, photoUrl: e.target.value })}
-                />
-                <Input
-                  placeholder="Source URL"
-                  value={formData.sourceUrl || ""}
-                  onChange={(e) => setFormData({ ...formData, sourceUrl: e.target.value })}
+                  placeholder="Metadata Source URL (optional)"
+                  value={formData.metadataSourceUrl || ""}
+                  onChange={(e) => setFormData({ ...formData, metadataSourceUrl: e.target.value })}
                 />
                 <div className="flex gap-2">
                   <Button onClick={handleCreate} disabled={createMutation.isPending} className="flex-1">
@@ -198,6 +193,7 @@ export default function ManageContestants() {
                       <TableHead>Hometown</TableHead>
                       <TableHead>Season</TableHead>
                       <TableHead>Outcome</TableHead>
+                      <TableHead>Images</TableHead>
                       <TableHead>Actions</TableHead>
                     </TableRow>
                   </TableHeader>
@@ -228,6 +224,20 @@ export default function ManageContestants() {
                           ) : (
                             "-"
                           )}
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-1">
+                            {contestant.hasImages ? (
+                              <>
+                                <Image className="h-4 w-4 text-green-600" />
+                                <span className="text-sm text-green-600">
+                                  {contestant.imageCount || 0}
+                                </span>
+                              </>
+                            ) : (
+                              <ImageOff className="h-4 w-4 text-gray-400" />
+                            )}
+                          </div>
                         </TableCell>
                         <TableCell>
                           <div className="flex gap-2">

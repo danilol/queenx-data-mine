@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useParams, useLocation } from "wouter";
-import { ArrowLeft, Save, X, Edit, Download } from "lucide-react";
+import { ArrowLeft, Save, X, Edit, Download, Image, Calendar, ExternalLink } from "lucide-react";
 import { Header } from "@/components/layout/header";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -79,7 +79,7 @@ export default function ContestantDetail() {
   const scrapeContestantMutation = useMutation({
     mutationFn: () => api.startScraping({ 
       level: 'contestant', 
-      metadataSourceUrl: contestant?.metadataSourceUrl || undefined 
+      sourceUrl: contestant?.metadataSourceUrl || undefined 
     }),
     onSuccess: () => {
       toast({
@@ -367,6 +367,61 @@ export default function ContestantDetail() {
               )}
             </CardContent>
           </Card>
+
+          {/* Images Gallery Section */}
+          {contestant.hasImages && contestant.imageUrls && contestant.imageUrls.length > 0 && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Image className="h-5 w-5" />
+                  Images ({contestant.imageCount || 0})
+                  {contestant.lastImageScrapeAt && (
+                    <span className="text-sm text-muted-foreground flex items-center gap-1">
+                      <Calendar className="h-4 w-4" />
+                      Last updated: {new Date(contestant.lastImageScrapeAt).toLocaleDateString()}
+                    </span>
+                  )}
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {contestant.imageUrls.map((imageUrl, index) => (
+                    <div key={index} className="relative group">
+                      <img
+                        src={imageUrl}
+                        alt={`${contestant.dragName} - Image ${index + 1}`}
+                        className="w-full h-48 object-cover rounded-lg shadow-sm hover:shadow-md transition-shadow cursor-pointer"
+                        onClick={() => window.open(imageUrl, '_blank')}
+                      />
+                      <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity rounded-lg flex items-center justify-center">
+                        <ExternalLink className="h-6 w-6 text-white" />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Image Status for contestants without images */}
+          {(!contestant.hasImages || !contestant.imageUrls || contestant.imageUrls.length === 0) && (
+            <Card className="border-dashed">
+              <CardContent className="p-6 text-center">
+                <Image className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                <h3 className="text-lg font-medium text-muted-foreground mb-2">No Images Available</h3>
+                <p className="text-sm text-muted-foreground mb-4">
+                  {contestant.metadataSourceUrl 
+                    ? "Click 'Download Images' above to scrape images from the source URL"
+                    : "Add a metadata source URL first, then download images"}
+                </p>
+                {contestant.lastImageScrapeAt && (
+                  <p className="text-xs text-muted-foreground">
+                    Last attempt: {new Date(contestant.lastImageScrapeAt).toLocaleDateString()}
+                  </p>
+                )}
+              </CardContent>
+            </Card>
+          )}
 
           <Card>
             <CardHeader>
