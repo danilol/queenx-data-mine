@@ -56,6 +56,7 @@ export class ImageScraper {
     metadataSourceUrl: string,
     seasonName?: string
   ): Promise<ImageScrapingResult> {
+    console.log(`[image-scraper] Starting image scraping for ${contestantName} from ${metadataSourceUrl}`);
     const result: ImageScrapingResult = {
       success: false,
       imagesDownloaded: 0,
@@ -114,6 +115,10 @@ export class ImageScraper {
         '.wikia-gallery-item img',
         '.gallery img',
         '.mw-gallery-traditional img',
+        '#mw-content-text .wikia-gallery-item .image img',
+        '#mw-content-text .gallery .image img',
+        '#mw-content-text .thumb .image img',
+        '#mw-content-text .image img', // More generic fallback within the content area
         // More generic selectors as fallback
         'img[src*="look"]',
         'img[src*="runway"]',
@@ -151,9 +156,11 @@ export class ImageScraper {
       }
 
       if (images.length === 0) {
+        console.log(`[image-scraper] No images found for ${contestantName} on page ${metadataSourceUrl}`);
         result.errors.push('No images found on the page');
         return result;
       }
+      console.log(`[image-scraper] Found a total of ${images.length} potential images for ${contestantName}.`);
 
       // Filter for season-specific images if seasonName is provided
       if (seasonName) {
@@ -191,8 +198,13 @@ export class ImageScraper {
             currentItem: `image_${i + 1}`
           });
 
+          console.log(`[image-scraper] Downloading image for ${contestantName} from: ${image.src}`);
           // Download the image
-          const response = await page.goto(image.src, { timeout: 15000 });
+          // Clean the URL to remove resizing/versioning parameters
+          const cleanedUrl = image.src.split('/revision/')[0];
+          console.log(`[image-scraper] Downloading cleaned image for ${contestantName} from: ${cleanedUrl}`);
+
+          const response = await page.goto(cleanedUrl, { timeout: 15000 });
           
           if (!response || response.status() !== 200) {
             result.errors.push(`Failed to download image: ${image.src}`);
@@ -240,9 +252,9 @@ export class ImageScraper {
           result.imagesDownloaded++;
 
         } catch (error) {
-          const errorMsg = `Failed to process image ${i + 1}: ${error instanceof Error ? error.message : 'Unknown error'}`;
-          result.errors.push(errorMsg);
-          console.error(errorMsg);
+          const errorMsg = `Failed to process image ${i + 1} (${image.src}):`;
+          console.error(errorMsg, error); // Log the full error object
+          result.errors.push(`${errorMsg} ${error instanceof Error ? error.message : 'Unknown error'}`);
         }
       }
 

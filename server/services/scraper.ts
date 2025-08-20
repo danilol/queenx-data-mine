@@ -221,9 +221,18 @@ export class RuPaulScraper {
       if (contestant.metadataSourceUrl) {
         console.log(`[scraper] Navigating to ${contestant.metadataSourceUrl} for contestant: ${contestant.dragName}`);
         await page.goto(contestant.metadataSourceUrl, { waitUntil: 'networkidle' });
-        // Here you would add logic to find and process the contestant's data on their own page.
-        // For now, we'll assume the necessary data is on a season page and this is a placeholder.
-        // This part can be expanded to scrape more details from a contestant-specific page.
+
+        // Trigger image scraping for the contestant
+        if (isImageScrapingEnabled()) {
+          console.log(`[scraper] Triggering image scraping for ${contestant.dragName}`);
+          const { imageScraper } = await import('./image-scraper.js');
+          imageScraper.scrapeContestantImages(
+            contestant.dragName,
+            contestant.metadataSourceUrl
+          ).catch(err => {
+            console.error(`[scraper] Image scraping failed for ${contestant.dragName}:`, err);
+          });
+        }
       }
       this.updateSeasonStatus(`Contestant: ${contestant.dragName}`, 'completed');
       await page.close();
@@ -322,6 +331,7 @@ export class RuPaulScraper {
   }
 
   private async scrapeContestantFromRow(row: any, seasonData: Season) {
+    console.log(`[scraper] Processing a contestant row for season: ${seasonData.name}`);
     const name = await row.locator('th').all();
     const cells = await row.locator('td').all();
     if (cells.length < 3) return;
@@ -344,7 +354,17 @@ export class RuPaulScraper {
           // Don't set metadataSourceUrl here - let createContestantWithFandomUrl find the fandom URL
         });
       } else {
-        console.log(`[scraper] Contestant ${dragName} already exists, skipping`);
+        console.log(`[scraper] Contestant ${dragName} already exists.`);
+        // If existing contestant has no URL, try to find it.
+        if (!contestant.metadataSourceUrl) {
+          console.log(`[scraper] Existing contestant ${dragName} is missing a Fandom URL. Attempting lookup...`);
+          const { getFandomUrl } = await import('./fandom-lookup.js');
+          const fandomUrl = await getFandomUrl(dragName, { headless: true, timeout: 20000 });
+          if (fandomUrl) {
+            contestant = await storage.updateContestant(contestant.id, { metadataSourceUrl: fandomUrl }) || contestant;
+            console.log(`[scraper] Found and updated Fandom URL for ${dragName}: ${fandomUrl}`);
+          }
+        }
       }
 
       const season = await storage.getSeasonByName(seasonData.name);
@@ -356,6 +376,19 @@ export class RuPaulScraper {
             seasonId: season.id,
             age: age,
             outcome: this.extractOutcome(await cells[cells.length - 1]?.textContent() || ""),
+          });
+        }
+
+        // After creating or finding a contestant, trigger image scraping if enabled
+        if (isImageScrapingEnabled() && contestant.metadataSourceUrl) {
+          console.log(`[scraper] Triggering image scraping for ${contestant.dragName}`);
+          const { imageScraper } = await import('./image-scraper.js');
+          imageScraper.scrapeContestantImages(
+            contestant.dragName,
+            contestant.metadataSourceUrl,
+            season.name
+          ).catch(err => {
+            console.error(`[scraper] Image scraping failed for ${contestant.dragName}:`, err);
           });
         }
       }

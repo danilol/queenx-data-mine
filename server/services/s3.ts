@@ -113,7 +113,7 @@ export class S3Service {
 
       // Return the key and constructed URL
       const url = this.getPublicUrl(key);
-      
+      console.log(`[s3] Successfully uploaded file to S3. Key: ${key}`);
       return { key, url };
     } catch (error) {
       console.error('S3 upload error:', error);
@@ -129,9 +129,11 @@ export class S3Service {
       });
 
       await this.client.send(command);
+      console.log(`[s3] File exists check: true, Key: ${key}`);
       return true; // File exists
     } catch (error: any) {
       if (error.name === 'NotFound' || error.$metadata?.httpStatusCode === 404) {
+        console.log(`[s3] File exists check: false, Key: ${key}`);
         return false; // File does not exist
       }
       // Re-throw other errors (like permission issues)
