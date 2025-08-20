@@ -144,11 +144,26 @@ export class S3Service {
   }
 
   async getObject(key: string) {
+    try {
+      const command = new GetObjectCommand({
+        Bucket: this.bucketName,
+        Key: key,
+      });
+      return await this.client.send(command);
+    } catch (error: any) {
+      console.error(`S3 getObject error for key ${key}:`, error);
+      throw error;
+    }
+  }
+
+  // Generate a presigned URL for direct access (alternative approach)
+  async getPresignedUrl(key: string, expiresIn: number = 3600): Promise<string> {
+    const { getSignedUrl } = await import('@aws-sdk/s3-request-presigner');
     const command = new GetObjectCommand({
       Bucket: this.bucketName,
       Key: key,
     });
-    return await this.client.send(command);
+    return await getSignedUrl(this.client, command, { expiresIn });
   }
 
   async testConnection(): Promise<{ success: boolean; message: string }> {
