@@ -132,26 +132,17 @@ export class MockImageScraper {
             currentItem: `image_${i + 1}`
           });
 
-          // Create a minimal valid PNG image (1x1 pixel transparent PNG)
-          const mockImageBuffer = Buffer.from([
-            0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A, // PNG signature
-            0x00, 0x00, 0x00, 0x0D, 0x49, 0x48, 0x44, 0x52, // IHDR chunk
-            0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x01, // 1x1 pixel
-            0x08, 0x06, 0x00, 0x00, 0x00, 0x1F, 0x15, 0xC4, // RGBA, CRC
-            0x89, 0x00, 0x00, 0x00, 0x0B, 0x49, 0x44, 0x41, // IDAT chunk
-            0x54, 0x08, 0x1D, 0x01, 0x00, 0x00, 0x00, 0x00, // compressed data
-            0x00, 0x05, 0x57, 0x72, 0x9C, 0x00, 0x00, 0x00, // end of IDAT
-            0x00, 0x49, 0x45, 0x4E, 0x44, 0xAE, 0x42, 0x60, 0x82 // IEND chunk
-          ]);
+          // Create a visible placeholder PNG image (50x50 colored square)
+          const mockImageBuffer = this.createPlaceholderImage(mockImage.description);
           
           // Upload mock image using the uploadContestantImage method
-          const imageName = `${mockImage.description.replace(/[^a-zA-Z0-9]/g, '-').toLowerCase()}.png`;
+          const imageName = `${mockImage.description.replace(/[^a-zA-Z0-9]/g, '-').toLowerCase()}.svg`;
           
           const uploadResult = await s3Service.uploadContestantImage(
             mockImageBuffer,
             contestantName,
             imageName,
-            'image/png'
+            'image/svg+xml'
           );
 
           result.uploadedImages.push({
@@ -218,6 +209,26 @@ export class MockImageScraper {
 
   private sleep(ms: number): Promise<void> {
     return new Promise(resolve => setTimeout(resolve, ms));
+  }
+
+  private createPlaceholderImage(description: string): Buffer {
+    // Create a simple SVG placeholder that browsers can display
+    const color = this.getColorForDescription(description);
+    const svgContent = `<?xml version="1.0" encoding="UTF-8"?>
+<svg width="200" height="200" xmlns="http://www.w3.org/2000/svg">
+  <rect width="200" height="200" fill="${color}"/>
+  <text x="100" y="90" font-family="Arial, sans-serif" font-size="16" fill="white" text-anchor="middle">${description}</text>
+  <text x="100" y="110" font-family="Arial, sans-serif" font-size="12" fill="rgba(255,255,255,0.8)" text-anchor="middle">Mock Image</text>
+  <circle cx="100" cy="150" r="25" fill="rgba(255,255,255,0.3)" stroke="white" stroke-width="2"/>
+</svg>`;
+    
+    return Buffer.from(svgContent, 'utf8');
+  }
+
+  private getColorForDescription(description: string): string {
+    const colors = ['#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FECA57', '#FF9FF3', '#54A0FF'];
+    const index = description.length % colors.length;
+    return colors[index];
   }
 }
 
