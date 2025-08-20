@@ -4,6 +4,8 @@ This is a RuPaul's Drag Race contestant scraping and management system built as 
 
 ## Recent Changes (August 2025)
 
+- **Image Display System Completed**: ✓ Successfully resolved S3 image access issues by implementing presigned URL redirects that bypass ListBucket permission requirements. Images now display properly through secure, time-limited URLs that work with the existing AWS IAM configuration. Created colorful SVG placeholder images (200x200) with descriptive text labels that browsers can display properly, replacing the previous tiny PNG files that appeared as broken images.
+
 - **Unified Dashboard Interface**: ✓ Merged Dashboard and Scraper pages into a single unified interface, eliminating duplication and creating a comprehensive control center. The new dashboard includes scraping controls at the top, enhanced progress visualization, stats, configuration, and development tools in a logical priority order.
 - **Enhanced Dashboard Layout and Progress Visualization**: ✓ Reordered dashboard sections to prioritize scraping progress at the top per user requirements, with development tools moved to bottom. Implemented comprehensive progress visualization with real-time counters for franchises, seasons, and contestants, processing rate metrics, time estimation, and hierarchical progress breakdown for large datasets (1000+ records).
 - **Improved Scraping Progress Component**: ✓ Created enhanced progress visualization with gradients, icons, live counters updating every 2 seconds during active scraping, performance metrics, and detailed progress breakdown for better handling of large-scale scraping operations.
