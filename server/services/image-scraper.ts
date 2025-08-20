@@ -119,6 +119,11 @@ export class ImageScraper {
         '#mw-content-text .gallery .image img',
         '#mw-content-text .thumb .image img',
         '#mw-content-text .image img', // More generic fallback within the content area
+        // Additional fandom-specific selectors
+        '.portable-infobox img',
+        '.infobox img',
+        '.tabbertab img',
+        '.tabber img',
         // More generic selectors as fallback
         'img[src*="look"]',
         'img[src*="runway"]',
@@ -128,32 +133,43 @@ export class ImageScraper {
         'img[alt*="outfit"]'
       ];
 
-      let images: any[] = [];
+      let allImages: any[] = [];
       
-      // Try each selector until we find images
+      // Try ALL selectors and combine results instead of stopping at first match
       for (const selector of imageSelectors) {
         try {
-          images = await page.$$eval(selector, (imgs) => {
+          const selectorImages = await page.$$eval(selector, (imgs) => {
             return imgs.map((img: any) => ({
               src: img.src,
               alt: img.alt || '',
-              title: img.title || ''
+              title: img.title || '',
+              selector: selector // Track which selector found this image
             })).filter(img => 
               img.src && 
               !img.src.includes('data:') && 
+              !img.src.includes('wikia-beacon') &&
+              !img.src.includes('scorecardresearch') &&
               (img.src.includes('.jpg') || img.src.includes('.jpeg') || img.src.includes('.png') || img.src.includes('.webp'))
             );
           });
           
-          if (images.length > 0) {
-            console.log(`Found ${images.length} images with selector: ${selector}`);
-            break;
+          if (selectorImages.length > 0) {
+            console.log(`Found ${selectorImages.length} images with selector: ${selector}`);
+            allImages.push(...selectorImages);
           }
         } catch (error) {
           console.log(`Selector ${selector} failed:`, error);
           continue;
         }
       }
+
+      // Remove duplicates based on src URL
+      const uniqueImages = allImages.filter((img, index, self) => 
+        index === self.findIndex(i => i.src === img.src)
+      );
+      
+      console.log(`[image-scraper] Found total of ${allImages.length} images, ${uniqueImages.length} unique images for ${contestantName}`);
+      let images = uniqueImages;
 
       if (images.length === 0) {
         console.log(`[image-scraper] No images found for ${contestantName} on page ${metadataSourceUrl}`);
@@ -199,15 +215,41 @@ export class ImageScraper {
           });
 
           console.log(`[image-scraper] Downloading image for ${contestantName} from: ${image.src}`);
-          // Download the image
-          // Clean the URL to remove resizing/versioning parameters
-          const cleanedUrl = image.src.split('/revision/')[0];
-          console.log(`[image-scraper] Downloading cleaned image for ${contestantName} from: ${cleanedUrl}`);
+          
+          // Try multiple URL variants for better success rate
+          const urlsToTry = [
+            image.src, // Original URL
+            image.src.split('/revision/')[0], // Remove revision part
+            image.src.replace(/\/scale-to-width-down\/\d+/, ''), // Remove scale parameters
+            image.src.replace(/\/zoom-crop\/width\/\d+\/height\/\d+/, '') // Remove crop parameters
+          ].filter((url, index, self) => self.indexOf(url) === index); // Remove duplicates
 
-          const response = await page.goto(cleanedUrl, { timeout: 15000 });
+          let response = null;
+          let lastError = null;
+          
+          for (const urlToTry of urlsToTry) {
+            try {
+              console.log(`[image-scraper] Trying URL for ${contestantName}: ${urlToTry}`);
+              response = await page.goto(urlToTry, { timeout: 30000 });
+              
+              if (response && response.status() === 200) {
+                console.log(`[image-scraper] Successfully downloaded from: ${urlToTry}`);
+                break;
+              } else {
+                console.log(`[image-scraper] URL failed with status ${response?.status()}: ${urlToTry}`);
+                lastError = `HTTP ${response?.status()} for ${urlToTry}`;
+              }
+            } catch (error) {
+              console.log(`[image-scraper] URL attempt failed: ${urlToTry}`, error);
+              lastError = error instanceof Error ? error.message : String(error);
+              continue;
+            }
+          }
           
           if (!response || response.status() !== 200) {
-            result.errors.push(`Failed to download image: ${image.src}`);
+            const errorMsg = `Failed to download image from any URL variant: ${image.src} (last error: ${lastError})`;
+            console.error(`[image-scraper] ${errorMsg}`);
+            result.errors.push(errorMsg);
             continue;
           }
 
@@ -254,6 +296,14 @@ export class ImageScraper {
         } catch (error) {
           const errorMsg = `Failed to process image ${i + 1} (${image.src}):`;
           console.error(errorMsg, error); // Log the full error object
+          console.error(`[image-scraper] Full error details for ${contestantName}:`, {
+            imageUrl: image.src,
+            cleanedUrl: image.src.split('/revision/')[0],
+            imageAlt: image.alt,
+            imageTitle: image.title,
+            error: error instanceof Error ? error.message : String(error),
+            errorStack: error instanceof Error ? error.stack : undefined
+          });
           result.errors.push(`${errorMsg} ${error instanceof Error ? error.message : 'Unknown error'}`);
         }
       }
@@ -375,5 +425,57 @@ export const imageScraper = {
   async scrapeContestantImages(contestantName: string, metadataSourceUrl: string, seasonName?: string) {
     const scraper = await getImageScraper();
     return scraper.scrapeContestantImages(contestantName, metadataSourceUrl, seasonName);
+  },
+
+  // Debug function to analyze page structure for specific contestants
+  async debugPageStructure(contestantName: string, metadataSourceUrl: string) {
+    console.log(`[image-scraper] Starting debug analysis for ${contestantName}`);
+    
+    if (!scraper || !(scraper instanceof ImageScraper)) {
+      console.log("[image-scraper] Playwright not available for debugging");
+      return { error: "Playwright not available" };
+    }
+
+    let page: Page | null = null;
+    try {
+      // Access browser through the scraper instance (we need to make browser public or add a getter)
+      if (!scraper['browser']) {
+        await scraper.initialize();
+      }
+      page = await scraper['browser']!.newPage();
+      await page.goto(metadataSourceUrl, { waitUntil: 'networkidle', timeout: 30000 });
+      
+      // Analyze page structure
+      const pageInfo = await page.evaluate(() => {
+        const galleries = document.querySelectorAll('.gallery, .wikia-gallery, .mw-gallery-traditional');
+        const tabbers = document.querySelectorAll('.tabber, .tabbertab');
+        const infoboxes = document.querySelectorAll('.portable-infobox, .infobox');
+        const allImages = document.querySelectorAll('img');
+        
+        return {
+          totalImages: allImages.length,
+          galleries: galleries.length,
+          tabbers: tabbers.length,
+          infoboxes: infoboxes.length,
+          imagesByType: {
+            galleryImages: document.querySelectorAll('.gallery img, .wikia-gallery img').length,
+            tabberImages: document.querySelectorAll('.tabber img, .tabbertab img').length,
+            infoboxImages: document.querySelectorAll('.portable-infobox img, .infobox img').length,
+            contentImages: document.querySelectorAll('#mw-content-text img').length
+          }
+        };
+      });
+      
+      console.log(`[image-scraper] Page structure for ${contestantName}:`, pageInfo);
+      return pageInfo;
+      
+    } catch (error) {
+      console.error(`[image-scraper] Debug failed for ${contestantName}:`, error);
+      return { error: error instanceof Error ? error.message : 'Unknown error' };
+    } finally {
+      if (page) {
+        await page.close();
+      }
+    }
   }
 };
