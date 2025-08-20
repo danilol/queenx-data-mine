@@ -153,6 +153,23 @@ export class ImageScraper {
       // Additional wait to ensure page fully loads after privacy dialog
       await page.waitForTimeout(3000);
 
+      // Scroll down to trigger lazy loading of images
+      console.log(`[image-scraper] Scrolling to trigger lazy loading for ${contestantName}...`);
+      await page.evaluate(() => {
+        window.scrollTo(0, document.body.scrollHeight);
+      });
+      await page.waitForTimeout(2000);
+      
+      // Scroll back to top and then to middle to ensure all images load
+      await page.evaluate(() => {
+        window.scrollTo(0, 0);
+      });
+      await page.waitForTimeout(1000);
+      await page.evaluate(() => {
+        window.scrollTo(0, document.body.scrollHeight / 2);
+      });
+      await page.waitForTimeout(2000);
+
       // Debug: Log page structure for troubleshooting
       console.log(`[image-scraper] Analyzing page structure for ${contestantName}...`);
       const pageInfo = await page.evaluate(() => {
@@ -214,12 +231,14 @@ export class ImageScraper {
         try {
           const selectorImages = await page.$$eval(selector, (imgs, selectorName) => {
             return imgs.map((img: any) => ({
-              src: img.src,
+              src: img.src || img.getAttribute('data-src') || img.getAttribute('data-image-src'), // Handle lazy loading
               alt: img.alt || '',
               title: img.title || '',
-              selector: selectorName // Track which selector found this image
+              selector: selectorName,
+              lazyLoaded: !img.src && (img.getAttribute('data-src') || img.getAttribute('data-image-src'))
             })).filter(img => 
               img.src && 
+              !img.src.includes('data:image/gif') && // Skip lazy loading placeholders
               !img.src.includes('data:') && 
               !img.src.includes('wikia-beacon') &&
               !img.src.includes('scorecardresearch') &&
@@ -252,12 +271,13 @@ export class ImageScraper {
         try {
           const fallbackImages = await page.$$eval('img', (imgs) => {
             return imgs.map((img: any) => ({
-              src: img.src,
+              src: img.src || img.getAttribute('data-src') || img.getAttribute('data-image-src'), // Handle lazy loading
               alt: img.alt || '',
               title: img.title || '',
               selector: 'fallback-all-images',
               width: img.width || 0,
-              height: img.height || 0
+              height: img.height || 0,
+              lazyLoaded: !img.src && (img.getAttribute('data-src') || img.getAttribute('data-image-src'))
             })).filter(img => {
               // Basic valid image checks
               if (!img.src || img.src.includes('data:') || img.src.includes('wikia-beacon') || img.src.includes('scorecardresearch')) {

@@ -381,6 +381,38 @@ apiRouter.post("/s3/test", async (req, res) => {
   }
 });
 
+// Debug image scraping endpoint
+apiRouter.post("/contestants/:id/debug-images", async (req, res) => {
+  try {
+    const contestantId = req.params.id;
+    const contestant = await storage.getContestant(contestantId);
+    
+    if (!contestant) {
+      return res.status(404).json({ error: "Contestant not found" });
+    }
+
+    if (!contestant.metadataSourceUrl) {
+      return res.status(400).json({ error: "No metadata source URL available for debugging" });
+    }
+
+    console.log(`[debug] Starting image debug for ${contestant.dragName}`);
+    const { imageScraper } = await import('./services/image-scraper.js');
+    const debugResult = await imageScraper.debugPageStructure(contestant.dragName, contestant.metadataSourceUrl);
+    
+    res.json({
+      contestant: contestant.dragName,
+      url: contestant.metadataSourceUrl,
+      debug: debugResult
+    });
+  } catch (error) {
+    console.error('[debug] Image debug failed:', error);
+    res.status(500).json({ 
+      error: 'Debug failed', 
+      details: error instanceof Error ? error.message : 'Unknown error' 
+    });
+  }
+});
+
 // Fandom URL lookup endpoint
 apiRouter.post("/contestants/:id/lookup-fandom-url", async (req, res) => {
   try {
