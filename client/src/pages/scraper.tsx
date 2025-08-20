@@ -307,9 +307,7 @@ export default function Scraper() {
           </div>
 
           {/* Enhanced Progress Visualization */}
-          {scrapingStatus && 'status' in scrapingStatus && scrapingStatus.status !== 'idle' && (
-            <ScrapingProgress />
-          )}
+          <ScrapingProgress />
 
           {/* Data Sources Status */}
           <Card>

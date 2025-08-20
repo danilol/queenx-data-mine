@@ -11,7 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { api } from "@/lib/api";
-import { FullContestant, Contestant } from "@shared/schema";
+import { Contestant } from "@shared/schema";
 import { Link } from "wouter";
 
 export default function Dashboard() {
@@ -26,40 +26,11 @@ export default function Dashboard() {
     queryFn: () => api.getStats(),
   });
 
-  const { data: recentContestantsData = [] } = useQuery<FullContestant[]>({
-    queryKey: ["/api/contestants", "recent"],
-    queryFn: () => api.getContestants(undefined, 10),
-  });
-
-  const recentContestants = recentContestantsData.filter((c: FullContestant, i: number, arr: FullContestant[]) => arr.findIndex(c2 => c2.id === c.id) === i);
 
 
 
-  const handleDeleteContestant = async (contestant: Contestant) => {
-    if (window.confirm(`Are you sure you want to delete ${contestant.dragName}?`)) {
-      try {
-        await api.deleteContestant(contestant.id);
-        toast({
-          title: "Contestant Deleted",
-          description: `${contestant.dragName} has been removed from the database.`,
-        });
-      } catch (error) {
-        toast({
-          title: "Delete Failed",
-          description: error instanceof Error ? error.message : "Failed to delete contestant",
-          variant: "destructive",
-        });
-      }
-    }
-  };
 
-  const getOutcomeVariant = (outcome: string | undefined) => {
-    if (!outcome) return "outline";
-    const lower = outcome.toLowerCase();
-    if (lower.includes("winner")) return "default";
-    if (lower.includes("runner-up")) return "secondary";
-    return "outline";
-  };
+
 
   // S3 upload mutations
   const uploadFileMutation = useMutation({
@@ -271,88 +242,7 @@ export default function Dashboard() {
           {/* Scraping Progress */}
           <ScrapingProgress />
 
-          {/* Recent Contestants */}
-          <Card className="card-enhanced">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between mb-6">
-                <h3 className="text-xl font-semibold text-foreground">Recently Added Contestants</h3>
-                <Link href="/contestants">
-                  <span className="text-primary hover:text-primary/80 font-medium text-sm cursor-pointer transition-colors">
-                    View All →
-                  </span>
-                </Link>
-              </div>
 
-              {recentContestants.length === 0 ? (
-                <div className="text-center py-8 text-muted-foreground">
-                  <p>No contestants found. Start scraping to populate the database.</p>
-                </div>
-              ) : (
-                <div className="overflow-x-auto">
-                  <table className="w-full">
-                    <thead>
-                      <tr className="border-b">
-                        <th className="text-left py-3 px-2 font-medium text-muted-foreground text-sm">Photo</th>
-                        <th className="text-left py-3 px-2 font-medium text-muted-foreground text-sm">Drag Name</th>
-                        <th className="text-left py-3 px-2 font-medium text-muted-foreground text-sm">Real Name</th>
-                        <th className="text-left py-3 px-2 font-medium text-muted-foreground text-sm">Season</th>
-                        <th className="text-left py-3 px-2 font-medium text-muted-foreground text-sm">Hometown</th>
-                        <th className="text-left py-3 px-2 font-medium text-muted-foreground text-sm">Outcome</th>
-                        <th className="text-left py-3 px-2 font-medium text-muted-foreground text-sm">Actions</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-muted/50">
-                      {recentContestants.map((contestant) => (
-                        <tr key={contestant.id} className="border-b hover:bg-muted/50">
-                          <td className="py-4 px-2">
-                            <div className="w-12 h-12 bg-muted/50 rounded-lg flex items-center justify-center">
-                              <span className="text-muted-foreground text-xs">No Photo</span>
-                            </div>
-                          </td>
-                          <td className="py-4 px-2">
-                            <div className="font-medium text-foreground">{contestant.dragName}</div>
-                          </td>
-                          <td className="py-4 px-2 text-muted-foreground">{contestant.realName || "—"}</td>
-                          <td className="py-4 px-2">
-                            <Badge variant="secondary">{contestant.season}</Badge>
-                          </td>
-                          <td className="py-4 px-2 text-muted-foreground">{contestant.hometown || "—"}</td>
-                          <td className="py-4 px-2">
-                            {contestant.outcome ? (
-                              <Badge variant={getOutcomeVariant(contestant.outcome)}>
-                                {contestant.outcome}
-                              </Badge>
-                            ) : (
-                              <span className="text-muted-foreground">—</span>
-                            )}
-                          </td>
-                          <td className="py-4 px-2">
-                            <div className="flex space-x-2">
-                              <Link href={`/manage/contestants/${contestant.id}`}>
-                                <Button
-                                  size="sm"
-                                  variant="ghost"
-                                >
-                                  <Edit className="h-4 w-4" />
-                                </Button>
-                              </Link>
-                              <Button
-                                size="sm"
-                                variant="ghost"
-                                onClick={() => handleDeleteContestant(contestant)}
-                              >
-                                <Trash2 className="h-4 w-4 text-destructive" />
-                              </Button>
-                            </div>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              )}
-            </CardContent>
-          </Card>
 
           {/* Quick Actions */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
