@@ -8,6 +8,11 @@ export interface MockScrapingOptions {
   headless?: boolean;
   screenshotsEnabled?: boolean;
   maxConcurrency?: number;
+  level?: "full" | "franchise" | "season" | "contestant";
+  franchiseId?: string;
+  seasonId?: string;
+  contestantId?: string;
+  sourceUrl?: string;
 }
 
 // Sample drag race data to simulate scraping results
@@ -104,6 +109,23 @@ export class MockRuPaulScraper {
       throw new Error("Scraping job already in progress");
     }
 
+    // Set scraping level
+    this.scrapingLevel = options.level || "full";
+
+    // Handle contestant-level scraping validation
+    if (this.scrapingLevel === "contestant") {
+      console.log(`[scraper] Starting contestant scraping for contestant ID: ${options.contestantId}`);
+      if (!options.contestantId) {
+        throw new Error("Contestant ID is required for contestant scraping");
+      }
+      
+      // Verify the contestant exists
+      const contestant = await storage.getContestant(options.contestantId);
+      if (!contestant) {
+        throw new Error(`Contestant not found: ${options.contestantId}`);
+      }
+    }
+
     const job = await storage.createScrapingJob({
       status: "running",
       progress: 0,
@@ -122,7 +144,15 @@ export class MockRuPaulScraper {
   private async simulateScraping(jobId: string, options: MockScrapingOptions) {
     try {
       let progress = 0;
-      const totalItems = SAMPLE_CONTESTANTS.length + SAMPLE_SEASONS.length;
+      let totalItems = SAMPLE_CONTESTANTS.length + SAMPLE_SEASONS.length;
+      
+      // For contestant-level scraping, only process one item
+      if (this.scrapingLevel === "contestant" && options.contestantId) {
+        await this.simulateContestantScraping(jobId, options.contestantId);
+        return;
+      }
+      
+      // Continue with full scraping for other levels
 
       // Build hierarchical structure for mock data
       const franchiseMap = new Map();
@@ -362,6 +392,142 @@ export class MockRuPaulScraper {
         progress: 0,
         totalItems: 0,
         message: `Scraping failed: ${error instanceof Error ? error.message : "Unknown error"}`,
+      });
+    } finally {
+      this.currentJobId = null;
+    }
+  }
+
+  private async simulateContestantScraping(jobId: string, contestantId: string) {
+    try {
+      // Get the actual contestant from the database
+      const contestant = await storage.getContestant(contestantId);
+      if (!contestant) {
+        throw new Error(`Contestant not found: ${contestantId}`);
+      }
+
+      // Initialize status for single contestant scraping
+      this.totalFranchises = 0;
+      this.totalSeasons = 0;
+      this.totalContestants = 1;
+      this.completedFranchises = 0;
+      this.completedSeasons = 0;
+      this.completedContestants = 0;
+      this.currentContestant = contestant.dragName;
+
+      // Initialize status arrays for single contestant
+      this.franchiseStatuses = [];
+      this.seasonStatuses = [{
+        name: `Contestant: ${contestant.dragName}`,
+        franchiseName: 'Individual',
+        status: 'pending' as const,
+        progress: 0,
+        totalContestants: 1,
+        completedContestants: 0,
+        contestants: [{
+          name: contestant.dragName,
+          status: 'pending' as const
+        }]
+      }];
+
+      // Start processing
+      broadcastProgress({
+        jobId,
+        status: "running",
+        progress: 0,
+        totalItems: 1,
+        message: `Processing contestant: ${contestant.dragName}`,
+        currentItem: contestant.dragName,
+        franchises: this.franchiseStatuses,
+        seasons: this.seasonStatuses,
+        level: this.scrapingLevel,
+        totalFranchises: this.totalFranchises,
+        completedFranchises: this.completedFranchises,
+        totalSeasons: this.totalSeasons,
+        completedSeasons: this.completedSeasons,
+        totalContestants: this.totalContestants,
+        completedContestants: this.completedContestants,
+        currentFranchise: undefined,
+        currentSeason: undefined,
+        currentContestant: this.currentContestant
+      });
+
+      await this.sleep(1500);
+
+      // Update contestant as running
+      this.seasonStatuses[0].status = 'running';
+      this.seasonStatuses[0].contestants![0].status = 'running';
+
+      broadcastProgress({
+        jobId,
+        status: "running",
+        progress: 50,
+        totalItems: 1,
+        message: `Updating contestant data: ${contestant.dragName}`,
+        currentItem: contestant.dragName,
+        franchises: this.franchiseStatuses,
+        seasons: this.seasonStatuses,
+        level: this.scrapingLevel,
+        totalFranchises: this.totalFranchises,
+        completedFranchises: this.completedFranchises,
+        totalSeasons: this.totalSeasons,
+        completedSeasons: this.completedSeasons,
+        totalContestants: this.totalContestants,
+        completedContestants: this.completedContestants,
+        currentFranchise: undefined,
+        currentSeason: undefined,
+        currentContestant: this.currentContestant
+      });
+
+      await this.sleep(2000);
+
+      // Complete the contestant update
+      this.seasonStatuses[0].status = 'completed';
+      this.seasonStatuses[0].progress = 100;
+      this.seasonStatuses[0].contestants![0].status = 'completed';
+      this.completedContestants = 1;
+
+      // Update the job status
+      await storage.updateScrapingJob(jobId, {
+        status: "completed",
+        progress: 100,
+        completedAt: new Date(),
+      });
+
+      broadcastProgress({
+        jobId,
+        status: "completed",
+        progress: 100,
+        totalItems: 1,
+        message: `Successfully updated contestant: ${contestant.dragName}`,
+        currentItem: "Finished",
+        franchises: this.franchiseStatuses,
+        seasons: this.seasonStatuses,
+        level: this.scrapingLevel,
+        totalFranchises: this.totalFranchises,
+        completedFranchises: this.completedFranchises,
+        totalSeasons: this.totalSeasons,
+        completedSeasons: this.completedSeasons,
+        totalContestants: this.totalContestants,
+        completedContestants: this.completedContestants,
+        currentFranchise: undefined,
+        currentSeason: undefined,
+        currentContestant: this.currentContestant
+      });
+
+    } catch (error) {
+      await storage.updateScrapingJob(jobId, {
+        status: "failed", 
+        errorMessage: error instanceof Error ? error.message : "Unknown error",
+        completedAt: new Date(),
+      });
+
+      broadcastProgress({
+        jobId,
+        status: "failed",
+        progress: 0,
+        totalItems: 1,
+        message: `Failed to process contestant: ${error instanceof Error ? error.message : "Unknown error"}`,
       });
     } finally {
       this.currentJobId = null;
