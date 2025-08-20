@@ -138,12 +138,12 @@ export class ImageScraper {
       // Try ALL selectors and combine results instead of stopping at first match
       for (const selector of imageSelectors) {
         try {
-          const selectorImages = await page.$$eval(selector, (imgs) => {
+          const selectorImages = await page.$$eval(selector, (imgs, selectorName) => {
             return imgs.map((img: any) => ({
               src: img.src,
               alt: img.alt || '',
               title: img.title || '',
-              selector: selector // Track which selector found this image
+              selector: selectorName // Track which selector found this image
             })).filter(img => 
               img.src && 
               !img.src.includes('data:') && 
@@ -151,14 +151,14 @@ export class ImageScraper {
               !img.src.includes('scorecardresearch') &&
               (img.src.includes('.jpg') || img.src.includes('.jpeg') || img.src.includes('.png') || img.src.includes('.webp'))
             );
-          });
+          }, selector);
           
           if (selectorImages.length > 0) {
             console.log(`Found ${selectorImages.length} images with selector: ${selector}`);
             allImages.push(...selectorImages);
           }
         } catch (error) {
-          console.log(`Selector ${selector} failed:`, error);
+          console.log(`[image-scraper] Selector ${selector} failed for ${contestantName}:`, error instanceof Error ? error.message : String(error));
           continue;
         }
       }
@@ -170,6 +170,45 @@ export class ImageScraper {
       
       console.log(`[image-scraper] Found total of ${allImages.length} images, ${uniqueImages.length} unique images for ${contestantName}`);
       let images = uniqueImages;
+
+      if (images.length === 0) {
+        console.log(`[image-scraper] No images found with specific selectors, trying fallback approach for ${contestantName}`);
+        
+        // Fallback: Get ALL images and filter by URL patterns and alt text
+        try {
+          const fallbackImages = await page.$$eval('img', (imgs) => {
+            return imgs.map((img: any) => ({
+              src: img.src,
+              alt: img.alt || '',
+              title: img.title || '',
+              selector: 'fallback-all-images'
+            })).filter(img => 
+              img.src && 
+              !img.src.includes('data:') && 
+              !img.src.includes('wikia-beacon') &&
+              !img.src.includes('scorecardresearch') &&
+              !img.src.includes('avatar') &&
+              !img.src.includes('logo') &&
+              !img.src.includes('icon') &&
+              (img.src.includes('.jpg') || img.src.includes('.jpeg') || img.src.includes('.png') || img.src.includes('.webp')) &&
+              (img.alt.toLowerCase().includes('look') || 
+               img.alt.toLowerCase().includes('runway') || 
+               img.alt.toLowerCase().includes('outfit') ||
+               img.alt.toLowerCase().includes('drag') ||
+               img.src.toLowerCase().includes('look') ||
+               img.src.toLowerCase().includes('runway') ||
+               img.src.toLowerCase().includes('outfit'))
+            );
+          });
+          
+          if (fallbackImages.length > 0) {
+            console.log(`[image-scraper] Found ${fallbackImages.length} images using fallback method for ${contestantName}`);
+            images = fallbackImages;
+          }
+        } catch (fallbackError) {
+          console.error(`[image-scraper] Fallback image detection failed for ${contestantName}:`, fallbackError);
+        }
+      }
 
       if (images.length === 0) {
         console.log(`[image-scraper] No images found for ${contestantName} on page ${metadataSourceUrl}`);

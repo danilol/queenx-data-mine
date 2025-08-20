@@ -1,0 +1,45 @@
+image-scraper] Starting image scraping for Sharon Needles from https://rupaulsdragrace.fandom.com/wiki/Sharon_Needles
+Selector .wikia-gallery-item img failed: page.$$eval: ReferenceError: selector is not defined
+    at eval (eval at evaluate (:291:30), <anonymous>:1:79)
+    at Array.map (<anonymous>)
+    at eval (eval at evaluate (:291:30), <anonymous>:1:20)
+    at UtilityScript.evaluate (<anonymous>:293:16)
+    at UtilityScript.<anonymous> (<anonymous>:1:44)
+    at ImageScraper.scrapeContestantImages (/Users/danilo/projects/queenx-data-mine/server/services/image-scraper.ts:141:45)
+Selector #mw-content-text .wikia-gallery-item .image img failed: page.$$eval: ReferenceError: selector is not defined
+    at eval (eval at evaluate (:291:30), <anonymous>:1:79)
+    at Array.map (<anonymous>)
+    at eval (eval at evaluate (:291:30), <anonymous>:1:20)
+    at UtilityScript.evaluate (<anonymous>:293:16)
+    at UtilityScript.<anonymous> (<anonymous>:1:44)
+    at ImageScraper.scrapeContestantImages (/Users/danilo/projects/queenx-data-mine/server/services/image-scraper.ts:141:45)
+Selector #mw-content-text .thumb .image img failed: page.$$eval: ReferenceError: selector is not defined
+    at eval (eval at evaluate (:291:30), <anonymous>:1:79)
+    at Array.map (<anonymous>)
+    at eval (eval at evaluate (:291:30), <anonymous>:1:20)
+    at UtilityScript.evaluate (<anonymous>:293:16)
+    at UtilityScript.<anonymous> (<anonymous>:1:44)
+    at ImageScraper.scrapeContestantImages (/Users/danilo/projects/queenx-data-mine/server/services/image-scraper.ts:141:45)
+Selector #mw-content-text .image img failed: page.$$eval: ReferenceError: selector is not defined
+    at eval (eval at evaluate (:291:30), <anonymous>:1:79)
+    at Array.map (<anonymous>)
+    at eval (eval at evaluate (:291:30), <anonymous>:1:20)
+    at UtilityScript.evaluate (<anonymous>:293:16)
+    at UtilityScript.<anonymous> (<anonymous>:1:44)
+    at ImageScraper.scrapeContestantImages (/Users/danilo/projects/queenx-data-mine/server/services/image-scraper.ts:141:45)
+Selector .portable-infobox img failed: page.$$eval: ReferenceError: selector is not defined
+    at eval (eval at evaluate (:291:30), <anonymous>:1:79)
+    at Array.map (<anonymous>)
+    at eval (eval at evaluate (:291:30), <anonymous>:1:20)
+    at UtilityScript.evaluate (<anonymous>:293:16)
+    at UtilityScript.<anonymous> (<anonymous>:1:44)
+    at ImageScraper.scrapeContestantImages (/Users/danilo/projects/queenx-data-mine/server/services/image-scraper.ts:141:45)
+Selector .tabber img failed: page.$$eval: ReferenceError: selector is not defined
+    at eval (eval at evaluate (:291:30), <anonymous>:1:79)
+    at Array.map (<anonymous>)
+    at eval (eval at evaluate (:291:30), <anonymous>:1:20)
+    at UtilityScript.evaluate (<anonymous>:293:16)
+    at UtilityScript.<anonymous> (<anonymous>:1:44)
+    at ImageScraper.scrapeContestantImages (/Users/danilo/projects/queenx-data-mine/server/services/image-scraper.ts:141:45)
+[image-scraper] Found total of 0 images, 0 unique images for Sharon Needles
+[image-scraper] No images found for Sharon Needles on page https://rupaulsdragrace.fandom.com/wiki/Sharon_Needles
