@@ -4,6 +4,7 @@ This is a RuPaul's Drag Race contestant scraping and management system built as 
 
 ## Recent Changes (August 2025)
 
+- **Unified Dashboard Interface**: ✓ Merged Dashboard and Scraper pages into a single unified interface, eliminating duplication and creating a comprehensive control center. The new dashboard includes scraping controls at the top, enhanced progress visualization, stats, configuration, and development tools in a logical priority order.
 - **Enhanced Dashboard Layout and Progress Visualization**: ✓ Reordered dashboard sections to prioritize scraping progress at the top per user requirements, with development tools moved to bottom. Implemented comprehensive progress visualization with real-time counters for franchises, seasons, and contestants, processing rate metrics, time estimation, and hierarchical progress breakdown for large datasets (1000+ records).
 - **Improved Scraping Progress Component**: ✓ Created enhanced progress visualization with gradients, icons, live counters updating every 2 seconds during active scraping, performance metrics, and detailed progress breakdown for better handling of large-scale scraping operations.
 - **Automatic Image Scraping Integration**: ✓ Implemented intelligent automatic image scraping that triggers whenever a fandom URL is successfully found and saved to the database, controlled by the image scraping configuration setting. Works for both new contestant creation (during scraping) and manual fandom URL lookup operations. Operates asynchronously without blocking API responses.
@@ -50,6 +51,8 @@ This is a RuPaul's Drag Race contestant scraping and management system built as 
 # User Preferences
 
 Preferred communication style: Simple, everyday language.
+Interface priority: Scraping progress visualization is more important than settings/configuration sections.
+User feedback: Eliminate duplicated information between pages - prefer unified interfaces.
 
 # System Architecture
 

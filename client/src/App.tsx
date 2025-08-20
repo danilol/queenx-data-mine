@@ -8,7 +8,6 @@ import { ThemeToggle } from "@/components/theme-toggle";
 import { LayoutDashboard, Bot, Download, Globe, UserCog, Calendar, Trophy } from "lucide-react";
 
 import Dashboard from "@/pages/dashboard";
-import Scraper from "@/pages/scraper";
 import Export from "@/pages/export";
 import ManageContestants from "@/pages/manage-contestants";
 import ManageSeasons from "@/pages/manage-seasons";
@@ -23,7 +22,6 @@ function Router() {
   return (
     <Switch>
       <Route path="/" component={Dashboard} />
-      <Route path="/scraper" component={Scraper} />
 
       <Route path="/manage/franchises" component={ManageFranchises} />
       <Route path="/manage/franchises/:id" component={FranchiseDetail} />
@@ -40,7 +38,6 @@ function Router() {
 
 const navigationItems = [
   { path: "/", label: "Dashboard", icon: LayoutDashboard },
-  { path: "/scraper", label: "Scraper", icon: Bot },
   { path: "/manage/franchises", label: "Franchises", icon: Globe },
   { path: "/manage/seasons", label: "Seasons", icon: Calendar },
   { path: "/manage/contestants", label: "Contestants", icon: UserCog },
