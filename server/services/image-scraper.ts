@@ -236,27 +236,37 @@ export class ImageScraper {
               title: img.title || '',
               selector: selectorName,
               lazyLoaded: !img.src && (img.getAttribute('data-src') || img.getAttribute('data-image-src'))
-            })).filter(img => 
-              img.src && 
-              !img.src.includes('data:image/gif') && // Skip lazy loading placeholders
-              !img.src.includes('data:') && 
-              !img.src.includes('wikia-beacon') &&
-              !img.src.includes('scorecardresearch') &&
-              !img.src.includes('logo') &&
-              !img.src.includes('Logo') &&
-              !img.src.includes('crown') &&
-              !img.src.includes('Crown') &&
-              !img.src.includes('icon') &&
-              !img.src.includes('Icon') &&
-              !img.src.includes('badge') &&
-              !img.src.includes('Badge') &&
-              !(img.alt && (img.alt.toLowerCase().includes('logo') || 
-                           img.alt.toLowerCase().includes('crown') || 
-                           img.alt.toLowerCase().includes('icon') ||
-                           img.alt.toLowerCase().includes('badge') ||
-                           img.alt.toLowerCase().includes('winner'))) &&
-              (img.src.includes('.jpg') || img.src.includes('.jpeg') || img.src.includes('.png') || img.src.includes('.webp'))
-            );
+            })).filter(img => {
+              if (!img.src || 
+                  img.src.includes('data:image/gif') || // Skip lazy loading placeholders
+                  img.src.includes('data:') || 
+                  img.src.includes('wikia-beacon') ||
+                  img.src.includes('scorecardresearch') ||
+                  !(img.src.includes('.jpg') || img.src.includes('.jpeg') || img.src.includes('.png') || img.src.includes('.webp'))) {
+                return false;
+              }
+              
+              // More intelligent filtering - only exclude if it's clearly a logo/icon/badge
+              const srcLower = img.src.toLowerCase();
+              const altLower = (img.alt || '').toLowerCase();
+              
+              // Exclude obvious logos, icons, badges, crowns
+              if (srcLower.includes('logo.') || 
+                  srcLower.includes('icon.') || 
+                  srcLower.includes('badge.') ||
+                  srcLower.includes('crown.') ||
+                  srcLower.includes('site-logo') ||
+                  altLower.includes('site logo') ||
+                  altLower.includes('wiki logo') ||
+                  (altLower.includes('logo') && !altLower.includes('promo')) ||
+                  altLower.includes('icon') ||
+                  altLower.includes('badge') ||
+                  (altLower.includes('crown') && !altLower.includes('crowning'))) {
+                return false;
+              }
+              
+              return true;
+            });
           }, selector);
           
           if (selectorImages.length > 0) {
@@ -314,24 +324,31 @@ export class ImageScraper {
                   img.src.includes('wikia-beacon') ||
                   img.src.includes('favicon') ||
                   img.src.includes('loading') ||
-                  img.src.includes('spinner') ||
-                  img.src.includes('logo') ||
-                  img.src.includes('Logo') ||
-                  img.src.includes('crown') ||
-                  img.src.includes('Crown') ||
-                  img.src.includes('icon') ||
-                  img.src.includes('Icon') ||
-                  img.src.includes('badge') ||
-                  img.src.includes('Badge')) {
+                  img.src.includes('spinner')) {
                 return false;
               }
               
-              // Exclude by alt text patterns
+              // More intelligent filtering - same as primary selectors
+              const srcLower = img.src.toLowerCase();
+              const altLower = (img.alt || '').toLowerCase();
+              
+              // Exclude obvious logos, icons, badges, crowns
+              if (srcLower.includes('logo.') || 
+                  srcLower.includes('icon.') || 
+                  srcLower.includes('badge.') ||
+                  srcLower.includes('crown.') ||
+                  srcLower.includes('site-logo') ||
+                  altLower.includes('site logo') ||
+                  altLower.includes('wiki logo') ||
+                  (altLower.includes('logo') && !altLower.includes('promo')) ||
+                  altLower.includes('icon') ||
+                  altLower.includes('badge') ||
+                  (altLower.includes('crown') && !altLower.includes('crowning'))) {
+                return false;
+              }
+              
+              // Legacy patterns to exclude
               if (img.alt && (
-                  img.alt.toLowerCase().includes('logo') ||
-                  img.alt.toLowerCase().includes('crown') ||
-                  img.alt.toLowerCase().includes('icon') ||
-                  img.alt.toLowerCase().includes('badge') ||
                   img.alt.toLowerCase().includes('winner') ||
                   img.alt.toLowerCase().includes('sharon logo'))) {
                 return false;

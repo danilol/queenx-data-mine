@@ -1,0 +1,87 @@
+[image-scraper] Starting image scraping for Ginger Minj from https://rupaulsdragrace.fandom.com/wiki/Ginger_Minj
+[image-scraper] Checking for privacy dialogs on Ginger Minj's page...
+[image-scraper] Found privacy dialog, clicking: button:has-text("Accept")
+[image-scraper] Scrolling to trigger lazy loading for Ginger Minj...
+[image-scraper] Analyzing page structure for Ginger Minj...
+[image-scraper] Page analysis for Ginger Minj: {
+  "totalImages": 144,
+  "galleries": 12,
+  "tabbers": 6,
+  "sampleImages": [
+    {
+      "src": "https://static.wikia.nocookie.net/logosrupaulsdragrace/images/e/e6/Site-logo.png/revision/latest?cb=20241206053431",
+      "alt": "RuPaul's Drag Race Wiki",
+      "width": 67,
+      "height": 30,
+      "className": ""
+    },
+    {
+      "src": "https://static.wikia.nocookie.net/logosrupaulsdragrace/images/e/e6/Site-logo.png/revision/latest?cb=20241206053431",
+      "alt": "RuPaul's Drag Race Wiki",
+      "width": 222,
+      "height": 100,
+      "className": ""
+    },
+    {
+      "src": "https://static.wikia.nocookie.net/logosrupaulsdragrace/images/e/e5/Crown_1.png/revision/latest/scale-to-width-down/25?cb=20210721043815",
+      "alt": "",
+      "width": 25,
+      "height": 25,
+      "className": "mw-file-element lazyloaded"
+    },
+    {
+      "src": "https://static.wikia.nocookie.net/logosrupaulsdragrace/images/2/2b/GingerMinjAS10.jpg/revision/latest/scale-to-width-down/268?cb=20250425005732",
+      "alt": "USA All Stars Season 10",
+      "width": 268,
+      "height": 335,
+      "className": "pi-image-thumbnail"
+    },
+    {
+      "src": "https://static.wikia.nocookie.net/logosrupaulsdragrace/images/f/f6/GingerMinjAS6.png/revision/latest/scale-to-width-down/268?cb=20210527170018",
+      "alt": "USA All Stars Season 6",
+      "width": 270,
+      "height": 453,
+      "className": "pi-image-thumbnail"
+    },
+    {
+      "src": "https://static.wikia.nocookie.net/logosrupaulsdragrace/images/0/08/Rpdr-as-s2-gm-w.jpg/revision/latest/scale-to-width-down/268?cb=20200126212219",
+      "alt": "USA All Stars Season 2",
+      "width": 270,
+      "height": 359,
+      "className": "pi-image-thumbnail"
+    },
+    {
+      "src": "https://static.wikia.nocookie.net/logosrupaulsdragrace/images/a/a2/GingerS7promo.jpg/revision/latest/scale-to-width-down/268?cb=20200127011853",
+      "alt": "USA Season 7",
+      "width": 270,
+      "height": 359,
+      "className": "pi-image-thumbnail"
+    },
+    {
+      "src": "https://static.wikia.nocookie.net/logosrupaulsdragrace/images/f/f6/GingerMinjLOGO.png/revision/latest/scale-to-width-down/268?cb=20210511064516",
+      "alt": "GingerMinjLOGO",
+      "width": 268,
+      "height": 168,
+      "className": "pi-image-thumbnail"
+    },
+    {
+      "src": "https://static.wikia.nocookie.net/logosrupaulsdragrace/images/2/27/MeetGingerMinjS7.gif/revision/latest/scale-to-width-down/285?cb=20210912150706",
+      "alt": "Mini Trailer",
+      "width": 160,
+      "height": 160,
+      "className": "thumbimage lazyloaded"
+    },
+    {
+      "src": "https://static.wikia.nocookie.net/logosrupaulsdragrace/images/3/31/TeamGingerS7.jpg/revision/latest/scale-to-width-down/160?cb=20190404035513",
+      "alt": "#TeamGinger Promo",
+      "width": 160,
+      "height": 160,
+      "className": "thumbimage lazyloaded"
+    }
+  ],
+  "pageTitle": "Ginger Minj | RuPaul's Drag Race Wiki | Fandom",
+  "hasContent": true
+}
+[image-scraper] Found total of 0 images, 0 unique images for Ginger Minj
+[image-scraper] No images found with specific selectors, trying fallback approach for Ginger Minj
+[image-scraper] No images found for Ginger Minj on page https://rupaulsdragrace.fandom.com/wiki/Ginger_Minj
