@@ -1,19 +1,17 @@
-import { S3Client, PutObjectCommand, HeadObjectCommand } from '@aws-sdk/client-s3';
-import 'dotenv/config';
+import { S3Client, PutObjectCommand, HeadObjectCommand, GetObjectCommand } from '@aws-sdk/client-s3';
 
 export class S3Service {
   private client: S3Client;
   private bucketName: string;
 
   constructor() {
-    // Validate required environment variables
     const accessKeyId = process.env.AWS_ACCESS_KEY_ID;
     const secretAccessKey = process.env.AWS_SECRET_ACCESS_KEY;
     const region = process.env.AWS_REGION || 'us-east-1';
-    this.bucketName = process.env.S3_BUCKET_NAME || '';
+    this.bucketName = process.env.S3_BUCKET_NAME || 'default-bucket';
 
     if (!accessKeyId || !secretAccessKey || !this.bucketName) {
-      throw new Error('Missing required S3 configuration. Please set AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, and S3_BUCKET_NAME environment variables.');
+      throw new Error('Missing AWS credentials or bucket name. Please check your environment variables.');
     }
 
     this.client = new S3Client({
@@ -143,6 +141,14 @@ export class S3Service {
 
   getPublicUrl(key: string): string {
     return `https://${this.bucketName}.s3.amazonaws.com/${key}`;
+  }
+
+  async getObject(key: string) {
+    const command = new GetObjectCommand({
+      Bucket: this.bucketName,
+      Key: key,
+    });
+    return await this.client.send(command);
   }
 
   async testConnection(): Promise<{ success: boolean; message: string }> {

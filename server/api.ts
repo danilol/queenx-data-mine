@@ -7,6 +7,7 @@ import { exporter } from "./services/exporter";
 import { s3Service } from "./services/s3";
 import { imageScraper } from "./services/image-scraper";
 import { getConfig, updateConfig, resetConfig } from "./config";
+import { GetObjectCommand } from "@aws-sdk/client-s3";
 
 export const apiRouter = Router();
 
@@ -593,6 +594,55 @@ apiRouter.patch("/config/image-scraping", async (req, res) => {
       error: "Failed to update image scraping setting",
       details: error instanceof Error ? error.message : 'Unknown error'
     });
+  }
+});
+
+// Image proxy endpoint to serve S3 images
+apiRouter.get("/images/*", async (req, res) => {
+  try {
+    // Extract the S3 key from the URL
+    const s3Key = req.params[0]; // Everything after /images/
+    
+    if (!s3Key) {
+      return res.status(400).json({ error: "Image path required" });
+    }
+
+    // Get the image from S3 using the service
+    const response = await s3Service.getObject(s3Key);
+    
+    if (!response.Body) {
+      return res.status(404).json({ error: "Image not found" });
+    }
+
+    // Set appropriate headers
+    res.set({
+      'Content-Type': response.ContentType || 'image/jpeg',
+      'Content-Length': response.ContentLength?.toString(),
+      'Cache-Control': 'public, max-age=31536000', // Cache for 1 year
+    });
+
+    // Stream the image data to the response
+    if (response.Body) {
+      // Handle async iterable body (AWS SDK v3 streams)
+      const chunks: any[] = [];
+      
+      if (typeof response.Body[Symbol.asyncIterator] === 'function') {
+        for await (const chunk of response.Body as any) {
+          chunks.push(chunk);
+        }
+        const buffer = Buffer.concat(chunks);
+        res.send(buffer);
+      } else if (Buffer.isBuffer(response.Body)) {
+        // Handle buffer directly
+        res.send(response.Body);
+      } else {
+        // Handle readable stream
+        (response.Body as any).pipe(res);
+      }
+    }
+  } catch (error) {
+    console.error('Image proxy error:', error);
+    res.status(500).json({ error: "Failed to load image" });
   }
 });
 

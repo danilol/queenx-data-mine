@@ -357,19 +357,25 @@ export default function ContestantDetail() {
               </CardHeader>
               <CardContent>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {contestant.imageUrls.map((imageUrl, index) => (
-                    <div key={index} className="relative group">
-                      <img
-                        src={imageUrl}
-                        alt={`${contestant.dragName} - Image ${index + 1}`}
-                        className="w-full h-48 object-cover rounded-lg shadow-sm hover:shadow-md transition-shadow cursor-pointer"
-                        onClick={() => window.open(imageUrl, '_blank')}
-                      />
-                      <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity rounded-lg flex items-center justify-center">
-                        <ExternalLink className="h-6 w-6 text-white" />
+                  {contestant.imageUrls.map((imageUrl, index) => {
+                    // Extract S3 key from the full S3 URL and create proxy URL
+                    const s3Key = imageUrl.replace(/^https:\/\/[^\/]+\.s3\.amazonaws\.com\//, '');
+                    const proxyUrl = `/api/images/${s3Key}`;
+                    
+                    return (
+                      <div key={index} className="relative group">
+                        <img
+                          src={proxyUrl}
+                          alt={`${contestant.dragName} - Image ${index + 1}`}
+                          className="w-full h-48 object-cover rounded-lg shadow-sm hover:shadow-md transition-shadow cursor-pointer"
+                          onClick={() => window.open(proxyUrl, '_blank')}
+                        />
+                        <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity rounded-lg flex items-center justify-center">
+                          <ExternalLink className="h-6 w-6 text-white" />
+                        </div>
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </CardContent>
             </Card>
