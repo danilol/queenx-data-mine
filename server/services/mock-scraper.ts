@@ -503,11 +503,11 @@ export class MockRuPaulScraper {
             currentContestant: this.currentContestant
           });
 
-          // Import and use image scraper
-          const { imageScraper } = await import('./image-scraper.js');
+          // Import and use mock image scraper
+          const { mockImageScraper } = await import('./mock-image-scraper.js');
           
-          // Start image scraping
-          const imageResult = await imageScraper.scrapeContestantImages(
+          // Start mock image scraping
+          const imageResult = await mockImageScraper.scrapeContestantImages(
             contestant.dragName,
             contestant.metadataSourceUrl
           );

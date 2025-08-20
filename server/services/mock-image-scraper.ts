@@ -132,39 +132,25 @@ export class MockImageScraper {
             currentItem: `image_${i + 1}`
           });
 
-          // Generate consistent hash for this contestant and image
+          // Create mock image buffer (small placeholder image data)
           const imageHash = this.generateImageHash(mockImage.name, contestantName);
-          const extension = '.jpg';
-          const s3Key = this.generateS3Key(contestantName, imageHash, extension);
+          const mockImageBuffer = Buffer.from('mock-image-data-' + imageHash, 'utf8');
           
-          // Check if this image already exists in S3
-          const existsInS3 = await s3Service.fileExists(s3Key);
+          // Upload mock image using the uploadContestantImage method
+          const imageName = `${mockImage.description.replace(/[^a-zA-Z0-9]/g, '-').toLowerCase()}.jpg`;
           
-          let uploadResult;
-          if (existsInS3) {
-            console.log(`[mock-image-scraper] Image already exists in S3, skipping upload: ${s3Key}`);
-            uploadResult = {
-              key: s3Key,
-              url: s3Service.getPublicUrl(s3Key)
-            };
-          } else {
-            // Create mock image buffer (small placeholder image data)
-            const mockImageBuffer = Buffer.from('mock-image-data-' + imageHash, 'utf8');
-            
-            // Upload mock image to S3
-            uploadResult = await s3Service.uploadWithKey(
-              mockImageBuffer,
-              s3Key,
-              'image/jpeg'
-            );
-            console.log(`[mock-image-scraper] Uploaded mock image: ${s3Key}`);
-          }
+          const uploadResult = await s3Service.uploadContestantImage(
+            mockImageBuffer,
+            contestantName,
+            imageName,
+            'image/jpeg'
+          );
 
           result.uploadedImages.push({
             originalUrl: mockImage.url,
             s3Key: uploadResult.key,
             s3Url: uploadResult.url,
-            imageName: s3Key.split('/').pop() || 'unknown'
+            imageName: uploadResult.key.split('/').pop() || 'unknown'
           });
 
           result.imagesDownloaded++;
