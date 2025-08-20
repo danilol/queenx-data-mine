@@ -321,7 +321,7 @@ export class DrizzleStorage implements IStorage {
         set: {
           franchiseId: insertSeason.franchiseId,
           year: insertSeason.year,
-          sourceUrl: insertSeason.sourceUrl,
+          metadataSourceUrl: insertSeason.metadataSourceUrl,
           isScraped: insertSeason.isScraped,
         },
       })

@@ -3,9 +3,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Play, Square, Bug, Settings, Monitor, Globe, Calendar, Users } from "lucide-react";
 import { Header } from "@/components/layout/header";
 import { ScrapingProgress } from "@/components/scraping-progress";
-import { FranchiseProgress } from "@/components/franchise-progress";
-import { HierarchicalProgress } from "@/components/hierarchical-progress";
-import { EnhancedProgress } from "@/components/enhanced-progress";
+
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
@@ -310,7 +308,7 @@ export default function Scraper() {
 
           {/* Enhanced Progress Visualization */}
           {scrapingStatus && 'status' in scrapingStatus && scrapingStatus.status !== 'idle' && (
-            <EnhancedProgress scrapingStatus={scrapingStatus} />
+            <ScrapingProgress />
           )}
 
           {/* Data Sources Status */}

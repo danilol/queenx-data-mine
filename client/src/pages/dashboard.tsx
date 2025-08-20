@@ -4,7 +4,7 @@ import { useState, useRef } from "react";
 import { Header } from "@/components/layout/header";
 import { StatsCards } from "@/components/stats-cards";
 import { ScrapingProgress } from "@/components/scraping-progress";
-import { ContestantEditModal } from "@/components/contestant-edit-modal";
+
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -14,8 +14,7 @@ import { FullContestant, Contestant } from "@shared/schema";
 import { Link } from "wouter";
 
 export default function Dashboard() {
-  const [selectedContestant, setSelectedContestant] = useState<Contestant | null>(null);
-  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
@@ -33,10 +32,7 @@ export default function Dashboard() {
 
   const recentContestants = recentContestantsData.filter((c: FullContestant, i: number, arr: FullContestant[]) => arr.findIndex(c2 => c2.id === c.id) === i);
 
-  const handleEditContestant = (contestant: Contestant) => {
-    setSelectedContestant(contestant);
-    setIsEditModalOpen(true);
-  };
+
 
   const handleDeleteContestant = async (contestant: Contestant) => {
     if (window.confirm(`Are you sure you want to delete ${contestant.dragName}?`)) {
@@ -328,13 +324,14 @@ export default function Dashboard() {
                           </td>
                           <td className="py-4 px-2">
                             <div className="flex space-x-2">
-                              <Button
-                                size="sm"
-                                variant="ghost"
-                                onClick={() => handleEditContestant(contestant)}
-                              >
-                                <Edit className="h-4 w-4" />
-                              </Button>
+                              <Link href={`/manage/contestants/${contestant.id}`}>
+                                <Button
+                                  size="sm"
+                                  variant="ghost"
+                                >
+                                  <Edit className="h-4 w-4" />
+                                </Button>
+                              </Link>
                               <Button
                                 size="sm"
                                 variant="ghost"
@@ -411,11 +408,7 @@ export default function Dashboard() {
         </div>
       </div>
 
-      <ContestantEditModal
-        contestant={selectedContestant}
-        isOpen={isEditModalOpen}
-        onClose={() => setIsEditModalOpen(false)}
-      />
+
     </div>
   );
 }

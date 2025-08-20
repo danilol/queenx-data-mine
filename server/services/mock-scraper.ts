@@ -231,7 +231,7 @@ export class MockRuPaulScraper {
         // Find franchise by name to get ID, or create it if it doesn't exist
         let franchise = await storage.getFranchiseByName(season.franchise);
         if (!franchise) {
-          // Create franchise with a basic sourceUrl (mock data doesn't have specific franchise URLs)
+          // Create franchise with a basic metadataSourceUrl (mock data doesn't have specific franchise URLs)
           franchise = await storage.createFranchise({
             name: season.franchise,
             metadataSourceUrl: `https://en.wikipedia.org/wiki/${encodeURIComponent(season.franchise.replace(/\s+/g, '_'))}`

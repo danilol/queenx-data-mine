@@ -37,7 +37,7 @@ export class ImageScraper {
 
   async scrapeContestantImages(
     contestantName: string,
-    sourceUrl: string,
+    metadataSourceUrl: string,
     seasonName?: string
   ): Promise<ImageScrapingResult> {
     const result: ImageScrapingResult = {
@@ -70,7 +70,7 @@ export class ImageScraper {
         currentItem: 'loading_page'
       });
 
-      await page.goto(sourceUrl, { 
+      await page.goto(metadataSourceUrl, { 
         waitUntil: 'networkidle',
         timeout: 30000 
       });

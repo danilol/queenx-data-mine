@@ -488,17 +488,17 @@ apiRouter.post("/database/reset", async (req, res) => {
 // Image scraping endpoint
 apiRouter.post("/images/scrape-contestant", async (req, res) => {
   try {
-    const { contestantId, contestantName, sourceUrl, seasonName } = req.body;
+    const { contestantId, contestantName, metadataSourceUrl, seasonName } = req.body;
     
-    if (!contestantName || !sourceUrl) {
+    if (!contestantName || !metadataSourceUrl) {
       return res.status(400).json({ 
-        error: "contestantName and sourceUrl are required" 
+        error: "contestantName and metadataSourceUrl are required" 
       });
     }
 
     const result = await imageScraper.scrapeContestantImages(
       contestantName,
-      sourceUrl,
+      metadataSourceUrl,
       seasonName
     );
 

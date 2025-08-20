@@ -217,9 +217,9 @@ export class RuPaulScraper {
 
     try {
       const page = await this.browser.newPage();
-      if (contestant.sourceUrl) {
-        console.log(`[scraper] Navigating to ${contestant.sourceUrl} for contestant: ${contestant.dragName}`);
-        await page.goto(contestant.sourceUrl, { waitUntil: 'networkidle' });
+      if (contestant.metadataSourceUrl) {
+        console.log(`[scraper] Navigating to ${contestant.metadataSourceUrl} for contestant: ${contestant.dragName}`);
+        await page.goto(contestant.metadataSourceUrl, { waitUntil: 'networkidle' });
         // Here you would add logic to find and process the contestant's data on their own page.
         // For now, we'll assume the necessary data is on a season page and this is a placeholder.
         // This part can be expanded to scrape more details from a contestant-specific page.
@@ -243,9 +243,9 @@ export class RuPaulScraper {
     for (const franchise of FRANCHISES_WITH_URLS) {
       const newFranchise = await storage.createFranchise({
         name: franchise.name,
-        sourceUrl: franchise.sourceUrl
+        metadataSourceUrl: franchise.metadataSourceUrl
       });
-      console.log(`Franchise '${newFranchise.name}' seeded with source URL: ${newFranchise.sourceUrl}`);
+      console.log(`Franchise '${newFranchise.name}' seeded with source URL: ${newFranchise.metadataSourceUrl}`);
     }
 
     const allDbFranchises = await storage.getAllFranchises();
@@ -257,7 +257,7 @@ export class RuPaulScraper {
             name: season.name,
             franchiseId: franchise.id,
             year: season.year,
-            sourceUrl: season.sourceUrl,
+            metadataSourceUrl: season.metadataSourceUrl,
           });
           if (newSeason) {
             console.log(`[scraper] Created season: ${newSeason.name}`);
@@ -365,12 +365,12 @@ export class RuPaulScraper {
 
   private async scrapeSeason(page: Page, seasonData: Season, screenshotsEnabled: boolean) {
     try {
-      if (!seasonData.sourceUrl) {
+      if (!seasonData.metadataSourceUrl) {
         console.log(`[scraper] Skipping season ${seasonData.name} due to missing source URL.`);
         return;
       }
-      console.log(`[scraper] Navigating to ${seasonData.sourceUrl} for season: ${seasonData.name}`);
-      await page.goto(seasonData.sourceUrl, { waitUntil: 'networkidle' });
+      console.log(`[scraper] Navigating to ${seasonData.metadataSourceUrl} for season: ${seasonData.name}`);
+      await page.goto(seasonData.metadataSourceUrl, { waitUntil: 'networkidle' });
 
       if (screenshotsEnabled) {
         await this.takeScreenshot(page, `season_${seasonData.name.replace(/\s/g, '_')}`);
