@@ -43,7 +43,13 @@ export class ImageScraper {
           '--disable-setuid-sandbox',
           '--disable-dev-shm-usage',
           '--disable-web-security',
-          '--disable-features=VizDisplayCompositor'
+          '--disable-features=VizDisplayCompositor',
+          '--disable-notifications',
+          '--disable-popup-blocking',
+          '--disable-background-timer-throttling',
+          '--disable-backgrounding-occluded-windows',
+          '--disable-renderer-backgrounding',
+          '--disable-blink-features=AutomationControlled'
         ],
       });
     } catch (error) {
@@ -81,9 +87,15 @@ export class ImageScraper {
     try {
       page = await this.browser!.newPage();
       
-      // Set user agent to avoid blocking
+      // Set realistic headers to avoid bot detection
       await page.setExtraHTTPHeaders({
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8',
+        'Accept-Language': 'en-US,en;q=0.9',
+        'Accept-Encoding': 'gzip, deflate, br',
+        'DNT': '1',
+        'Connection': 'keep-alive',
+        'Upgrade-Insecure-Requests': '1'
       });
       
       broadcastProgress({
@@ -99,6 +111,47 @@ export class ImageScraper {
         waitUntil: 'networkidle',
         timeout: 30000 
       });
+
+      // Handle privacy/consent dialogs that may block content
+      console.log(`[image-scraper] Checking for privacy dialogs on ${contestantName}'s page...`);
+      
+      const privacySelectors = [
+        // Common fandom/wikia privacy dialog selectors
+        '.oo-ui-processDialog-actions button',
+        '.privacy-settings .accept-all',
+        '.gdpr-banner button[data-tracking="accept"]',
+        '.privacy-banner .accept',
+        'button[data-tracking="opt-in-accept"]',
+        '.cookie-banner .accept',
+        '.consent-banner button',
+        // Generic privacy dialog patterns
+        'button:has-text("Accept")',
+        'button:has-text("Accept All")',
+        'button:has-text("I Accept")',
+        'button:has-text("Agree")',
+        'button:has-text("OK")',
+        'button:has-text("Continue")',
+        '[aria-label*="Accept"]',
+        '[aria-label*="Agree"]'
+      ];
+
+      for (const selector of privacySelectors) {
+        try {
+          const element = await page.$(selector);
+          if (element) {
+            console.log(`[image-scraper] Found privacy dialog, clicking: ${selector}`);
+            await element.click();
+            await page.waitForTimeout(2000); // Wait for dialog to dismiss
+            break;
+          }
+        } catch (error) {
+          // Ignore errors for privacy dialog selectors
+          continue;
+        }
+      }
+
+      // Additional wait to ensure page fully loads after privacy dialog
+      await page.waitForTimeout(3000);
 
       broadcastProgress({
         jobId: null,
