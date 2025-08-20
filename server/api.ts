@@ -32,10 +32,15 @@ apiRouter.get("/stats", async (req, res) => {
 // Contestants endpoints
 apiRouter.get("/contestants", async (req, res) => {
   try {
-    const { search, limit } = req.query;
+    const { search, sortBy, sortOrder, page, limit } = req.query;
     const contestants = search
       ? await storage.getContestantsBySearch(search as string)
-      : await storage.getContestants();
+      : await storage.getContestants({
+          sortBy: sortBy as any,
+          sortOrder: sortOrder as 'asc' | 'desc' | undefined,
+          page: page ? parseInt(page as string) : undefined,
+          limit: limit ? parseInt(limit as string) : undefined,
+        });
     res.json(contestants);
   } catch (error) {
     res.status(500).json({ error: "Failed to fetch contestants" });
@@ -88,12 +93,14 @@ apiRouter.delete("/contestants/:id", async (req, res) => {
 // Seasons endpoints
 apiRouter.get("/seasons", async (req, res) => {
   try {
-    const { franchiseId, sortBy, sortOrder, search } = req.query;
+    const { franchiseId, sortBy, sortOrder, search, page, limit } = req.query;
     const seasons = await storage.getAllSeasons({
       franchiseId: franchiseId as string | undefined,
       sortBy: sortBy as any,
       sortOrder: sortOrder as 'asc' | 'desc' | undefined,
       search: search as string | undefined,
+      page: page ? parseInt(page as string) : undefined,
+      limit: limit ? parseInt(limit as string) : undefined,
     });
     res.json(seasons);
   } catch (error) {
@@ -104,7 +111,13 @@ apiRouter.get("/seasons", async (req, res) => {
 // Franchises endpoints
 apiRouter.get("/franchises", async (req, res) => {
   try {
-    const franchises = await storage.getAllFranchises();
+    const { sortBy, sortOrder, page, limit } = req.query;
+    const franchises = await storage.getAllFranchises({
+      sortBy: sortBy as any,
+      sortOrder: sortOrder as 'asc' | 'desc' | undefined,
+      page: page ? parseInt(page as string) : undefined,
+      limit: limit ? parseInt(limit as string) : undefined,
+    });
     res.json(franchises);
   } catch (error) {
     res.status(500).json({ error: "Failed to fetch franchises" });

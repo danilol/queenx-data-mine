@@ -24,6 +24,8 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { SeasonsList } from "@/components/related-data";
+import { SortableTableHead } from "@/components/ui/sortable-table";
+import { DataPagination } from "@/components/ui/data-pagination";
 import type { Franchise, InsertFranchise } from "@shared/schema";
 
 export default function ManageFranchises() {
@@ -32,13 +34,24 @@ export default function ManageFranchises() {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [formData, setFormData] = useState<Partial<InsertFranchise>>({});
   const [expandedFranchises, setExpandedFranchises] = useState<Set<string>>(new Set());
+  const [sortBy, setSortBy] = useState<string>('name');
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage] = useState(20);
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
   const { data: franchises = [], isLoading } = useQuery({
-    queryKey: ["/api/franchises"],
+    queryKey: ["/api/franchises", sortBy, sortOrder, currentPage],
     queryFn: async () => {
-      const response = await fetch("/api/franchises");
+      const params = new URLSearchParams({
+        sortBy,
+        sortOrder,
+        page: currentPage.toString(),
+        limit: itemsPerPage.toString(),
+      });
+      
+      const response = await fetch(`/api/franchises?${params.toString()}`);
       if (!response.ok) throw new Error("Failed to fetch franchises");
       return response.json() as Promise<Franchise[]>;
     },
@@ -94,6 +107,16 @@ export default function ManageFranchises() {
     setExpandedFranchises(newExpanded);
   };
 
+  const handleSort = (newSortBy: string, newSortOrder: 'asc' | 'desc') => {
+    setSortBy(newSortBy);
+    setSortOrder(newSortOrder);
+    setCurrentPage(1);
+  };
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+  };
+
   return (
     <div className="min-h-screen bg-gray-50">
       <Header title="Manage Franchises" subtitle="Add, edit, and manage franchise information" />
@@ -119,8 +142,8 @@ export default function ManageFranchises() {
                 />
                 <Input
                   placeholder="Source URL"
-                  value={formData.sourceUrl || ""}
-                  onChange={(e) => setFormData({ ...formData, sourceUrl: e.target.value })}
+                  value={formData.metadataSourceUrl || ""}
+                  onChange={(e) => setFormData({ ...formData, metadataSourceUrl: e.target.value })}
                 />
                 <div className="flex gap-2">
                   <Button onClick={handleCreate} disabled={createMutation.isPending} className="flex-1">
@@ -156,9 +179,23 @@ export default function ManageFranchises() {
                   <TableHeader>
                     <TableRow>
                       <TableHead className="w-8"></TableHead>
-                      <TableHead>Name</TableHead>
+                      <SortableTableHead 
+                        sortKey="name"
+                        currentSortBy={sortBy}
+                        currentSortOrder={sortOrder}
+                        onSort={handleSort}
+                      >
+                        Name
+                      </SortableTableHead>
                       <TableHead>Source URL</TableHead>
-                      <TableHead>Created</TableHead>
+                      <SortableTableHead 
+                        sortKey="createdAt"
+                        currentSortBy={sortBy}
+                        currentSortOrder={sortOrder}
+                        onSort={handleSort}
+                      >
+                        Created
+                      </SortableTableHead>
                       <TableHead>Actions</TableHead>
                     </TableRow>
                   </TableHeader>
@@ -185,14 +222,14 @@ export default function ManageFranchises() {
                           </TableCell>
                           <TableCell>
                             <div className="max-w-xs truncate text-sm">
-                              {franchise.sourceUrl ? (
+                              {franchise.metadataSourceUrl ? (
                                 <a 
-                                  href={franchise.sourceUrl} 
+                                  href={franchise.metadataSourceUrl} 
                                   target="_blank" 
                                   rel="noopener noreferrer"
                                   className="text-blue-600 hover:underline"
                                 >
-                                  {franchise.sourceUrl}
+                                  {franchise.metadataSourceUrl}
                                 </a>
                               ) : (
                                 "-"
@@ -237,6 +274,17 @@ export default function ManageFranchises() {
                     ))}
                   </TableBody>
                 </Table>
+                
+                {franchises.length === itemsPerPage && (
+                  <div className="mt-6">
+                    <DataPagination
+                      currentPage={currentPage}
+                      totalItems={19} // We'd need to get this from API
+                      itemsPerPage={itemsPerPage}
+                      onPageChange={handlePageChange}
+                    />
+                  </div>
+                )}
               </div>
             )}
           </CardContent>

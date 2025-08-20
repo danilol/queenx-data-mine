@@ -15,7 +15,7 @@ const db = drizzle(client);
 
 export interface IStorage {
   // Contestants
-  getContestants(): Promise<FullContestant[]>;
+  getContestants(options?: { sortBy?: keyof Contestant; sortOrder?: 'asc' | 'desc'; page?: number; limit?: number }): Promise<FullContestant[]>;
   getContestant(id: string): Promise<Contestant | undefined>;
   getContestantsBySearch(search: string): Promise<FullContestant[]>;
   getContestantByDragName(dragName: string): Promise<Contestant | undefined>;
@@ -26,14 +26,14 @@ export interface IStorage {
   getRecentContestants(limit: number): Promise<FullContestant[]>;
 
   // Franchises
-  getAllFranchises(): Promise<Franchise[]>;
+  getAllFranchises(options?: { sortBy?: keyof Franchise; sortOrder?: 'asc' | 'desc'; page?: number; limit?: number }): Promise<Franchise[]>;
   getFranchiseByName(name: string): Promise<Franchise | undefined>;
   createFranchise(franchise: InsertFranchise): Promise<Franchise>;
   updateFranchise(id: string, franchise: Partial<InsertFranchise>): Promise<Franchise | undefined>;
   deleteFranchise(id: string): Promise<boolean>;
 
   // Seasons
-  getAllSeasons(options?: { franchiseId?: string; sortBy?: keyof Season | 'franchiseName'; sortOrder?: 'asc' | 'desc'; search?: string }): Promise<(Season & { franchiseName: string })[]>;
+  getAllSeasons(options?: { franchiseId?: string; sortBy?: keyof Season | 'franchiseName'; sortOrder?: 'asc' | 'desc'; search?: string; page?: number; limit?: number }): Promise<(Season & { franchiseName: string })[]>;
   getSeason(id: string): Promise<(Season & { franchise?: Franchise }) | undefined>;
   getSeasonByName(name: string): Promise<Season | undefined>;
   createSeason(season: InsertSeason): Promise<Season>;
@@ -67,9 +67,12 @@ export interface IStorage {
 }
 
 export class DrizzleStorage implements IStorage {
-  async getContestants(): Promise<FullContestant[]> {
+  async getContestants(options?: { sortBy?: keyof Contestant; sortOrder?: 'asc' | 'desc'; page?: number; limit?: number }): Promise<FullContestant[]> {
     try {
-      const result = await db.select({
+      const { sortBy = 'createdAt', sortOrder = 'desc', page = 1, limit = 20 } = options || {};
+      
+      // Build the query
+      let query = db.select({
         id: contestants.id,
         dragName: contestants.dragName,
         realName: contestants.realName,
@@ -94,8 +97,16 @@ export class DrizzleStorage implements IStorage {
       .from(contestants)
       .leftJoin(appearances, eq(contestants.id, appearances.contestantId))
       .leftJoin(seasons, eq(appearances.seasonId, seasons.id))
-      .leftJoin(franchises, eq(seasons.franchiseId, franchises.id))
-      .orderBy(desc(contestants.createdAt));
+      .leftJoin(franchises, eq(seasons.franchiseId, franchises.id));
+
+      // Add sorting
+      const sortColumn = contestants[sortBy] || contestants.createdAt;
+      const orderBy = sortOrder === 'asc' ? asc(sortColumn) : desc(sortColumn);
+
+      // Add pagination
+      const offset = (page - 1) * limit;
+      
+      const result = await query.orderBy(orderBy).limit(limit).offset(offset);
       
       return result;
     } catch (error) {
@@ -288,8 +299,21 @@ export class DrizzleStorage implements IStorage {
     return result.length > 0;
   }
 
-  async getAllFranchises(): Promise<Franchise[]> {
-    return db.select().from(franchises).orderBy(franchises.name);
+  async getAllFranchises(options?: { sortBy?: keyof Franchise; sortOrder?: 'asc' | 'desc'; page?: number; limit?: number }): Promise<Franchise[]> {
+    const { sortBy = 'name', sortOrder = 'asc', page = 1, limit = 20 } = options || {};
+    
+    // Build sorting
+    const sortColumn = franchises[sortBy] || franchises.name;
+    const orderBy = sortOrder === 'asc' ? asc(sortColumn) : desc(sortColumn);
+
+    // Add pagination
+    const offset = (page - 1) * limit;
+    
+    return db.select()
+      .from(franchises)
+      .orderBy(orderBy)
+      .limit(limit)
+      .offset(offset);
   }
 
   async getFranchiseByName(name: string): Promise<Franchise | undefined> {
@@ -316,8 +340,10 @@ export class DrizzleStorage implements IStorage {
     sortBy?: keyof Season | 'franchiseName';
     sortOrder?: 'asc' | 'desc';
     search?: string;
+    page?: number;
+    limit?: number;
   } = {}): Promise<(Season & { franchiseName: string })[]> {
-    const { franchiseId, sortBy = 'year', sortOrder = 'desc', search } = options;
+    const { franchiseId, sortBy = 'year', sortOrder = 'desc', search, page = 1, limit = 20 } = options;
 
     const sortColumnMap: Record<string, any> = {
       name: seasons.name,
@@ -337,6 +363,9 @@ export class DrizzleStorage implements IStorage {
       conditions.push(ilike(seasons.name, `%${search}%`));
     }
 
+    // Add pagination
+    const offset = (page - 1) * limit;
+
     const query = db
       .select({
         ...getTableColumns(seasons),
@@ -345,7 +374,9 @@ export class DrizzleStorage implements IStorage {
       .from(seasons)
       .leftJoin(franchises, eq(seasons.franchiseId, franchises.id))
       .where(and(...conditions))
-      .orderBy(orderByClause);
+      .orderBy(orderByClause)
+      .limit(limit)
+      .offset(offset);
 
     const result = await query;
 

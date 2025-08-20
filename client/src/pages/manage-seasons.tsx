@@ -32,6 +32,8 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { ContestantsList } from "@/components/related-data";
+import { SortableTableHead } from "@/components/ui/sortable-table";
+import { DataPagination } from "@/components/ui/data-pagination";
 import type { Season, InsertSeason, Franchise } from "@shared/schema";
 
 interface SeasonWithFranchise extends Season {
@@ -44,13 +46,24 @@ export default function ManageSeasons() {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [formData, setFormData] = useState<Partial<InsertSeason>>({});
   const [expandedSeasons, setExpandedSeasons] = useState<Set<string>>(new Set());
+  const [sortBy, setSortBy] = useState<string>('year');
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage] = useState(20);
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
   const { data: seasons = [], isLoading } = useQuery({
-    queryKey: ["/api/seasons"],
+    queryKey: ["/api/seasons", sortBy, sortOrder, currentPage],
     queryFn: async () => {
-      const response = await fetch("/api/seasons");
+      const params = new URLSearchParams({
+        sortBy,
+        sortOrder,
+        page: currentPage.toString(),
+        limit: itemsPerPage.toString(),
+      });
+      
+      const response = await fetch(`/api/seasons?${params.toString()}`);
       if (!response.ok) throw new Error("Failed to fetch seasons");
       return response.json() as Promise<SeasonWithFranchise[]>;
     },
@@ -115,6 +128,16 @@ export default function ManageSeasons() {
     setExpandedSeasons(newExpanded);
   };
 
+  const handleSort = (newSortBy: string, newSortOrder: 'asc' | 'desc') => {
+    setSortBy(newSortBy);
+    setSortOrder(newSortOrder);
+    setCurrentPage(1);
+  };
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+  };
+
   return (
     <div className="min-h-screen bg-gray-50">
       <Header title="Manage Seasons" subtitle="Add, edit, and manage season information" />
@@ -161,8 +184,8 @@ export default function ManageSeasons() {
                 />
                 <Input
                   placeholder="Source URL"
-                  value={formData.sourceUrl || ""}
-                  onChange={(e) => setFormData({ ...formData, sourceUrl: e.target.value })}
+                  value={formData.metadataSourceUrl || ""}
+                  onChange={(e) => setFormData({ ...formData, metadataSourceUrl: e.target.value })}
                 />
                 <div className="flex gap-2">
                   <Button onClick={handleCreate} disabled={createMutation.isPending} className="flex-1">
@@ -198,9 +221,30 @@ export default function ManageSeasons() {
                   <TableHeader>
                     <TableRow>
                       <TableHead className="w-8"></TableHead>
-                      <TableHead>Name</TableHead>
-                      <TableHead>Franchise</TableHead>
-                      <TableHead>Year</TableHead>
+                      <SortableTableHead 
+                        sortKey="name"
+                        currentSortBy={sortBy}
+                        currentSortOrder={sortOrder}
+                        onSort={handleSort}
+                      >
+                        Name
+                      </SortableTableHead>
+                      <SortableTableHead 
+                        sortKey="franchiseName"
+                        currentSortBy={sortBy}
+                        currentSortOrder={sortOrder}
+                        onSort={handleSort}
+                      >
+                        Franchise
+                      </SortableTableHead>
+                      <SortableTableHead 
+                        sortKey="year"
+                        currentSortBy={sortBy}
+                        currentSortOrder={sortOrder}
+                        onSort={handleSort}
+                      >
+                        Year
+                      </SortableTableHead>
                       <TableHead>Status</TableHead>
                       <TableHead>Actions</TableHead>
                     </TableRow>
@@ -270,6 +314,17 @@ export default function ManageSeasons() {
                     ))}
                   </TableBody>
                 </Table>
+                
+                {seasons.length === itemsPerPage && (
+                  <div className="mt-6">
+                    <DataPagination
+                      currentPage={currentPage}
+                      totalItems={79} // We'd need to get this from API
+                      itemsPerPage={itemsPerPage}
+                      onPageChange={handlePageChange}
+                    />
+                  </div>
+                )}
               </div>
             )}
           </CardContent>

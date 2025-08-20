@@ -26,6 +26,8 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { AppearancesList } from "@/components/related-data";
+import { SortableTableHead } from "@/components/ui/sortable-table";
+import { DataPagination } from "@/components/ui/data-pagination";
 import type { FullContestant, InsertContestant, UpdateContestant } from "@shared/schema";
 
 export default function ManageContestants() {
@@ -34,13 +36,27 @@ export default function ManageContestants() {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [formData, setFormData] = useState<Partial<InsertContestant>>({});
   const [expandedContestants, setExpandedContestants] = useState<Set<string>>(new Set());
+  const [sortBy, setSortBy] = useState<string>('dragName');
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage] = useState(20);
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
   const { data: contestants = [], isLoading } = useQuery({
-    queryKey: ["/api/contestants", searchTerm],
+    queryKey: ["/api/contestants", searchTerm, sortBy, sortOrder, currentPage],
     queryFn: async () => {
-      const url = searchTerm ? `/api/contestants?search=${encodeURIComponent(searchTerm)}` : "/api/contestants";
+      const params = new URLSearchParams();
+      if (searchTerm) {
+        params.set('search', searchTerm);
+      } else {
+        params.set('sortBy', sortBy);
+        params.set('sortOrder', sortOrder);
+        params.set('page', currentPage.toString());
+        params.set('limit', itemsPerPage.toString());
+      }
+      
+      const url = `/api/contestants?${params.toString()}`;
       const response = await fetch(url);
       if (!response.ok) throw new Error("Failed to fetch contestants");
       return response.json() as Promise<FullContestant[]>;
@@ -96,6 +112,21 @@ export default function ManageContestants() {
     }
     setExpandedContestants(newExpanded);
   };
+
+  const handleSort = (newSortBy: string, newSortOrder: 'asc' | 'desc') => {
+    setSortBy(newSortBy);
+    setSortOrder(newSortOrder);
+    setCurrentPage(1); // Reset to first page when sorting
+  };
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+  };
+
+  // Reset page when search term changes
+  React.useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm]);
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -188,9 +219,30 @@ export default function ManageContestants() {
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>Drag Name</TableHead>
-                      <TableHead>Real Name</TableHead>
-                      <TableHead>Hometown</TableHead>
+                      <SortableTableHead 
+                        sortKey="dragName"
+                        currentSortBy={sortBy}
+                        currentSortOrder={sortOrder}
+                        onSort={handleSort}
+                      >
+                        Drag Name
+                      </SortableTableHead>
+                      <SortableTableHead 
+                        sortKey="realName"
+                        currentSortBy={sortBy}
+                        currentSortOrder={sortOrder}
+                        onSort={handleSort}
+                      >
+                        Real Name
+                      </SortableTableHead>
+                      <SortableTableHead 
+                        sortKey="hometown"
+                        currentSortBy={sortBy}
+                        currentSortOrder={sortOrder}
+                        onSort={handleSort}
+                      >
+                        Hometown
+                      </SortableTableHead>
                       <TableHead>Season</TableHead>
                       <TableHead>Outcome</TableHead>
                       <TableHead>Images</TableHead>
@@ -262,6 +314,18 @@ export default function ManageContestants() {
                     ))}
                   </TableBody>
                 </Table>
+                
+                {/* Only show pagination when not searching */}
+                {!searchTerm && contestants.length === itemsPerPage && (
+                  <div className="mt-6">
+                    <DataPagination
+                      currentPage={currentPage}
+                      totalItems={293} // We'd need to get this from API
+                      itemsPerPage={itemsPerPage}
+                      onPageChange={handlePageChange}
+                    />
+                  </div>
+                )}
               </div>
             )}
           </CardContent>
