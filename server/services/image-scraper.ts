@@ -153,6 +153,34 @@ export class ImageScraper {
       // Additional wait to ensure page fully loads after privacy dialog
       await page.waitForTimeout(3000);
 
+      // Debug: Log page structure for troubleshooting
+      console.log(`[image-scraper] Analyzing page structure for ${contestantName}...`);
+      const pageInfo = await page.evaluate(() => {
+        const allImages = document.querySelectorAll('img');
+        const galleries = document.querySelectorAll('.gallery, .wikia-gallery, .mw-gallery-traditional');
+        const tabbers = document.querySelectorAll('.tabber, .tabbertab');
+        
+        // Get sample of images with their details
+        const sampleImages = Array.from(allImages).slice(0, 10).map(img => ({
+          src: img.src,
+          alt: img.alt,
+          width: img.width,
+          height: img.height,
+          className: img.className
+        }));
+        
+        return {
+          totalImages: allImages.length,
+          galleries: galleries.length,
+          tabbers: tabbers.length,
+          sampleImages: sampleImages,
+          pageTitle: document.title,
+          hasContent: document.querySelector('#mw-content-text') ? true : false
+        };
+      });
+      
+      console.log(`[image-scraper] Page analysis for ${contestantName}:`, JSON.stringify(pageInfo, null, 2));
+
       broadcastProgress({
         jobId: null,
         status: 'running',
@@ -162,28 +190,21 @@ export class ImageScraper {
         currentItem: 'finding_images'
       });
 
-      // Look for section containing looks/runway images
+      // Simplified approach: Focus on the most common fandom gallery structures
       const imageSelectors = [
-        // Fandom wiki specific selectors for drag race looks
-        '.wikia-gallery-item img',
+        // Primary fandom gallery selectors (most likely to work)
         '.gallery img',
-        '.mw-gallery-traditional img',
-        '#mw-content-text .wikia-gallery-item .image img',
-        '#mw-content-text .gallery .image img',
-        '#mw-content-text .thumb .image img',
-        '#mw-content-text .image img', // More generic fallback within the content area
-        // Additional fandom-specific selectors
-        '.portable-infobox img',
-        '.infobox img',
-        '.tabbertab img',
+        '.wikia-gallery img', 
+        '.mw-gallery img',
+        // Content area images
+        '#mw-content-text img',
+        '.mw-parser-output img',
+        // Tabbed content
         '.tabber img',
-        // More generic selectors as fallback
-        'img[src*="look"]',
-        'img[src*="runway"]',
-        'img[src*="outfit"]',
-        'img[alt*="look"]',
-        'img[alt*="runway"]',
-        'img[alt*="outfit"]'
+        '.wds-tabs img',
+        // Infobox images  
+        '.portable-infobox img',
+        '.infobox img'
       ];
 
       let allImages: any[] = [];
@@ -227,31 +248,55 @@ export class ImageScraper {
       if (images.length === 0) {
         console.log(`[image-scraper] No images found with specific selectors, trying fallback approach for ${contestantName}`);
         
-        // Fallback: Get ALL images and filter by URL patterns and alt text
+        // Fallback: Get ALL images and use less restrictive filtering
         try {
           const fallbackImages = await page.$$eval('img', (imgs) => {
             return imgs.map((img: any) => ({
               src: img.src,
               alt: img.alt || '',
               title: img.title || '',
-              selector: 'fallback-all-images'
-            })).filter(img => 
-              img.src && 
-              !img.src.includes('data:') && 
-              !img.src.includes('wikia-beacon') &&
-              !img.src.includes('scorecardresearch') &&
-              !img.src.includes('avatar') &&
-              !img.src.includes('logo') &&
-              !img.src.includes('icon') &&
-              (img.src.includes('.jpg') || img.src.includes('.jpeg') || img.src.includes('.png') || img.src.includes('.webp')) &&
-              (img.alt.toLowerCase().includes('look') || 
-               img.alt.toLowerCase().includes('runway') || 
-               img.alt.toLowerCase().includes('outfit') ||
-               img.alt.toLowerCase().includes('drag') ||
-               img.src.toLowerCase().includes('look') ||
-               img.src.toLowerCase().includes('runway') ||
-               img.src.toLowerCase().includes('outfit'))
-            );
+              selector: 'fallback-all-images',
+              width: img.width || 0,
+              height: img.height || 0
+            })).filter(img => {
+              // Basic valid image checks
+              if (!img.src || img.src.includes('data:') || img.src.includes('wikia-beacon') || img.src.includes('scorecardresearch')) {
+                return false;
+              }
+              
+              // Must be a proper image format
+              if (!(img.src.includes('.jpg') || img.src.includes('.jpeg') || img.src.includes('.png') || img.src.includes('.webp'))) {
+                return false;
+              }
+              
+              // Exclude very small images (likely icons/thumbnails)
+              if (img.width > 0 && img.height > 0 && (img.width < 50 || img.height < 50)) {
+                return false;
+              }
+              
+              // Exclude obvious UI elements by URL patterns
+              if (img.src.includes('/common/') || 
+                  img.src.includes('/sitewide/') ||
+                  img.src.includes('/ui/') ||
+                  img.src.includes('wikia-beacon') ||
+                  img.src.includes('favicon') ||
+                  img.src.includes('loading') ||
+                  img.src.includes('spinner')) {
+                return false;
+              }
+              
+              // Include images that are likely content images (less restrictive than before)
+              return img.src.includes('images/') || // Fandom image paths
+                     img.width >= 100 || // Reasonably sized images
+                     img.alt.toLowerCase().includes('look') ||
+                     img.alt.toLowerCase().includes('runway') ||
+                     img.alt.toLowerCase().includes('outfit') ||
+                     img.alt.toLowerCase().includes('drag') ||
+                     img.alt.toLowerCase().includes('season') ||
+                     img.src.toLowerCase().includes('look') ||
+                     img.src.toLowerCase().includes('runway') ||
+                     img.src.toLowerCase().includes('outfit');
+            });
           });
           
           if (fallbackImages.length > 0) {
