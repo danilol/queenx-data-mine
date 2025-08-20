@@ -341,4 +341,27 @@ export class ImageScraper {
   }
 }
 
-export const imageScraper = new ImageScraper();
+// Create fallback to mock scraper when Playwright is not available
+let scraper: ImageScraper | null = null;
+
+async function getImageScraper() {
+  if (!scraper) {
+    scraper = new ImageScraper();
+    try {
+      await scraper.initialize();
+    } catch (error) {
+      console.log("[image-scraper] Playwright not available, using mock image scraper:", error instanceof Error ? error.message : 'Unknown error');
+      // Import and return mock scraper
+      const { mockImageScraper } = await import('./mock-image-scraper.js');
+      return mockImageScraper;
+    }
+  }
+  return scraper;
+}
+
+export const imageScraper = {
+  async scrapeContestantImages(contestantName: string, metadataSourceUrl: string, seasonName?: string) {
+    const scraper = await getImageScraper();
+    return scraper.scrapeContestantImages(contestantName, metadataSourceUrl, seasonName);
+  }
+};

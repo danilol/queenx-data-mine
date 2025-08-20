@@ -422,8 +422,6 @@ export class MockRuPaulScraper {
         franchiseName: 'Individual',
         status: 'pending' as const,
         progress: 0,
-        totalContestants: 1,
-        completedContestants: 0,
         contestants: [{
           name: contestant.dragName,
           status: 'pending' as const
@@ -479,7 +477,53 @@ export class MockRuPaulScraper {
         currentContestant: this.currentContestant
       });
 
-      await this.sleep(2000);
+      await this.sleep(1500);
+
+      // If image scraping is enabled and contestant has fandom URL, start image scraping
+      if (contestant.metadataSourceUrl) {
+        try {
+          broadcastProgress({
+            jobId,
+            status: "running",
+            progress: 75,
+            totalItems: 1,
+            message: `Starting image scraping for ${contestant.dragName}...`,
+            currentItem: contestant.dragName,
+            franchises: this.franchiseStatuses,
+            seasons: this.seasonStatuses,
+            level: this.scrapingLevel,
+            totalFranchises: this.totalFranchises,
+            completedFranchises: this.completedFranchises,
+            totalSeasons: this.totalSeasons,
+            completedSeasons: this.completedSeasons,
+            totalContestants: this.totalContestants,
+            completedContestants: this.completedContestants,
+            currentFranchise: undefined,
+            currentSeason: undefined,
+            currentContestant: this.currentContestant
+          });
+
+          // Import and use image scraper
+          const { imageScraper } = await import('./image-scraper.js');
+          
+          // Start image scraping
+          const imageResult = await imageScraper.scrapeContestantImages(
+            contestant.dragName,
+            contestant.metadataSourceUrl
+          );
+          
+          console.log(`[mock-scraper] Image scraping completed for ${contestant.dragName}:`, {
+            success: imageResult.success,
+            imagesDownloaded: imageResult.imagesDownloaded,
+            errors: imageResult.errors.length
+          });
+
+        } catch (error) {
+          console.error(`[mock-scraper] Image scraping failed for ${contestant.dragName}:`, error);
+        }
+      }
+
+      await this.sleep(500);
 
       // Complete the contestant update
       this.seasonStatuses[0].status = 'completed';
