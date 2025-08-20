@@ -208,21 +208,13 @@ export class RuPaulScraper {
   }
 
   private async runContestantScraping(contestant: any, options: ScrapingOptions) {
-    if (!this.browser) {
-      console.error("Browser not initialized, stopping scraping process.");
-      return;
-    }
-
     console.log(`[scraper] Scraping contestant: ${contestant.dragName}`);
     this.updateSeasonStatus(`Contestant: ${contestant.dragName}`, 'running');
 
     try {
-      const page = await this.browser.newPage();
+      // Skip URL checking since metadata_source_url already exists and was verified when saved
       if (contestant.metadataSourceUrl) {
-        console.log(`[scraper] Navigating to ${contestant.metadataSourceUrl} for contestant: ${contestant.dragName}`);
-        await page.goto(contestant.metadataSourceUrl, { waitUntil: 'networkidle' });
-
-        // Trigger image scraping for the contestant
+        // Trigger image scraping for the contestant (no need to check URL again)
         if (isImageScrapingEnabled()) {
           console.log(`[scraper] Triggering image scraping for ${contestant.dragName}`);
           const { imageScraper } = await import('./image-scraper.js');
@@ -231,11 +223,16 @@ export class RuPaulScraper {
             contestant.metadataSourceUrl
           ).catch(err => {
             console.error(`[scraper] Image scraping failed for ${contestant.dragName}:`, err);
+            this.updateSeasonStatus(`Contestant: ${contestant.dragName}`, 'failed');
+            return;
           });
+        } else {
+          console.log(`[scraper] Image scraping disabled for ${contestant.dragName}`);
         }
+      } else {
+        console.log(`[scraper] No metadata source URL for ${contestant.dragName}, skipping`);
       }
       this.updateSeasonStatus(`Contestant: ${contestant.dragName}`, 'completed');
-      await page.close();
     } catch (error) {
       this.updateSeasonStatus(`Contestant: ${contestant.dragName}`, 'failed');
       console.error(`Failed to scrape ${contestant.dragName}:`, error);

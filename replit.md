@@ -1,6 +1,12 @@
 # Overview
 This is a RuPaul's Drag Race contestant scraping and management system built as a full-stack web application. The system automatically scrapes contestant data from Wikipedia using Playwright web automation, stores it in a PostgreSQL database, and provides a modern web interface for viewing and managing the collected data. The application features real-time progress tracking during scraping operations, comprehensive contestant profiles with photos and biographical information, and data export capabilities. The business vision is to create a comprehensive content management system for RuPaul's Drag Race data, with potential for broader entertainment data management.
 
+## Recent Performance Improvements (August 2025)
+- **S3 Bucket Structure**: Implemented uploads/ prefix level for better organization (queenx-app-bucket/uploads/contestants/)
+- **Scraping Performance**: Eliminated unnecessary double URL checking when scraping contestants with existing metadata_source_url
+- **Image Display**: Enhanced gallery with object-contain (no cropping), 256px height, and proper click-to-expand functionality  
+- **Image Filtering**: Fixed overly aggressive filtering that excluded legitimate contestant photos (GingerMinjAS10.jpg, etc.)
+
 # User Preferences
 Preferred communication style: Simple, everyday language.
 Interface priority: Scraping progress visualization is more important than settings/configuration sections.
