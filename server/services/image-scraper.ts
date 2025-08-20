@@ -30,7 +30,7 @@ export class ImageScraper {
   // Generate consistent S3 key based on image hash and contestant name
   private generateS3Key(contestantName: string, imageHash: string, extension: string): string {
     const sanitizedName = contestantName.replace(/[^a-zA-Z0-9]/g, '_').toLowerCase();
-    return `contestants/${sanitizedName}/${imageHash}${extension}`;
+    return `uploads/contestants/${sanitizedName}/${imageHash}${extension}`;
   }
 
   async initialize() {

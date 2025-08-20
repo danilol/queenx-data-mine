@@ -62,7 +62,7 @@ export class S3Service {
       // Clean contestant name for safe file paths
       const safeName = contestantName.replace(/[^a-zA-Z0-9]/g, '-').toLowerCase();
       const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-      const key = `contestants/${safeName}/images/${timestamp}-${imageName}`;
+      const key = `uploads/contestants/${safeName}/images/${timestamp}-${imageName}`;
 
       const command = new PutObjectCommand({
         Bucket: this.bucketName,

@@ -633,15 +633,33 @@ apiRouter.patch("/config/image-scraping", async (req, res) => {
 apiRouter.get("/images/*", async (req, res) => {
   try {
     // Extract the S3 key from the URL
-    const s3Key = (req.params as any)[0]; // Everything after /images/
+    let s3Key = (req.params as any)[0]; // Everything after /images/
     
     if (!s3Key) {
       return res.status(400).json({ error: "Image path required" });
     }
 
     try {
-      // Try to generate a presigned URL for the image (expires in 1 hour)
-      const presignedUrl = await s3Service.getPresignedUrl(s3Key, 3600);
+      // First, try the key as provided (for new uploads with uploads/ prefix)
+      let presignedUrl: string;
+      try {
+        presignedUrl = await s3Service.getPresignedUrl(s3Key, 3600);
+      } catch (firstError) {
+        // If that fails and the key doesn't start with uploads/, try adding the uploads/ prefix
+        if (!s3Key.startsWith('uploads/')) {
+          const uploadsKey = `uploads/${s3Key}`;
+          try {
+            presignedUrl = await s3Service.getPresignedUrl(uploadsKey, 3600);
+            console.log(`Found image with uploads/ prefix: ${uploadsKey}`);
+          } catch (secondError) {
+            // If both fail, throw the original error
+            throw firstError;
+          }
+        } else {
+          throw firstError;
+        }
+      }
+      
       console.log(`Generated presigned URL for ${s3Key}`);
       
       // Redirect to the presigned URL - browser will handle the image display
