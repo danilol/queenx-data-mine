@@ -150,33 +150,14 @@ export default function Dashboard() {
         />
 
         <div className="p-6 space-y-8 max-w-7xl mx-auto">
-          {/* Development Tools Section */}
-          {process.env.NODE_ENV === 'development' && (
-            <Card className="card-enhanced border-red-200 bg-red-50 dark:border-red-800 dark:bg-red-950">
-              <CardContent className="p-6">
-                <h3 className="text-xl font-semibold text-red-800 dark:text-red-200 mb-4 flex items-center gap-2">
-                  <Bug className="h-5 w-5" />
-                  Development Tools
-                </h3>
-                <div className="space-y-4">
-                  <div className="bg-red-100 dark:bg-red-900 border border-red-300 dark:border-red-700 rounded-lg p-4">
-                    <p className="text-red-800 dark:text-red-200 text-sm mb-3">
-                      ⚠️ <strong>Danger Zone:</strong> These tools are only available in development mode.
-                    </p>
-                    <Button
-                      onClick={handleDatabaseReset}
-                      disabled={databaseResetMutation.isPending}
-                      variant="destructive"
-                      className="flex items-center gap-2"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                      {databaseResetMutation.isPending ? "Resetting Database..." : "Reset Database"}
-                    </Button>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          )}
+          {/* Scraping Progress - Priority Section */}
+          <ScrapingProgress />
+
+          {/* Stats Cards */}
+          <StatsCards stats={stats} isLoading={statsLoading} />
+
+          {/* Configuration Settings */}
+          <ConfigSettings />
 
           {/* S3 Upload Testing Section */}
           <Card className="card-enhanced">
@@ -232,15 +213,6 @@ export default function Dashboard() {
               </div>
             </CardContent>
           </Card>
-
-          {/* Stats Cards */}
-          <StatsCards stats={stats} isLoading={statsLoading} />
-
-          {/* Configuration Settings */}
-          <ConfigSettings />
-
-          {/* Scraping Progress */}
-          <ScrapingProgress />
 
 
 
@@ -299,9 +271,36 @@ export default function Dashboard() {
               </CardContent>
             </Card>
           </div>
+
+          {/* Development Tools Section - Moved to Bottom */}
+          {process.env.NODE_ENV === 'development' && (
+            <Card className="card-enhanced border-red-200 bg-red-50 dark:border-red-800 dark:bg-red-950">
+              <CardContent className="p-6">
+                <h3 className="text-xl font-semibold text-red-800 dark:text-red-200 mb-4 flex items-center gap-2">
+                  <Bug className="h-5 w-5" />
+                  Development Tools
+                </h3>
+                <div className="space-y-4">
+                  <div className="bg-red-100 dark:bg-red-900 border border-red-300 dark:border-red-700 rounded-lg p-4">
+                    <p className="text-red-800 dark:text-red-200 text-sm mb-3">
+                      ⚠️ <strong>Danger Zone:</strong> These tools are only available in development mode.
+                    </p>
+                    <Button
+                      onClick={handleDatabaseReset}
+                      disabled={databaseResetMutation.isPending}
+                      variant="destructive"
+                      className="flex items-center gap-2"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                      {databaseResetMutation.isPending ? "Resetting Database..." : "Reset Database"}
+                    </Button>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          )}
         </div>
       </div>
-
 
     </div>
   );

@@ -40,7 +40,7 @@ export function ScrapingProgress() {
     }
     return { 
       ...defaultStatus, 
-      status: (scrapingStatus?.status as 'idle' | 'running' | 'completed' | 'failed') || 'idle' 
+      status: (scrapingStatus?.status as any) || 'idle' 
     };
   })();
 
