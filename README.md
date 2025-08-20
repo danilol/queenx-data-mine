@@ -23,12 +23,13 @@ This is a full-stack web application designed to automatically scrape, organize,
 ### 🎯 Key Highlights
 
 - **🤖 Multi-Level Scraping**: Full → Franchise → Season → Contestant hierarchical data collection
-- **🌐 Generic Source Integration**: Flexible `sourceUrl` fields support Wikipedia, Fandom, official sites, and more
+- **🌐 Generic Source Integration**: Flexible `metadataSourceUrl` fields support Wikipedia, Fandom, official sites, and more
 - **⚡ Real-Time Progress**: WebSocket-powered live updates with detailed progress tracking
 - **🎨 Modern Interface**: Clean, responsive React UI with shadcn/ui components and dark mode
 - **📊 Comprehensive Management**: Full CRUD operations with advanced search and filtering
 - **📥 Data Export**: CSV and JSON export with complete metadata preservation
 - **🔧 Developer-Friendly**: TypeScript throughout, hot reload, comprehensive debugging tools
+- **🏗️ Clean Architecture**: Streamlined codebase with eliminated redundancy and consistent schema patterns
 
 ## 🏗️ System Architecture
 
@@ -441,7 +442,7 @@ export const contestants = pgTable('contestants', {
   season: text('season').notNull(),
   outcome: text('outcome'),
   photoUrl: text('photo_url'),
-  sourceUrl: text('source_url').notNull(), // Generic field for any source
+  metadataSourceUrl: text('metadata_source_url').notNull(), // Generic field for any source
   isScraped: boolean('is_scraped').default(false),
   
   // Custom fields you can add:

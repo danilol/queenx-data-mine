@@ -4,6 +4,10 @@ This is a RuPaul's Drag Race contestant scraping and management system built as 
 
 ## Recent Changes (August 2025)
 
+- **Code Cleanup Completed**: ✓ Removed all redundant and obsolete components including standalone view pages, unused modal components, and legacy progress visualization components while maintaining full functionality through management pages
+- **Schema Standardization**: ✓ Updated entire codebase to use consistent `metadataSourceUrl` field names across all components, services, and data files for better maintainability
+- **Component Architecture Cleanup**: ✓ Eliminated duplicated functionality by consolidating all CRUD operations into dedicated management pages with proper navigation structure
+
 - **Fandom URL Auto-Population**: ✓ Implemented intelligent fandom URL lookup system that automatically populates `metadata_source_url` with RuPaul's Drag Race Fandom wiki URLs for new contestants during scraping
 - **Fallback URL Construction**: ✓ Added fallback mechanism to construct fandom URLs when browser automation is unavailable, ensuring functionality in all environments
 - **Manual Fandom URL Lookup**: ✓ Added API endpoint `/api/contestants/:id/lookup-fandom-url` and frontend button to manually search and populate fandom URLs for existing contestants without metadata source URLs
