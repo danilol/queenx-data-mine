@@ -1,4 +1,4 @@
-import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
+import { S3Client, PutObjectCommand, HeadObjectCommand } from '@aws-sdk/client-s3';
 import 'dotenv/config';
 
 export class S3Service {
@@ -96,6 +96,68 @@ export class S3Service {
     const buffer = Buffer.from(testContent, 'utf-8');
     
     return this.uploadFile(buffer, 'test-connection.json', 'application/json');
+  }
+
+  async uploadWithKey(
+    fileBuffer: Buffer,
+    key: string,
+    contentType: string = 'application/octet-stream'
+  ): Promise<{ key: string; url: string }> {
+    try {
+      const command = new PutObjectCommand({
+        Bucket: this.bucketName,
+        Key: key,
+        Body: fileBuffer,
+        ContentType: contentType,
+      });
+
+      await this.client.send(command);
+
+      // Return the key and constructed URL
+      const url = this.getPublicUrl(key);
+      
+      return { key, url };
+    } catch (error) {
+      console.error('S3 upload error:', error);
+      throw new Error(`Failed to upload file to S3: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
+  }
+
+  async fileExists(key: string): Promise<boolean> {
+    try {
+      const command = new HeadObjectCommand({
+        Bucket: this.bucketName,
+        Key: key,
+      });
+
+      await this.client.send(command);
+      return true; // File exists
+    } catch (error: any) {
+      if (error.name === 'NotFound' || error.$metadata?.httpStatusCode === 404) {
+        return false; // File does not exist
+      }
+      // Re-throw other errors (like permission issues)
+      throw error;
+    }
+  }
+
+  getPublicUrl(key: string): string {
+    return `https://${this.bucketName}.s3.amazonaws.com/${key}`;
+  }
+
+  async testConnection(): Promise<{ success: boolean; message: string }> {
+    try {
+      await this.uploadTestFile();
+      return {
+        success: true,
+        message: 'S3 connection successful! Test file uploaded.',
+      };
+    } catch (error) {
+      return {
+        success: false,
+        message: `S3 connection failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      };
+    }
   }
 }
 

@@ -5,6 +5,7 @@ import { isImageScrapingEnabled, getConfig } from "../config";
 import { db } from "../db";
 import { contestants } from "../../shared/schema";
 import { eq } from "drizzle-orm";
+import crypto from "crypto";
 
 export interface ImageScrapingResult {
   success: boolean;
@@ -20,6 +21,17 @@ export interface ImageScrapingResult {
 
 export class ImageScraper {
   private browser: Browser | null = null;
+
+  // Generate a consistent hash for image content to prevent duplicates
+  private generateImageHash(imageBuffer: Buffer): string {
+    return crypto.createHash('md5').update(imageBuffer).digest('hex');
+  }
+
+  // Generate consistent S3 key based on image hash and contestant name
+  private generateS3Key(contestantName: string, imageHash: string, extension: string): string {
+    const sanitizedName = contestantName.replace(/[^a-zA-Z0-9]/g, '_').toLowerCase();
+    return `contestants/${sanitizedName}/${imageHash}${extension}`;
+  }
 
   async initialize() {
     try {
@@ -193,22 +205,36 @@ export class ImageScraper {
           const contentType = response.headers()['content-type'] || 'image/jpeg';
           const fileExtension = this.getFileExtension(image.src, contentType);
           
-          // Generate a meaningful filename
-          const imageName = this.generateImageName(image, i, fileExtension);
+          // Generate hash-based key to prevent duplicates
+          const imageHash = this.generateImageHash(imageBuffer);
+          const s3Key = this.generateS3Key(contestantName, imageHash, fileExtension);
           
-          // Upload to S3
-          const uploadResult = await s3Service.uploadContestantImage(
-            imageBuffer,
-            contestantName,
-            imageName,
-            contentType
-          );
+          // Check if this image already exists in S3
+          const existsInS3 = await s3Service.fileExists(s3Key);
+          
+          let uploadResult;
+          if (existsInS3) {
+            console.log(`Image already exists in S3, skipping upload: ${s3Key}`);
+            // Still track it as part of this contestant's images
+            uploadResult = {
+              key: s3Key,
+              url: s3Service.getPublicUrl(s3Key)
+            };
+          } else {
+            // Upload new image to S3 with hash-based key
+            uploadResult = await s3Service.uploadWithKey(
+              imageBuffer,
+              s3Key,
+              contentType
+            );
+            console.log(`Uploaded new image: ${s3Key}`);
+          }
 
           result.uploadedImages.push({
             originalUrl: image.src,
             s3Key: uploadResult.key,
             s3Url: uploadResult.url,
-            imageName: imageName
+            imageName: s3Key.split('/').pop() || 'unknown'
           });
 
           result.imagesDownloaded++;
