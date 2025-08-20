@@ -242,6 +242,19 @@ export class ImageScraper {
               !img.src.includes('data:') && 
               !img.src.includes('wikia-beacon') &&
               !img.src.includes('scorecardresearch') &&
+              !img.src.includes('logo') &&
+              !img.src.includes('Logo') &&
+              !img.src.includes('crown') &&
+              !img.src.includes('Crown') &&
+              !img.src.includes('icon') &&
+              !img.src.includes('Icon') &&
+              !img.src.includes('badge') &&
+              !img.src.includes('Badge') &&
+              !(img.alt && (img.alt.toLowerCase().includes('logo') || 
+                           img.alt.toLowerCase().includes('crown') || 
+                           img.alt.toLowerCase().includes('icon') ||
+                           img.alt.toLowerCase().includes('badge') ||
+                           img.alt.toLowerCase().includes('winner'))) &&
               (img.src.includes('.jpg') || img.src.includes('.jpeg') || img.src.includes('.png') || img.src.includes('.webp'))
             );
           }, selector);
@@ -301,7 +314,26 @@ export class ImageScraper {
                   img.src.includes('wikia-beacon') ||
                   img.src.includes('favicon') ||
                   img.src.includes('loading') ||
-                  img.src.includes('spinner')) {
+                  img.src.includes('spinner') ||
+                  img.src.includes('logo') ||
+                  img.src.includes('Logo') ||
+                  img.src.includes('crown') ||
+                  img.src.includes('Crown') ||
+                  img.src.includes('icon') ||
+                  img.src.includes('Icon') ||
+                  img.src.includes('badge') ||
+                  img.src.includes('Badge')) {
+                return false;
+              }
+              
+              // Exclude by alt text patterns
+              if (img.alt && (
+                  img.alt.toLowerCase().includes('logo') ||
+                  img.alt.toLowerCase().includes('crown') ||
+                  img.alt.toLowerCase().includes('icon') ||
+                  img.alt.toLowerCase().includes('badge') ||
+                  img.alt.toLowerCase().includes('winner') ||
+                  img.alt.toLowerCase().includes('sharon logo'))) {
                 return false;
               }
               
