@@ -56,7 +56,7 @@ export interface IStorage {
   // Stats
   getAppStats(): Promise<AppStats>;
 
-  // Bulk operations for database reset
+  // Bulk operations for data cleanup
   truncateAllTables(): Promise<void>;
 
   // Related data methods
@@ -525,15 +525,12 @@ export class DrizzleStorage implements IStorage {
 
   async truncateAllTables(): Promise<void> {
     try {
-      console.log('[truncate] Starting bulk table truncation...');
+      console.log('[truncate] Starting bulk data cleanup...');
       
-      // Delete all data in dependency order (foreign key constraints)
-      // Use DELETE without WHERE clause for bulk deletion
+      // Delete only scraped data in dependency order (foreign key constraints)
+      // Keep scraping jobs for history/logging purposes
       await db.delete(appearances);
       console.log('[truncate] Cleared appearances table');
-      
-      await db.delete(scrapingJobs);
-      console.log('[truncate] Cleared scraping jobs table');
       
       await db.delete(contestants);
       console.log('[truncate] Cleared contestants table');
@@ -544,9 +541,9 @@ export class DrizzleStorage implements IStorage {
       await db.delete(franchises);
       console.log('[truncate] Cleared franchises table');
       
-      console.log('[truncate] Bulk table truncation completed');
+      console.log('[truncate] Bulk data cleanup completed');
     } catch (error) {
-      console.error('Error during table truncation:', error);
+      console.error('Error during data cleanup:', error);
       throw error;
     }
   }

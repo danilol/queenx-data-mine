@@ -454,7 +454,7 @@ apiRouter.post("/database/reset", async (req, res) => {
 
     res.json({
       success: true,
-      message: "Database has been completely reset. All data has been cleared.",
+      message: "Scraped data has been cleared. Scraping jobs history preserved.",
       resetAt: new Date().toISOString(),
       tablesCleared: ['appearances', 'contestants', 'seasons', 'franchises']
     });
