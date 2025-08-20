@@ -363,14 +363,20 @@ export default function ContestantDetail() {
                     const proxyUrl = `/api/images/${s3Key}`;
                     
                     return (
-                      <div key={index} className="relative group">
+                      <div 
+                        key={index} 
+                        className="relative group cursor-pointer"
+                        onClick={() => {
+                          console.log('Opening image:', proxyUrl);
+                          window.open(proxyUrl, '_blank');
+                        }}
+                      >
                         <img
                           src={proxyUrl}
                           alt={`${contestant.dragName} - Image ${index + 1}`}
-                          className="w-full h-64 object-contain bg-gray-100 rounded-lg shadow-sm hover:shadow-md transition-shadow cursor-pointer"
-                          onClick={() => window.open(proxyUrl, '_blank')}
+                          className="w-full h-64 object-contain bg-gray-100 rounded-lg shadow-sm hover:shadow-md transition-shadow"
                         />
-                        <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity rounded-lg flex items-center justify-center">
+                        <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity rounded-lg flex items-center justify-center pointer-events-none">
                           <ExternalLink className="h-6 w-6 text-white" />
                         </div>
                       </div>
