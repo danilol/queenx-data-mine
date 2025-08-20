@@ -447,33 +447,8 @@ apiRouter.post("/database/reset", async (req, res) => {
 
     console.log('[database-reset] Starting database reset...');
     
-    // Use storage abstraction to clear all data
-    // Get all records to delete them properly through the storage layer
-    const allAppearances = await storage.getAllAppearances();
-    const allContestants = await storage.getContestants();
-    const allSeasons = await storage.getAllSeasons();
-    const allFranchises = await storage.getAllFranchises();
-    
-    // Delete all data in dependency order (foreign key constraints)
-    for (const appearance of allAppearances) {
-      await storage.deleteAppearance(appearance.id);
-    }
-    console.log('[database-reset] Cleared appearances table');
-    
-    for (const contestant of allContestants) {
-      await storage.deleteContestant(contestant.id);
-    }
-    console.log('[database-reset] Cleared contestants table');
-    
-    for (const season of allSeasons) {
-      await storage.deleteSeason(season.id);
-    }
-    console.log('[database-reset] Cleared seasons table');
-    
-    for (const franchise of allFranchises) {
-      await storage.deleteFranchise(franchise.id);
-    }
-    console.log('[database-reset] Cleared franchises table');
+    // Use storage abstraction for efficient bulk deletion
+    await storage.truncateAllTables();
 
     console.log('[database-reset] Database reset completed successfully');
 

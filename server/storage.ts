@@ -56,6 +56,9 @@ export interface IStorage {
   // Stats
   getAppStats(): Promise<AppStats>;
 
+  // Bulk operations for database reset
+  truncateAllTables(): Promise<void>;
+
   // Related data methods
   getSeasonsByFranchise(franchiseId: string): Promise<(Season & { franchiseName: string })[]>;
   getContestantsBySeason(seasonId: string): Promise<FullContestant[]>;
@@ -517,6 +520,34 @@ export class DrizzleStorage implements IStorage {
     } catch (error) {
       console.error('Error fetching appearances by contestant:', error);
       return [];
+    }
+  }
+
+  async truncateAllTables(): Promise<void> {
+    try {
+      console.log('[truncate] Starting bulk table truncation...');
+      
+      // Delete all data in dependency order (foreign key constraints)
+      // Use DELETE without WHERE clause for bulk deletion
+      await db.delete(appearances);
+      console.log('[truncate] Cleared appearances table');
+      
+      await db.delete(scrapingJobs);
+      console.log('[truncate] Cleared scraping jobs table');
+      
+      await db.delete(contestants);
+      console.log('[truncate] Cleared contestants table');
+      
+      await db.delete(seasons);
+      console.log('[truncate] Cleared seasons table');
+      
+      await db.delete(franchises);
+      console.log('[truncate] Cleared franchises table');
+      
+      console.log('[truncate] Bulk table truncation completed');
+    } catch (error) {
+      console.error('Error during table truncation:', error);
+      throw error;
     }
   }
 
