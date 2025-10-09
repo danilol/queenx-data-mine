@@ -33,6 +33,84 @@ This is a full-stack web application designed to automatically scrape, organize,
 
 ## 🏗️ System Architecture
 
+## 🌐 API Endpoints
+
+This section provides a detailed overview of the available API endpoints. All endpoints are prefixed with `/api`.
+
+### Scraping Endpoints
+
+These endpoints control the web scraping engine.
+
+#### Start a Scraping Job
+
+- **POST** `/api/scrape/full`
+  - **Description**: Initiates a full scrape of all franchises, seasons, and contestants.
+  - **Body**: `{ "options": { "headless": boolean, "screenshotsEnabled": boolean } }` (optional)
+
+- **POST** `/api/scrape/franchise`
+  - **Description**: Scrapes a specific franchise and all its seasons.
+  - **Body**: `{ "franchiseId": "<franchise-uuid>", "options": { ... } }`
+
+- **POST** `/api/scrape/season`
+  - **Description**: Scrapes a specific season and its contestants.
+  - **Body**: `{ "seasonId": "<season-uuid>", "options": { ... } }`
+
+- **POST** `/api/scrape/contestant`
+  - **Description**: Scrapes or re-scrapes a single contestant's detailed information.
+  - **Body**: `{ "contestantId": "<contestant-uuid>", "options": { ... } }`
+
+#### Control and Status
+
+- **GET** `/api/scrape/status`
+  - **Description**: Retrieves the real-time status of the current scraping job.
+  - **Response**: A `ScrapingJobPayload` object with the current job's progress.
+
+- **POST** `/api/scrape/stop`
+  - **Description**: Stops the currently active scraping job.
+  - **Response**: `{ "status": "stopped" }`
+
+### Data Management Endpoints
+
+These endpoints provide full CRUD (Create, Read, Update, Delete) functionality for the core data models.
+
+#### Contestants
+
+- **GET** `/api/contestants`
+  - **Description**: Retrieves a list of all contestants. Supports filtering by `search` and `seasonId`.
+- **GET** `/api/contestants/:id`
+  - **Description**: Fetches a single contestant by their ID.
+- **POST** `/api/contestants`
+  - **Description**: Creates a new contestant.
+- **PATCH** `/api/contestants/:id`
+  - **Description**: Updates an existing contestant.
+- **DELETE** `/api/contestants/:id`
+  - **Description**: Deletes a contestant.
+
+#### Franchises
+
+- **GET** `/api/franchises`
+- **GET** `/api/franchises/:id`
+- **POST** `/api/franchises`
+- **PATCH** `/api/franchises/:id`
+- **DELETE** `/api/franchises/:id`
+
+#### Seasons
+
+- **GET** `/api/seasons`
+- **GET** `/api/seasons/:id`
+- **POST** `/api/seasons`
+- **PATCH** `/api/seasons/:id`
+- **DELETE** `/api/seasons/:id`
+
+### Other Endpoints
+
+- **GET** `/api/stats`
+  - **Description**: Retrieves application-wide statistics (total contestants, seasons, etc.).
+- **GET** `/api/export/csv`
+  - **Description**: Exports all data into a downloadable CSV file.
+- **GET** `/api/export/json`
+  - **Description**: Exports all data into a downloadable JSON file.
+
 ### Technology Stack
 
 | Layer | Technologies | Purpose |

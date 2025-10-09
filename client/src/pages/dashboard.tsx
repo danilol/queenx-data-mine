@@ -23,7 +23,9 @@ export default function Dashboard() {
   const [headlessMode, setHeadlessMode] = useState(true);
   const [screenshotsEnabled, setScreenshotsEnabled] = useState(true);
   const [selectedScrapingLevel, setSelectedScrapingLevel] = useState<'full' | 'franchise' | 'season' | 'contestant'>('full');
-  const [customSourceUrl, setCustomSourceUrl] = useState('');
+  const [selectedFranchiseId, setSelectedFranchiseId] = useState<string | null>(null);
+  const [selectedSeasonId, setSelectedSeasonId] = useState<string | null>(null);
+  const [selectedContestantId, setSelectedContestantId] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -35,9 +37,27 @@ export default function Dashboard() {
   });
 
   const { data: scrapingStatus } = useQuery({
-    queryKey: ["/api/scraping/status"],
+    queryKey: ["/api/scrape/status"],
     queryFn: () => api.getScrapingStatus(),
     refetchInterval: 5000,
+  });
+
+  const { data: franchises = [] } = useQuery({
+    queryKey: ["/api/franchises"],
+    queryFn: api.getFranchises,
+    enabled: ['franchise', 'season', 'contestant'].includes(selectedScrapingLevel),
+  });
+
+  const { data: seasons = [] } = useQuery({
+    queryKey: ["/api/seasons", { franchiseId: selectedFranchiseId }],
+    queryFn: () => api.getSeasons({ franchiseId: selectedFranchiseId! }),
+    enabled: !!selectedFranchiseId && ['season', 'contestant'].includes(selectedScrapingLevel),
+  });
+
+  const { data: contestants = [] } = useQuery({
+    queryKey: ["/api/contestants", { seasonId: selectedSeasonId }],
+    queryFn: () => api.getContestants({ seasonId: selectedSeasonId! }),
+    enabled: !!selectedSeasonId && selectedScrapingLevel === 'contestant',
   });
 
   const { data: scrapingJobs = [] } = useQuery({
@@ -46,27 +66,48 @@ export default function Dashboard() {
   });
 
   // Scraping mutations
+  const onScrapingSuccess = (level: string) => {
+    toast({
+      title: "Scraping Started",
+      description: `${level.charAt(0).toUpperCase() + level.slice(1)} scraping has begun. Monitor progress below.`,
+    });
+    queryClient.invalidateQueries({ queryKey: ["/api/scrape/status"] });
+  };
+
+  const onScrapingError = (error: any) => {
+    toast({
+      title: "Failed to Start Scraping",
+      description: error instanceof Error ? error.message : "An unknown error occurred",
+      variant: "destructive",
+    });
+  };
+
+  const startFullScrapingMutation = useMutation({
+    mutationFn: (options: { headless: boolean; screenshotsEnabled: boolean }) => api.startFullScraping(options),
+    onSuccess: () => onScrapingSuccess('full'),
+    onError: onScrapingError,
+  });
+
+  const startFranchiseScrapingMutation = useMutation({
+    mutationFn: (variables: { franchiseId: string, options: { headless: boolean; screenshotsEnabled: boolean } }) => api.startFranchiseScraping(variables.franchiseId, variables.options),
+    onSuccess: () => onScrapingSuccess('franchise'),
+    onError: onScrapingError,
+  });
+
+  const startSeasonScrapingMutation = useMutation({
+    mutationFn: (variables: { seasonId: string, options: { headless: boolean; screenshotsEnabled: boolean } }) => api.startSeasonScraping(variables.seasonId, variables.options),
+    onSuccess: () => onScrapingSuccess('season'),
+    onError: onScrapingError,
+  });
+
+  const startContestantScrapingMutation = useMutation({
+    mutationFn: (variables: { contestantId: string, options: { headless: boolean; screenshotsEnabled: boolean } }) => api.startContestantScraping(variables.contestantId, variables.options),
+    onSuccess: () => onScrapingSuccess('contestant'),
+    onError: onScrapingError,
+  });
+
   const startScrapingMutation = useMutation({
-    mutationFn: () => api.startScraping({ 
-      headless: headlessMode, 
-      screenshotsEnabled,
-      level: selectedScrapingLevel,
-      sourceUrl: customSourceUrl || undefined
-    }),
-    onSuccess: () => {
-      toast({
-        title: "Scraping Started",
-        description: `${selectedScrapingLevel.charAt(0).toUpperCase() + selectedScrapingLevel.slice(1)} scraping has begun. Monitor progress below.`,
-      });
-      queryClient.invalidateQueries({ queryKey: ["/api/scraping/status"] });
-    },
-    onError: (error) => {
-      toast({
-        title: "Failed to Start Scraping",
-        description: error instanceof Error ? error.message : "An unknown error occurred",
-        variant: "destructive",
-      });
-    },
+    mutationFn: async () => { console.log('This mutation is deprecated') },
   });
 
   const stopScrapingMutation = useMutation({
@@ -178,14 +219,46 @@ export default function Dashboard() {
   };
 
   const handleStartScraping = () => {
-    startScrapingMutation.mutate();
+    const options = { headless: headlessMode, screenshotsEnabled };
+    switch (selectedScrapingLevel) {
+      case 'full':
+        startFullScrapingMutation.mutate(options);
+        break;
+      case 'franchise':
+        if (selectedFranchiseId) {
+          startFranchiseScrapingMutation.mutate({ franchiseId: selectedFranchiseId, options });
+        } else {
+          toast({ title: 'Please select a franchise', variant: 'destructive' });
+        }
+        break;
+      case 'season':
+        if (selectedSeasonId) {
+          startSeasonScrapingMutation.mutate({ seasonId: selectedSeasonId, options });
+        } else {
+          toast({ title: 'Please select a season', variant: 'destructive' });
+        }
+        break;
+      case 'contestant':
+        if (selectedContestantId) {
+          startContestantScrapingMutation.mutate({ contestantId: selectedContestantId, options });
+        } else {
+          toast({ title: 'Please select a contestant', variant: 'destructive' });
+        }
+        break;
+    }
   };
 
   const handleStopScraping = () => {
     stopScrapingMutation.mutate();
   };
 
-  const isScrapingActive = scrapingStatus && 'status' in scrapingStatus && scrapingStatus.status === 'running';
+  const isScrapingActive = scrapingStatus?.status?.status === 'running';
+
+  const anyMutationPending = 
+    startFullScrapingMutation.isPending ||
+    startFranchiseScrapingMutation.isPending ||
+    startSeasonScrapingMutation.isPending ||
+    startContestantScrapingMutation.isPending;
 
   const getScrapingButtonText = () => {
     switch (selectedScrapingLevel) {
@@ -245,18 +318,73 @@ export default function Dashboard() {
                     <p className="text-xs text-muted-foreground">{getScrapingDescription()}</p>
                   </div>
 
-                  {(selectedScrapingLevel === 'franchise' || selectedScrapingLevel === 'season' || selectedScrapingLevel === 'contestant') && (
+                  {selectedScrapingLevel === 'franchise' && (
                     <div className="space-y-2">
-                      <Label htmlFor="source-url" className="text-sm font-medium">Source URL (Optional)</Label>
-                      <Input
-                        id="source-url"
-                        value={customSourceUrl}
-                        onChange={(e) => setCustomSourceUrl(e.target.value)}
-                        placeholder="https://en.wikipedia.org/wiki/..."
-                        className="text-sm"
-                      />
-                      <p className="text-xs text-muted-foreground">Leave empty to use default Wikipedia URLs</p>
+                      <Label htmlFor="franchise-select">Franchise</Label>
+                      <Select onValueChange={setSelectedFranchiseId} value={selectedFranchiseId || ''}>
+                        <SelectTrigger><SelectValue placeholder="Select a franchise" /></SelectTrigger>
+                        <SelectContent>
+                          {franchises.map(f => <SelectItem key={f.id} value={f.id}>{f.name}</SelectItem>)}
+                        </SelectContent>
+                      </Select>
                     </div>
+                  )}
+
+                  {selectedScrapingLevel === 'season' && (
+                    <div className="space-y-2">
+                      <Label htmlFor="franchise-select">Franchise</Label>
+                      <Select onValueChange={id => { setSelectedFranchiseId(id); setSelectedSeasonId(null); }} value={selectedFranchiseId || ''}>
+                        <SelectTrigger><SelectValue placeholder="Select a franchise" /></SelectTrigger>
+                        <SelectContent>
+                          {franchises.map(f => <SelectItem key={f.id} value={f.id}>{f.name}</SelectItem>)}
+                        </SelectContent>
+                      </Select>
+                      {selectedFranchiseId && (
+                        <div className="space-y-2 pt-2">
+                          <Label htmlFor="season-select">Season</Label>
+                          <Select onValueChange={setSelectedSeasonId} value={selectedSeasonId || ''}>
+                            <SelectTrigger><SelectValue placeholder="Select a season" /></SelectTrigger>
+                            <SelectContent>
+                              {seasons.map(s => <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>)}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                  
+                  {selectedScrapingLevel === 'contestant' && (
+                     <div className="space-y-2">
+                     <Label>Franchise</Label>
+                     <Select onValueChange={id => { setSelectedFranchiseId(id); setSelectedSeasonId(null); setSelectedContestantId(null); }} value={selectedFranchiseId || ''}>
+                       <SelectTrigger><SelectValue placeholder="Select a franchise" /></SelectTrigger>
+                       <SelectContent>
+                         {franchises.map(f => <SelectItem key={f.id} value={f.id}>{f.name}</SelectItem>)}
+                       </SelectContent>
+                     </Select>
+                     {selectedFranchiseId && (
+                       <div className="space-y-2 pt-2">
+                         <Label>Season</Label>
+                         <Select onValueChange={id => { setSelectedSeasonId(id); setSelectedContestantId(null); }} value={selectedSeasonId || ''}>
+                           <SelectTrigger><SelectValue placeholder="Select a season" /></SelectTrigger>
+                           <SelectContent>
+                             {seasons.map(s => <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>)}
+                           </SelectContent>
+                         </Select>
+                       </div>
+                     )}
+                     {selectedSeasonId && (
+                        <div className="space-y-2 pt-2">
+                          <Label>Contestant</Label>
+                          <Select onValueChange={setSelectedContestantId} value={selectedContestantId || ''}>
+                            <SelectTrigger><SelectValue placeholder="Select a contestant" /></SelectTrigger>
+                            <SelectContent>
+                              {contestants.map(c => <SelectItem key={c.id} value={c.id}>{c.dragName}</SelectItem>)}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                     )}
+                   </div>
                   )}
                 </div>
 
@@ -301,11 +429,11 @@ export default function Dashboard() {
               <div className="flex gap-4 pt-4 border-t border-border">
                 <Button
                   onClick={handleStartScraping}
-                  disabled={startScrapingMutation.isPending || isScrapingActive}
+                  disabled={anyMutationPending || isScrapingActive}
                   className="flex items-center gap-2 flex-1 md:flex-none"
                 >
                   <Play className="h-4 w-4" />
-                  {startScrapingMutation.isPending ? "Starting..." : getScrapingButtonText()}
+                  {anyMutationPending ? "Starting..." : getScrapingButtonText()}
                 </Button>
                 
                 <Button

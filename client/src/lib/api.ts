@@ -9,10 +9,11 @@ export const api = {
   },
 
   // Contestants
-  getContestants: async (search?: string, limit?: number): Promise<FullContestant[]> => {
+  getContestants: async (options: { search?: string; limit?: number; seasonId?: string } = {}): Promise<FullContestant[]> => {
     const params = new URLSearchParams();
-    if (search) params.set("search", search);
-    if (limit) params.set("limit", limit.toString());
+    if (options.search) params.set("search", options.search);
+    if (options.limit) params.set("limit", options.limit.toString());
+    if (options.seasonId) params.set("seasonId", options.seasonId);
     
     const response = await apiRequest("GET", `/api/contestants${params.toString() ? `?${params}` : ""}`);
     return response.json();
@@ -61,14 +62,25 @@ export const api = {
   },
 
   // Scraping
-  getScrapingStatus: async (): Promise<ScrapingProgress> => {
-    const response = await apiRequest("GET", "/api/scraping/status");
+  getScrapingStatus: async (): Promise<{ status: ScrapingJob | null }> => {
+    const response = await apiRequest("GET", "/api/scrape/status");
     return response.json();
   },
 
-  startScraping: async (options: { headless?: boolean; screenshotsEnabled?: boolean; level?: string; franchiseId?: string; seasonId?: string; contestantId?: string; sourceUrl?: string } = {}) => {
-    const response = await apiRequest("POST", "/api/scraping/start", options);
-    return response.json();
+  startFullScraping: async (options: { headless?: boolean; screenshotsEnabled?: boolean }) => {
+    return apiRequest("POST", "/api/scrape/full", { options });
+  },
+
+  startFranchiseScraping: async (franchiseId: string, options: { headless?: boolean; screenshotsEnabled?: boolean }) => {
+    return apiRequest("POST", "/api/scrape/franchise", { franchiseId, options });
+  },
+
+  startSeasonScraping: async (seasonId: string, options: { headless?: boolean; screenshotsEnabled?: boolean }) => {
+    return apiRequest("POST", "/api/scrape/season", { seasonId, options });
+  },
+
+  startContestantScraping: async (contestantId: string, options: { headless?: boolean; screenshotsEnabled?: boolean }) => {
+    return apiRequest("POST", "/api/scrape/contestant", { contestantId, options });
   },
 
   stopScraping: async () => {

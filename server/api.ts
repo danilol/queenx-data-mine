@@ -8,14 +8,68 @@ import { s3Service } from "./services/s3";
 import { imageScraper } from "./services/image-scraper";
 import { getConfig, updateConfig, resetConfig } from "./config";
 import { GetObjectCommand } from "@aws-sdk/client-s3";
+import { z } from 'zod';
 
 export const apiRouter = Router();
+
+// Scraping request schemas
+const optionsSchema = z.object({
+  headless: z.boolean().optional(),
+  screenshotsEnabled: z.boolean().optional()
+}).optional();
+
+const fullScrapeSchema = z.object({ options: optionsSchema });
+const franchiseScrapeSchema = z.object({ franchiseId: z.string(), options: optionsSchema });
+const seasonScrapeSchema = z.object({ seasonId: z.string(), options: optionsSchema });
+const contestantScrapeSchema = z.object({ contestantId: z.string(), options: optionsSchema });
 
 // Configure multer for file uploads (store in memory)
 const upload = multer({ 
   storage: multer.memoryStorage(),
   limits: {
     fileSize: 10 * 1024 * 1024, // 10MB limit
+  }
+});
+
+// Scraping endpoints
+apiRouter.get('/scrape/status', (req, res) => {
+  try {
+    const status = scraper.getStatus();
+    res.json({ status });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to get scraping status' });
+  }
+});
+
+const handleScrapingRequest = async (res: any, schema: z.ZodType<any>, level: 'full' | 'franchise' | 'season' | 'contestant', data: any) => {
+  try {
+    const result = schema.safeParse(data);
+    if (!result.success) {
+      return res.status(400).json({ error: 'Invalid request', details: result.error });
+    }
+
+    const { options, ...ids } = result.data;
+    const request = { level, ...ids };
+
+    const job = await scraper.startScraping(request, options || {});
+    res.json(job);
+  } catch (error) {
+    console.error(`Scraping error for level ${level}:`, error);
+    res.status(500).json({ error: `Failed to start ${level} scraping`, message: error instanceof Error ? error.message : 'Unknown error' });
+  }
+};
+
+apiRouter.post('/scrape/full', (req, res) => handleScrapingRequest(res, fullScrapeSchema, 'full', req.body));
+apiRouter.post('/scrape/franchise', (req, res) => handleScrapingRequest(res, franchiseScrapeSchema, 'franchise', req.body));
+apiRouter.post('/scrape/season', (req, res) => handleScrapingRequest(res, seasonScrapeSchema, 'season', req.body));
+apiRouter.post('/scrape/contestant', (req, res) => handleScrapingRequest(res, contestantScrapeSchema, 'contestant', req.body));
+
+apiRouter.post('/scrape/stop', async (req, res) => {
+  try {
+    await scraper.stopScraping();
+    res.json({ status: 'stopped' });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to stop scraping' });
   }
 });
 
@@ -32,11 +86,22 @@ apiRouter.get("/stats", async (req, res) => {
 // Contestants endpoints
 apiRouter.get("/contestants", async (req, res) => {
   try {
-    const { search, limit } = req.query;
-    const contestants = search
-      ? await storage.getContestantsBySearch(search as string)
-      : await storage.getContestants();
-    res.json(contestants);
+    const { search, seasonId, limit } = req.query;
+    let contestants;
+
+    if (seasonId) {
+      contestants = await storage.getContestantsBySeason(seasonId as string);
+    } else if (search) {
+      contestants = await storage.getContestantsBySearch(search as string);
+    } else {
+      contestants = await storage.getContestants();
+    }
+
+    if (limit) {
+      res.json(contestants.slice(0, parseInt(limit as string)));
+    } else {
+      res.json(contestants);
+    }
   } catch (error) {
     res.status(500).json({ error: "Failed to fetch contestants" });
   }
