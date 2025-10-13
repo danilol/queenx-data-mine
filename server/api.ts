@@ -2,7 +2,6 @@ import { Router } from "express";
 import multer from "multer";
 import { storage } from "./storage";
 import { scraper } from "./services/scraper";
-import { mockScraper } from "./services/mock-scraper";
 import { exporter } from "./services/exporter";
 import { s3Service } from "./services/s3";
 import { imageScraper } from "./services/image-scraper";
@@ -324,70 +323,6 @@ apiRouter.get("/contestants/:id/appearances", async (req, res) => {
   }
 });
 
-// Scraping endpoints
-
-apiRouter.post("/scraping/start", async (req, res) => {
-  try {
-    // Default to full scraping if no level specified for backward compatibility
-    const request = req.body.level ? req.body : { level: 'full', ...req.body };
-    
-    // Use mock scraper in development/testing environments when real scraper fails
-    let job;
-    try {
-      job = await scraper.startScraping(request);
-    } catch (playwrightError: any) {
-      console.log("Real scraper unavailable, using mock scraper:", playwrightError?.message || playwrightError);
-      job = await mockScraper.startScraping(request);
-    }
-    
-    res.json({ jobId: job, message: "Scraping started" });
-  } catch (error) {
-    console.error('Scraping start error:', error);
-    res.status(500).json({ error: error instanceof Error ? error.message : "Failed to start scraping" });
-  }
-});
-
-apiRouter.post("/scraping/stop", async (req, res) => {
-  try {
-    await scraper.stopScraping();
-    res.json({ message: "Scraping stopped" });
-  } catch (error) {
-    res.status(500).json({ error: "Failed to stop scraping" });
-  }
-});
-
-apiRouter.get("/scraping/status", async (req, res) => {
-  try {
-    // Check both real scraper and mock scraper for status
-    let status;
-    try {
-      status = scraper.getStatus();
-      // If real scraper is not running, check mock scraper
-      if (!status || status.status === "idle") {
-        const mockStatus = mockScraper.getScrapingStatus();
-        if (mockStatus.status !== "idle") {
-          status = mockStatus;
-        }
-      }
-    } catch (error) {
-      // If real scraper fails, use mock scraper status
-      status = mockScraper.getScrapingStatus();
-    }
-    
-    res.json(status);
-  } catch (error) {
-    res.status(500).json({ error: "Failed to fetch scraping status" });
-  }
-});
-
-apiRouter.get("/scraping/jobs", async (req, res) => {
-  try {
-    const jobs = await storage.getScrapingJobs();
-    res.json(jobs);
-  } catch (error) {
-    res.status(500).json({ error: "Failed to fetch scraping jobs" });
-  }
-});
 
 apiRouter.get("/export/csv", async (req, res) => {
   try {
