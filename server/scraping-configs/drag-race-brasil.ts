@@ -1,64 +1,63 @@
 import { FranchiseScrapingConfig } from './types';
 
 // Configuration for Drag Race Brasil
-// Supports both Wikipedia and Fandom wiki pages
+// Uses Fandom wiki as primary source for better data quality
 export const dragRaceBrasilConfig: FranchiseScrapingConfig = {
   franchiseName: 'Drag Race Brasil',
   season: {
-    // Primary configuration: Wikipedia
-    // Wikipedia table structure: Contestant | Age | City | Outcome
+    // Primary configuration: Fandom Wiki
+    // Fandom table structure: Rank | Contestant | Photo | Age | Location | Episodes...
+    // Important: First column (Rank) is <th>, rest are <td>
     contestantTable: {
-      tableSelector: '.wikitable',
-      skipFirstRow: true,
+      tableSelector: 'table',  
+      skipFirstRow: true,  // Skip header row with "Rank", "Contestant", etc.
       columns: {
         dragName: {
-          cellType: 'td',  // Brasil uses <td> for all cells including names
-          index: 0,
+          cellType: 'td',
+          index: 0,  // First <td> cell (Contestant column, since Rank is <th>)
+          selector: 'a',  // Extract text from the link
           parser: 'trim'
         },
         age: {
           cellType: 'td',
-          index: 1,
+          index: 2,  // Third <td> cell (Age column)
           parser: 'extractAge'
         },
         hometown: {
           cellType: 'td',
-          index: 2,
+          index: 3,  // Fourth <td> cell (Location column)
           parser: 'trim'
         },
-        // No realName column in Wikipedia Brasil tables
-        outcome: {
-          cellType: 'td',
-          index: 3,
-          parser: 'extractOutcome'
-        }
       }
     },
     
-    // Alternative configuration: Fandom Wiki
-    // Fandom table structure: Rank | Contestant | Photo | Age | Location | Episodes...
+    // Alternative configuration: Wikipedia (if Fandom fails)
+    // Wikipedia table structure: Contestant | Age | City | Outcome
     alternativeTables: [
       {
-        tableSelector: 'table',  // Fandom uses generic table
-        skipFirstRow: true,  // Skip header row
+        tableSelector: '.wikitable',
+        skipFirstRow: true,
         columns: {
           dragName: {
             cellType: 'td',
-            index: 1,  // Second column (Contestant)
-            selector: 'a',  // Extract from link text
+            index: 0,
             parser: 'trim'
           },
           age: {
             cellType: 'td',
-            index: 3,  // Fourth column (Age)
+            index: 1,
             parser: 'extractAge'
           },
           hometown: {
             cellType: 'td',
-            index: 4,  // Fifth column (Location)
+            index: 2,
             parser: 'trim'
           },
-          // Fandom doesn't have outcome in the main contestant table
+          outcome: {
+            cellType: 'td',
+            index: 3,
+            parser: 'extractOutcome'
+          }
         }
       }
     ]
