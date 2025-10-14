@@ -504,7 +504,16 @@ export class RuPaulScraper {
       const config = getScrapingConfig(franchiseName);
       
       console.log(`[scraper] Navigating to ${seasonData.metadataSourceUrl} for season: ${seasonData.name} (Franchise: ${franchiseName})`);
-      await page.goto(seasonData.metadataSourceUrl, { waitUntil: 'networkidle' });
+      
+      // Use 'domcontentloaded' for Fandom pages (they have heavy ads that prevent networkidle)
+      // Use 'networkidle' for Wikipedia pages (cleaner, loads faster)
+      const isFandomUrl = seasonData.metadataSourceUrl.includes('fandom.com');
+      const waitStrategy = isFandomUrl ? 'domcontentloaded' : 'networkidle';
+      
+      await page.goto(seasonData.metadataSourceUrl, { 
+        waitUntil: waitStrategy,
+        timeout: 60000  // Increase timeout to 60s for heavy pages
+      });
 
       if (screenshotsEnabled) {
         await this.takeScreenshot(page, `season_${seasonData.name.replace(/\s/g, '_')}`);

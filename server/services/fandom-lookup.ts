@@ -50,9 +50,10 @@ export class FandomLookup {
       console.log(`[fandom-lookup] Searching for contestant: ${contestantName}`);
       console.log(`[fandom-lookup] Search URL: ${searchUrl}`);
       
+      // Use 'domcontentloaded' for Fandom pages (they have heavy ads that prevent networkidle)
       await page.goto(searchUrl, { 
-        waitUntil: 'networkidle', 
-        timeout: options.timeout || 30000 
+        waitUntil: 'domcontentloaded', 
+        timeout: options.timeout || 60000 
       });
 
       // Wait for search results to load
@@ -71,6 +72,7 @@ export class FandomLookup {
       // Try to find the first search result that matches the contestant name
       const searchResults = await page.$$eval('a[href*="/wiki/"]:not([href*="Special:"])', (links, name) => {
         return links
+          .filter((link): link is HTMLAnchorElement => link instanceof HTMLAnchorElement)
           .map(link => ({
             href: link.href,
             text: link.textContent?.trim() || '',
@@ -111,6 +113,7 @@ export class FandomLookup {
       const articleLinks = await page.$$eval('.unified-search__result__title a, .mw-search-result-heading a', 
         (links, name) => {
           return links
+            .filter((link): link is HTMLAnchorElement => link instanceof HTMLAnchorElement)
             .map(link => link.href)
             .filter(href => href.includes('/wiki/') && !href.includes('Special:'))
             .slice(0, 3);
