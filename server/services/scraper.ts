@@ -9,6 +9,7 @@ import 'dotenv/config';
 import { Season, ScrapingJobPayload, seasonStatusSchema, ScrapingRequest, ScrapingLevel } from "@shared/schema";
 import { z } from "zod";
 import { isImageScrapingEnabled, getConfig } from "../config";
+import { getScrapingConfig, ColumnConfig } from "../scraping-configs/index";
 
 export interface ScrapingOptions {
   headless?: boolean;
@@ -162,9 +163,12 @@ export class RuPaulScraper {
       throw new Error(`Season not found: ${request.seasonId}`);
     }
 
+    const franchiseName = season.franchise?.name || 'Unknown';
+    const seasonWithFranchiseName = { ...season, franchiseName };
+
     this.seasonStatuses = [{
       name: season.name,
-      franchiseName: 'Unknown', // Will be resolved during scraping
+      franchiseName,
       status: 'pending' as const,
       progress: 0
     }];
@@ -175,7 +179,7 @@ export class RuPaulScraper {
       seasons: this.seasonStatuses,
     };
 
-    this.runScrapingProcess([season], options);
+    this.runScrapingProcess([seasonWithFranchiseName], options);
     return this.scrapingJob;
   }
 
@@ -274,7 +278,7 @@ export class RuPaulScraper {
     }
   }
 
-  private async runScrapingProcess(allSeasons: Season[], options: ScrapingOptions) {
+  private async runScrapingProcess(allSeasons: (Season & { franchiseName: string })[], options: ScrapingOptions) {
     if (!this.browser) {
         console.error("Browser not initialized, stopping scraping process.");
         if (this.scrapingJob) {
@@ -328,19 +332,70 @@ export class RuPaulScraper {
     });
   }
 
-  private async scrapeContestantFromRow(row: any, seasonData: Season) {
+  private async extractCellValue(row: any, columnConfig: ColumnConfig): Promise<string> {
+    const cells = await row.locator(columnConfig.cellType).all();
+    const index = columnConfig.index < 0 ? cells.length + columnConfig.index : columnConfig.index;
+    
+    if (index < 0 || index >= cells.length) {
+      return '';
+    }
+
+    const cell = cells[index];
+    let value = '';
+    
+    if (columnConfig.selector) {
+      const element = cell.locator(columnConfig.selector);
+      value = (await element.textContent())?.trim() || '';
+    } else {
+      value = (await cell.textContent())?.trim() || '';
+    }
+
+    // Apply parser
+    if (columnConfig.parser === 'trim') {
+      return value.trim();
+    } else if (columnConfig.parser === 'extractAge') {
+      const age = this.extractAge(value);
+      return age !== null ? age.toString() : '';
+    } else if (columnConfig.parser === 'extractOutcome') {
+      return this.extractOutcome(value) || '';
+    }
+
+    return value;
+  }
+
+  private async scrapeContestantFromRow(row: any, seasonData: Season & { franchiseName: string }, franchiseName: string) {
     console.log(`[scraper] Processing a contestant row for season: ${seasonData.name}`);
-    const name = await row.locator('th').all();
-    const cells = await row.locator('td').all();
-    if (cells.length < 3) return;
+    
+    const config = getScrapingConfig(franchiseName);
+    if (!config.season?.contestantTable) {
+      console.error(`[scraper] No contestant table config for franchise: ${franchiseName}`);
+      return;
+    }
+
+    const tableConfig = config.season.contestantTable;
 
     try {
-      const dragName = (await name[0]?.textContent())?.trim() || '';
+      // Extract data using configuration
+      const dragName = await this.extractCellValue(row, tableConfig.columns.dragName);
       if (!dragName || dragName.toLowerCase() === 'contestant') return;
-      const age = cells.length > 2 ? this.extractAge(await cells[0]?.textContent() || '') : null;
-      const hometown = (await cells[1]?.textContent())?.trim() || undefined;
-      const realName = (await cells[2]?.textContent())?.trim() || undefined;
 
+      const age = tableConfig.columns.age 
+        ? parseInt(await this.extractCellValue(row, tableConfig.columns.age)) || null
+        : null;
+      
+      const hometown = tableConfig.columns.hometown 
+        ? (await this.extractCellValue(row, tableConfig.columns.hometown)) || undefined
+        : undefined;
+      
+      const realName = tableConfig.columns.realName 
+        ? (await this.extractCellValue(row, tableConfig.columns.realName)) || undefined
+        : undefined;
+
+      const outcome = tableConfig.columns.outcome 
+        ? (await this.extractCellValue(row, tableConfig.columns.outcome)) || undefined
+        : undefined;
+
+      console.log(`[scraper] Extracted data - Name: ${dragName}, Age: ${age}, Hometown: ${hometown}, Real Name: ${realName}, Outcome: ${outcome}`);
 
       let contestant = await storage.getContestantByDragName(dragName);
       if (!contestant) {
@@ -373,7 +428,7 @@ export class RuPaulScraper {
             contestantId: contestant.id,
             seasonId: season.id,
             age: age,
-            outcome: this.extractOutcome(await cells[cells.length - 1]?.textContent() || ""),
+            outcome: outcome,
           });
         }
 
@@ -395,30 +450,45 @@ export class RuPaulScraper {
     }
   }
 
-  private async scrapeSeason(page: Page, seasonData: Season, screenshotsEnabled: boolean) {
+  private async scrapeSeason(page: Page, seasonData: Season & { franchiseName: string }, screenshotsEnabled: boolean) {
     try {
       if (!seasonData.metadataSourceUrl) {
         console.log(`[scraper] Skipping season ${seasonData.name} due to missing source URL.`);
         return;
       }
-      console.log(`[scraper] Navigating to ${seasonData.metadataSourceUrl} for season: ${seasonData.name}`);
+
+      // Get franchise name for this season
+      const franchiseName = seasonData.franchiseName;
+      const config = getScrapingConfig(franchiseName);
+      
+      console.log(`[scraper] Navigating to ${seasonData.metadataSourceUrl} for season: ${seasonData.name} (Franchise: ${franchiseName})`);
       await page.goto(seasonData.metadataSourceUrl, { waitUntil: 'networkidle' });
 
       if (screenshotsEnabled) {
         await this.takeScreenshot(page, `season_${seasonData.name.replace(/\s/g, '_')}`);
       }
 
-      const contestantTable = page.locator('.wikitable');
-      await contestantTable.first().waitFor({ state: 'visible', timeout: 10000 });
-
-      const contestantRows = await contestantTable.first().locator('tr').all();
-      if (contestantRows.length < 2) {
+      if (!config.season?.contestantTable) {
+        console.error(`[scraper] No contestant table configuration for franchise: ${franchiseName}`);
         return;
       }
 
-      for (let i = 1; i < contestantRows.length; i++) {
+      const tableConfig = config.season.contestantTable;
+      const contestantTable = page.locator(tableConfig.tableSelector);
+      await contestantTable.first().waitFor({ state: 'visible', timeout: 10000 });
+
+      const rowSelector = tableConfig.rowSelector || 'tr';
+      const contestantRows = await contestantTable.first().locator(rowSelector).all();
+      
+      if (contestantRows.length < 2) {
+        console.log(`[scraper] Not enough rows found in table for season: ${seasonData.name}`);
+        return;
+      }
+
+      const startIndex = tableConfig.skipFirstRow ? 1 : 0;
+      for (let i = startIndex; i < contestantRows.length; i++) {
         const row = contestantRows[i];
-        await this.scrapeContestantFromRow(row, seasonData);
+        await this.scrapeContestantFromRow(row, seasonData, franchiseName);
       }
     } catch (error) {
       console.error(`[scraper] Critical error scraping season ${seasonData.name}:`, error);
