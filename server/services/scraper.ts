@@ -28,6 +28,7 @@ export class RuPaulScraper {
   async initialize(options: ScrapingOptions = {}) {
     try {
       this.browser = await chromium.launch({
+        executablePath: '/nix/store/qa9cnw4v5xkxyip6mb9kxqfq1z4x2dx1-chromium-138.0.7204.100/bin/chromium',
         headless: process.env.HEADLESS === 'true',
         slowMo: 100,
         args: [
