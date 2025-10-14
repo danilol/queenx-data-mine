@@ -64,6 +64,9 @@ export interface IStorage {
   getSeasonsByFranchise(franchiseId: string): Promise<(Season & { franchiseName: string })[]>;
   getContestantsBySeason(seasonId: string): Promise<FullContestant[]>;
   getAppearancesByContestant(contestantId: string): Promise<(Appearance & { seasonName: string; franchiseName: string })[]>;
+  
+  // Data cleanup methods
+  clearSeasonContestants(seasonId: string): Promise<{ deletedAppearances: number; deletedContestants: number }>;
 }
 
 export class DrizzleStorage implements IStorage {
@@ -618,6 +621,52 @@ export class DrizzleStorage implements IStorage {
     } catch (error) {
       console.error('Error fetching appearances by contestant:', error);
       return [];
+    }
+  }
+
+  async clearSeasonContestants(seasonId: string): Promise<{ deletedAppearances: number; deletedContestants: number }> {
+    try {
+      console.log(`[clearSeasonContestants] Clearing contestants for season ${seasonId}`);
+      
+      // Step 1: Get all appearances for this season
+      const seasonAppearances = await db.select()
+        .from(appearances)
+        .where(eq(appearances.seasonId, seasonId));
+      
+      const contestantIds = seasonAppearances.map(a => a.contestantId);
+      console.log(`[clearSeasonContestants] Found ${seasonAppearances.length} appearances to delete`);
+      
+      // Step 2: Delete all appearances for this season
+      const deletedAppearancesResult = await db.delete(appearances)
+        .where(eq(appearances.seasonId, seasonId));
+      
+      // Step 3: For each contestant, check if they have other appearances
+      // If not, delete them
+      let deletedContestantsCount = 0;
+      for (const contestantId of contestantIds) {
+        // Check if this contestant has any remaining appearances
+        const remainingAppearances = await db.select()
+          .from(appearances)
+          .where(eq(appearances.contestantId, contestantId))
+          .limit(1);
+        
+        // If no remaining appearances, delete the contestant
+        if (remainingAppearances.length === 0) {
+          await db.delete(contestants)
+            .where(eq(contestants.id, contestantId));
+          deletedContestantsCount++;
+        }
+      }
+      
+      console.log(`[clearSeasonContestants] Deleted ${seasonAppearances.length} appearances and ${deletedContestantsCount} contestants`);
+      
+      return {
+        deletedAppearances: seasonAppearances.length,
+        deletedContestants: deletedContestantsCount
+      };
+    } catch (error) {
+      console.error('Error clearing season contestants:', error);
+      throw error;
     }
   }
 
