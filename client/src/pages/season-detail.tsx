@@ -62,7 +62,7 @@ export default function SeasonDetail() {
         name: season.name,
         franchiseId: season.franchiseId,
         year: season.year,
-        sourceUrl: season.sourceUrl || "",
+        metadataSourceUrl: season.metadataSourceUrl || "",
       });
       setIsEditing(true);
     }
@@ -81,8 +81,7 @@ export default function SeasonDetail() {
 
   const scrapeSeasonMutation = useMutation({
     mutationFn: () => api.startScraping({ 
-      level: 'season', 
-      sourceUrl: season?.sourceUrl || undefined 
+      seasonId: id 
     }),
     onSuccess: () => {
       toast({
@@ -229,20 +228,20 @@ export default function SeasonDetail() {
                   </label>
                   {isEditing ? (
                     <Input
-                      value={formData.sourceUrl || ""}
-                      onChange={(e) => setFormData({ ...formData, sourceUrl: e.target.value })}
+                      value={formData.metadataSourceUrl || ""}
+                      onChange={(e) => setFormData({ ...formData, metadataSourceUrl: e.target.value })}
                       placeholder="Source URL"
                     />
                   ) : (
                     <p className="text-gray-600">
-                      {season.sourceUrl ? (
+                      {season.metadataSourceUrl ? (
                         <a 
-                          href={season.sourceUrl} 
+                          href={season.metadataSourceUrl} 
                           target="_blank" 
                           rel="noopener noreferrer"
                           className="text-blue-600 hover:underline"
                         >
-                          {season.sourceUrl}
+                          {season.metadataSourceUrl}
                         </a>
                       ) : (
                         "No source URL"

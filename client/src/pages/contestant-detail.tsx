@@ -78,9 +78,7 @@ export default function ContestantDetail() {
 
   const scrapeContestantMutation = useMutation({
     mutationFn: () => api.startScraping({ 
-      level: 'contestant', 
-      contestantId: id,
-      sourceUrl: contestant?.metadataSourceUrl || undefined 
+      contestantId: id 
     }),
     onSuccess: () => {
       toast({

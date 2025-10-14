@@ -57,7 +57,7 @@ export default function FranchiseDetail() {
     if (franchise) {
       setFormData({
         name: franchise.name,
-        sourceUrl: franchise.sourceUrl || "",
+        metadataSourceUrl: franchise.metadataSourceUrl || "",
       });
       setIsEditing(true);
     }
@@ -76,8 +76,7 @@ export default function FranchiseDetail() {
 
   const scrapeFranchiseMutation = useMutation({
     mutationFn: () => api.startScraping({ 
-      level: 'franchise', 
-      sourceUrl: franchise?.sourceUrl || undefined 
+      franchiseId: id 
     }),
     onSuccess: () => {
       toast({
@@ -185,20 +184,20 @@ export default function FranchiseDetail() {
                   </label>
                   {isEditing ? (
                     <Input
-                      value={formData.sourceUrl || ""}
-                      onChange={(e) => setFormData({ ...formData, sourceUrl: e.target.value })}
+                      value={formData.metadataSourceUrl || ""}
+                      onChange={(e) => setFormData({ ...formData, metadataSourceUrl: e.target.value })}
                       placeholder="Source URL"
                     />
                   ) : (
                     <p className="text-gray-600">
-                      {franchise.sourceUrl ? (
+                      {franchise.metadataSourceUrl ? (
                         <a 
-                          href={franchise.sourceUrl} 
+                          href={franchise.metadataSourceUrl} 
                           target="_blank" 
                           rel="noopener noreferrer"
                           className="text-blue-600 hover:underline"
                         >
-                          {franchise.sourceUrl}
+                          {franchise.metadataSourceUrl}
                         </a>
                       ) : (
                         "No source URL"

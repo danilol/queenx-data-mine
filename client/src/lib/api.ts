@@ -67,6 +67,25 @@ export const api = {
     return response.json();
   },
 
+  startScraping: async (request: { level?: string; contestantId?: string; seasonId?: string; franchiseId?: string; sourceUrl?: string }, options?: { headless?: boolean; screenshotsEnabled?: boolean }) => {
+    // Route to the correct specific endpoint based on the request
+    if (request.contestantId) {
+      return apiRequest("POST", "/api/scrape/contestant", { contestantId: request.contestantId, options });
+    } else if (request.seasonId) {
+      return apiRequest("POST", "/api/scrape/season", { seasonId: request.seasonId, options });
+    } else if (request.franchiseId) {
+      return apiRequest("POST", "/api/scrape/franchise", { franchiseId: request.franchiseId, options });
+    } else if (request.level === 'season' && request.sourceUrl) {
+      // For season scraping by sourceUrl, need to find the seasonId first
+      // This is a temporary workaround - ideally components should pass seasonId
+      throw new Error("Season scraping requires seasonId. Please use the specific scraping button.");
+    } else if (request.level === 'contestant' && request.contestantId) {
+      return apiRequest("POST", "/api/scrape/contestant", { contestantId: request.contestantId, options });
+    } else {
+      return apiRequest("POST", "/api/scrape/full", { options });
+    }
+  },
+
   startFullScraping: async (options: { headless?: boolean; screenshotsEnabled?: boolean }) => {
     return apiRequest("POST", "/api/scrape/full", { options });
   },
