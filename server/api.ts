@@ -260,6 +260,16 @@ apiRouter.delete("/seasons/:id", async (req, res) => {
   }
 });
 
+apiRouter.post("/seasons/:id/clear-contestants", async (req, res) => {
+  try {
+    const result = await storage.clearSeasonContestants(req.params.id);
+    res.json(result);
+  } catch (error) {
+    console.error('Error clearing season contestants:', error);
+    res.status(500).json({ error: "Failed to clear season contestants" });
+  }
+});
+
 // Appearances endpoints
 apiRouter.get("/appearances", async (req, res) => {
   try {

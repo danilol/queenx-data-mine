@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useParams, useLocation } from "wouter";
-import { ArrowLeft, Save, X, Edit, Download } from "lucide-react";
+import { ArrowLeft, Save, X, Edit, Download, Trash2 } from "lucide-react";
 import { Header } from "@/components/layout/header";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -98,6 +98,26 @@ export default function SeasonDetail() {
     },
   });
 
+  const clearContestantsMutation = useMutation({
+    mutationFn: () => api.clearSeasonContestants(id!),
+    onSuccess: (result) => {
+      queryClient.invalidateQueries({ queryKey: ["/api/seasons", id, "contestants"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/contestants"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/stats"] });
+      toast({
+        title: "Contestants Cleared",
+        description: `Deleted ${result.deletedAppearances} appearances and ${result.deletedContestants} contestants from ${season?.name}`,
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Failed to Clear Contestants",
+        description: error instanceof Error ? error.message : "An unknown error occurred",
+        variant: "destructive",
+      });
+    },
+  });
+
   if (isLoading) {
     return (
       <div className="min-h-screen bg-gray-50">
@@ -154,6 +174,19 @@ export default function SeasonDetail() {
               >
                 <Download className="h-4 w-4 mr-2" />
                 {scrapeSeasonMutation.isPending ? "Starting..." : "Scrape Season"}
+              </Button>
+              <Button 
+                onClick={() => {
+                  if (confirm(`Are you sure you want to clear all contestants from ${season.name}? This will delete all appearances and contestants that only appear in this season.`)) {
+                    clearContestantsMutation.mutate();
+                  }
+                }}
+                disabled={clearContestantsMutation.isPending}
+                variant="destructive"
+                data-testid="button-clear-contestants"
+              >
+                <Trash2 className="h-4 w-4 mr-2" />
+                {clearContestantsMutation.isPending ? "Clearing..." : "Clear Contestants"}
               </Button>
             </>
           )}

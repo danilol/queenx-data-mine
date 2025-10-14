@@ -61,6 +61,11 @@ export const api = {
     return response.json();
   },
 
+  clearSeasonContestants: async (seasonId: string): Promise<{ deletedAppearances: number; deletedContestants: number }> => {
+    const response = await apiRequest("POST", `/api/seasons/${seasonId}/clear-contestants`);
+    return response.json();
+  },
+
   // Scraping
   getScrapingStatus: async (): Promise<{ status: ScrapingJob | null }> => {
     const response = await apiRequest("GET", "/api/scrape/status");
