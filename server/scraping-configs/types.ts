@@ -26,8 +26,11 @@ export interface ColumnConfig {
 }
 
 export interface SeasonScrapingConfig {
-  // Season page configuration
+  // Primary table configuration (e.g., Wikipedia)
   contestantTable: ContestantRowConfig;
+  
+  // Alternative table configurations (e.g., Fandom wiki)
+  alternativeTables?: ContestantRowConfig[];
   
   // Optional custom behavior
   waitForSelector?: string;

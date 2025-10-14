@@ -450,6 +450,51 @@ export class RuPaulScraper {
     }
   }
 
+  private async scrapeTableWithConfig(
+    page: Page, 
+    seasonData: Season & { franchiseName: string }, 
+    franchiseName: string,
+    tableConfig: any,
+    configName: string
+  ): Promise<number> {
+    try {
+      console.log(`[scraper] Trying ${configName} table config with selector: ${tableConfig.tableSelector}`);
+      
+      const contestantTable = page.locator(tableConfig.tableSelector);
+      const tableCount = await contestantTable.count();
+      
+      if (tableCount === 0) {
+        console.log(`[scraper] No tables found with selector: ${tableConfig.tableSelector}`);
+        return 0;
+      }
+
+      await contestantTable.first().waitFor({ state: 'visible', timeout: 10000 });
+
+      const rowSelector = tableConfig.rowSelector || 'tr';
+      const contestantRows = await contestantTable.first().locator(rowSelector).all();
+      
+      if (contestantRows.length < 2) {
+        console.log(`[scraper] Not enough rows found (${contestantRows.length}) in ${configName} table`);
+        return 0;
+      }
+
+      const startIndex = tableConfig.skipFirstRow ? 1 : 0;
+      let scrapedCount = 0;
+      
+      for (let i = startIndex; i < contestantRows.length; i++) {
+        const row = contestantRows[i];
+        await this.scrapeContestantFromRow(row, seasonData, franchiseName);
+        scrapedCount++;
+      }
+      
+      console.log(`[scraper] Successfully scraped ${scrapedCount} contestants using ${configName} config`);
+      return scrapedCount;
+    } catch (error) {
+      console.log(`[scraper] Error with ${configName} config: ${error}`);
+      return 0;
+    }
+  }
+
   private async scrapeSeason(page: Page, seasonData: Season & { franchiseName: string }, screenshotsEnabled: boolean) {
     try {
       if (!seasonData.metadataSourceUrl) {
@@ -473,22 +518,38 @@ export class RuPaulScraper {
         return;
       }
 
-      const tableConfig = config.season.contestantTable;
-      const contestantTable = page.locator(tableConfig.tableSelector);
-      await contestantTable.first().waitFor({ state: 'visible', timeout: 10000 });
+      // Try primary table configuration first
+      let scrapedCount = await this.scrapeTableWithConfig(
+        page, 
+        seasonData, 
+        franchiseName, 
+        config.season.contestantTable,
+        'primary'
+      );
 
-      const rowSelector = tableConfig.rowSelector || 'tr';
-      const contestantRows = await contestantTable.first().locator(rowSelector).all();
-      
-      if (contestantRows.length < 2) {
-        console.log(`[scraper] Not enough rows found in table for season: ${seasonData.name}`);
-        return;
+      // If primary config didn't find contestants, try alternative configs
+      if (scrapedCount === 0 && config.season.alternativeTables && config.season.alternativeTables.length > 0) {
+        console.log(`[scraper] Primary config found no contestants, trying ${config.season.alternativeTables.length} alternative config(s)`);
+        
+        for (let i = 0; i < config.season.alternativeTables.length; i++) {
+          const altConfig = config.season.alternativeTables[i];
+          scrapedCount = await this.scrapeTableWithConfig(
+            page,
+            seasonData,
+            franchiseName,
+            altConfig,
+            `alternative #${i + 1}`
+          );
+          
+          if (scrapedCount > 0) {
+            console.log(`[scraper] Successfully used alternative config #${i + 1}`);
+            break;
+          }
+        }
       }
 
-      const startIndex = tableConfig.skipFirstRow ? 1 : 0;
-      for (let i = startIndex; i < contestantRows.length; i++) {
-        const row = contestantRows[i];
-        await this.scrapeContestantFromRow(row, seasonData, franchiseName);
+      if (scrapedCount === 0) {
+        console.warn(`[scraper] No contestants found for season ${seasonData.name} with any configuration`);
       }
     } catch (error) {
       console.error(`[scraper] Critical error scraping season ${seasonData.name}:`, error);

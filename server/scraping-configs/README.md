@@ -97,7 +97,7 @@ Each column has these properties:
 
 - **`cellType`**: `'th'` for header cells or `'td'` for data cells
 - **`index`**: Column position (0-based). Use `-1` for the last column
-- **`selector`** (optional): CSS selector within the cell
+- **`selector`** (optional): CSS selector within the cell (e.g., `'a'` to extract link text)
 - **`parser`** (optional): How to parse the text:
   - `'trim'`: Remove whitespace
   - `'extractAge'`: Extract age number from text
@@ -109,6 +109,44 @@ Each column has these properties:
 - **`tableSelector`**: CSS selector for the contestant table (e.g., `.wikitable`)
 - **`rowSelector`** (optional): Selector for table rows (default: `'tr'`)
 - **`skipFirstRow`**: Whether to skip the first row (usually headers)
+
+### Multiple Data Sources
+
+You can configure alternative table structures for cases where data comes from multiple sources (e.g., Wikipedia + Fandom wiki):
+
+```typescript
+export const myFranchiseConfig: FranchiseScrapingConfig = {
+  franchiseName: 'My Franchise',
+  season: {
+    // Primary source (e.g., Wikipedia)
+    contestantTable: {
+      tableSelector: '.wikitable',
+      // ... column config
+    },
+    
+    // Alternative sources (e.g., Fandom wiki)
+    alternativeTables: [
+      {
+        tableSelector: 'table',  // Different selector
+        columns: {
+          dragName: {
+            cellType: 'td',
+            index: 1,
+            selector: 'a',  // Extract from link
+            parser: 'trim'
+          },
+          // ... other columns
+        }
+      }
+    ]
+  }
+};
+```
+
+The scraper will:
+1. Try the primary configuration first
+2. If no contestants are found, try each alternative configuration in order
+3. Stop at the first configuration that successfully finds contestants
 
 ## Testing Your Configuration
 
