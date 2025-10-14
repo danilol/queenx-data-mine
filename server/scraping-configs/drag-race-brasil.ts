@@ -1,7 +1,8 @@
 import { FranchiseScrapingConfig } from './types';
 
 // Configuration for Drag Race Brasil
-// Note: This is a starting template - adjust selectors based on actual Wikipedia structure
+// Brasil Wikipedia tables have: Contestant | Age | City | Outcome
+// No "Real Name" column exists in Brasil tables
 export const dragRaceBrasilConfig: FranchiseScrapingConfig = {
   franchiseName: 'Drag Race Brasil',
   season: {
@@ -10,28 +11,24 @@ export const dragRaceBrasilConfig: FranchiseScrapingConfig = {
       skipFirstRow: true,
       columns: {
         dragName: {
-          cellType: 'th',
+          cellType: 'td',  // Brasil uses <td> for all cells including names
           index: 0,
           parser: 'trim'
         },
         age: {
           cellType: 'td',
-          index: 0,
+          index: 1,
           parser: 'extractAge'
         },
         hometown: {
           cellType: 'td',
-          index: 1,
-          parser: 'trim'
-        },
-        realName: {
-          cellType: 'td',
           index: 2,
           parser: 'trim'
         },
+        // No realName column in Brasil tables - omitted
         outcome: {
           cellType: 'td',
-          index: -1,
+          index: 3,  // Fourth column (or use -1 for last)
           parser: 'extractOutcome'
         }
       }
