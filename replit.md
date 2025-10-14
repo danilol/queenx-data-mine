@@ -2,6 +2,7 @@
 This is a RuPaul's Drag Race contestant scraping and management system built as a full-stack web application. The system automatically scrapes contestant data from Wikipedia using Playwright web automation, stores it in a PostgreSQL database, and provides a modern web interface for viewing and managing the collected data. The application features real-time progress tracking during scraping operations, comprehensive contestant profiles with photos and biographical information, and data export capabilities. The business vision is to create a comprehensive content management system for RuPaul's Drag Race data, with potential for broader entertainment data management.
 
 ## Recent Performance Improvements (October 2025)
+- **Multi-Source Scraping Support** (Oct 14, 2025): Extended configuration system to support alternative table configurations (Wikipedia + Fandom wiki). Scraper now tries primary config first, then automatically falls back to alternative configs if no contestants found. Fixed critical bug where alternative configs were ignored during scraping.
 - **Customizable Scraping Configs** (Oct 2025): Implemented franchise-specific scraping configurations in `server/scraping-configs/` to handle varying Wikipedia HTML structures. Each franchise can define custom selectors, column mappings, and parsing rules.
 - **S3 Bucket Structure**: Implemented uploads/ prefix level for better organization (queenx-app-bucket/uploads/contestants/)
 - **Scraping Performance**: Eliminated unnecessary double URL checking when scraping contestants with existing metadata_source_url
@@ -26,8 +27,9 @@ Each franchise can have customized scraping rules stored in `server/scraping-con
 - Table and row selectors specific to each franchise's Wikipedia structure
 - Column mappings (drag name, age, hometown, real name, outcome) with cell types and indices
 - Custom parsing rules per column (trim, extractAge, extractOutcome)
+- Alternative table configurations for multi-source scraping (e.g., Wikipedia + Fandom wiki)
 - Fallback to default configuration when franchise-specific config doesn't exist
-This allows fine-tuning data extraction quality franchise-by-franchise without modifying core scraper code.
+The scraper automatically tries the primary configuration first, then falls back to alternative configurations if no contestants are found. This allows fine-tuning data extraction quality franchise-by-franchise and supports multiple data sources without modifying core scraper code.
 
 ## Data Storage Solutions
 The application uses PostgreSQL as the primary database with Drizzle ORM for type-safe operations and schema management. The database schema includes tables for contestants, seasons, and scraping jobs. Database migrations are handled through Drizzle Kit. An in-memory storage implementation is available for development. All `source_url` columns have been standardized to `metadata_source_url` for consistency.

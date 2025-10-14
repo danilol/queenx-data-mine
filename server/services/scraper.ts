@@ -363,16 +363,13 @@ export class RuPaulScraper {
     return value;
   }
 
-  private async scrapeContestantFromRow(row: any, seasonData: Season & { franchiseName: string }, franchiseName: string) {
+  private async scrapeContestantFromRow(
+    row: any, 
+    seasonData: Season & { franchiseName: string }, 
+    franchiseName: string,
+    tableConfig: any
+  ) {
     console.log(`[scraper] Processing a contestant row for season: ${seasonData.name}`);
-    
-    const config = getScrapingConfig(franchiseName);
-    if (!config.season?.contestantTable) {
-      console.error(`[scraper] No contestant table config for franchise: ${franchiseName}`);
-      return;
-    }
-
-    const tableConfig = config.season.contestantTable;
 
     try {
       // Extract data using configuration
@@ -483,7 +480,7 @@ export class RuPaulScraper {
       
       for (let i = startIndex; i < contestantRows.length; i++) {
         const row = contestantRows[i];
-        await this.scrapeContestantFromRow(row, seasonData, franchiseName);
+        await this.scrapeContestantFromRow(row, seasonData, franchiseName, tableConfig);
         scrapedCount++;
       }
       
