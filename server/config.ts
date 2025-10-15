@@ -16,6 +16,7 @@ export interface AppConfig {
     headless: boolean;
     timeout: number;
     retryAttempts: number;
+    chromiumExecutablePath?: string;
   };
   
   // Storage settings
@@ -38,6 +39,7 @@ const defaultConfig: AppConfig = {
     headless: process.env.SCRAPING_HEADLESS !== 'false', // Default to headless
     timeout: 60000, // 60 seconds
     retryAttempts: 3,
+    chromiumExecutablePath: process.env.CHROMIUM_EXECUTABLE_PATH,
   },
   
   storage: {
