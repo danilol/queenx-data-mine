@@ -197,3 +197,109 @@ export async function closeFandomLookup() {
     fandomLookupInstance = null;
   }
 }
+
+// Interface for biographical information
+export interface BiographicalInfo {
+  gender?: string;
+  pronouns?: string;
+  height?: string;
+  dateOfBirth?: string;
+  birthplace?: string;
+  location?: string;
+}
+
+// Extract biographical information from a Fandom contestant page
+export async function extractBiographicalInfo(fandomUrl: string, options: FandomLookupOptions = {}): Promise<BiographicalInfo | null> {
+  let browser = null;
+  try {
+    const config = await import('../config').then(m => m.getConfig());
+    const launchOptions: Parameters<typeof chromium.launch>[0] = {
+      headless: true,
+      args: [
+        '--no-sandbox',
+        '--disable-setuid-sandbox',
+        '--disable-dev-shm-usage',
+      ],
+    };
+
+    if (config.scraping.chromiumExecutablePath) {
+      launchOptions.executablePath = config.scraping.chromiumExecutablePath;
+    }
+
+    browser = await chromium.launch(launchOptions);
+    const page = await browser.newPage();
+
+    console.log(`[fandom-biographical] Extracting biographical info from: ${fandomUrl}`);
+
+    // Navigate to the Fandom page
+    await page.goto(fandomUrl, {
+      waitUntil: 'domcontentloaded',
+      timeout: options.timeout || 60000
+    });
+
+    // Wait for the biographical section to load
+    // Selector: #mw-content-text > div > aside > section:nth-child(3)
+    const bioInfo: BiographicalInfo = {};
+
+    try {
+      // Try to find the biographical information section
+      const bioSection = await page.$('#mw-content-text > div > aside > section:nth-child(3)');
+      
+      if (bioSection) {
+        console.log(`[fandom-biographical] Found biographical section`);
+
+        // Extract all data items from the section
+        const data = await bioSection.$$eval('div[data-source]', (elements) => {
+          return elements.map(el => ({
+            key: el.getAttribute('data-source') || '',
+            label: el.querySelector('h3')?.textContent?.trim() || '',
+            value: el.querySelector('div')?.textContent?.trim() || ''
+          }));
+        });
+
+        console.log(`[fandom-biographical] Extracted data items:`, data);
+
+        // Map the extracted data to our fields
+        for (const item of data) {
+          const label = item.label.toLowerCase();
+          const value = item.value;
+
+          if (label.includes('gender')) {
+            bioInfo.gender = value;
+          } else if (label.includes('pronoun')) {
+            bioInfo.pronouns = value;
+          } else if (label.includes('height')) {
+            bioInfo.height = value;
+          } else if (label.includes('date of birth') || label.includes('dob')) {
+            bioInfo.dateOfBirth = value;
+          } else if (label.includes('birthplace')) {
+            bioInfo.birthplace = value;
+          } else if (label.includes('location') && !label.includes('hometown')) {
+            bioInfo.location = value;
+          } else if (label.includes('hometown')) {
+            // Store in location if we don't have it yet
+            if (!bioInfo.location) {
+              bioInfo.location = value;
+            }
+          }
+        }
+
+        console.log(`[fandom-biographical] Extracted biographical info:`, bioInfo);
+      } else {
+        console.log(`[fandom-biographical] Biographical section not found`);
+      }
+    } catch (sectionError) {
+      console.error(`[fandom-biographical] Error extracting biographical section:`, sectionError);
+    }
+
+    await browser.close();
+    return Object.keys(bioInfo).length > 0 ? bioInfo : null;
+
+  } catch (error) {
+    console.error(`[fandom-biographical] Error extracting biographical info:`, error);
+    if (browser) {
+      await browser.close();
+    }
+    return null;
+  }
+}
