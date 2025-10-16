@@ -423,6 +423,24 @@ export class RuPaulScraper {
         }
       }
 
+      // Extract biographical information from Fandom if we have a URL and it's a Fandom page
+      if (contestant && contestant.metadataSourceUrl && contestant.metadataSourceUrl.includes('fandom.com')) {
+        // Check if we already have biographical info
+        const needsBioInfo = !contestant.gender && !contestant.pronouns && !contestant.height && 
+                             !contestant.dateOfBirth && !contestant.birthplace && !contestant.location;
+        
+        if (needsBioInfo) {
+          console.log(`[scraper] Extracting biographical info for ${contestant.dragName} from Fandom`);
+          const { extractBiographicalInfo } = await import('./fandom-lookup.js');
+          const bioInfo = await extractBiographicalInfo(contestant.metadataSourceUrl, { timeout: 30000 });
+          
+          if (bioInfo && Object.keys(bioInfo).length > 0) {
+            console.log(`[scraper] Found biographical info for ${contestant.dragName}:`, bioInfo);
+            contestant = await storage.updateContestant(contestant.id, bioInfo) || contestant;
+          }
+        }
+      }
+
       const season = await storage.getSeasonByName(seasonData.name);
       if (contestant && season) {
         const existingAppearance = await storage.getAppearance(contestant.id, season.id);
