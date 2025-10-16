@@ -59,6 +59,12 @@ export default function ContestantDetail() {
         realName: contestant.realName || "",
         hometown: contestant.hometown || "",
         biography: contestant.biography || "",
+        gender: contestant.gender || "",
+        pronouns: contestant.pronouns || "",
+        height: contestant.height || "",
+        dateOfBirth: contestant.dateOfBirth || "",
+        birthplace: contestant.birthplace || "",
+        location: contestant.location || "",
         metadataSourceUrl: contestant.metadataSourceUrl || "",
       });
       setIsEditing(true);
@@ -289,6 +295,102 @@ export default function ContestantDetail() {
                       {contestant.biography || "No biography available"}
                     </p>
                   )}
+                </div>
+
+                {/* Biographical Information Section */}
+                <div className="border-t pt-4 mt-4">
+                  <h3 className="text-lg font-semibold mb-4">Biographical Information</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="text-sm font-medium text-gray-700 mb-2 block">
+                        Gender
+                      </label>
+                      {isEditing ? (
+                        <Input
+                          value={formData.gender || ""}
+                          onChange={(e) => setFormData({ ...formData, gender: e.target.value })}
+                          placeholder="Gender"
+                        />
+                      ) : (
+                        <p className="text-gray-600">{contestant.gender || "Not specified"}</p>
+                      )}
+                    </div>
+
+                    <div>
+                      <label className="text-sm font-medium text-gray-700 mb-2 block">
+                        Pronouns
+                      </label>
+                      {isEditing ? (
+                        <Input
+                          value={formData.pronouns || ""}
+                          onChange={(e) => setFormData({ ...formData, pronouns: e.target.value })}
+                          placeholder="Pronouns"
+                        />
+                      ) : (
+                        <p className="text-gray-600">{contestant.pronouns || "Not specified"}</p>
+                      )}
+                    </div>
+
+                    <div>
+                      <label className="text-sm font-medium text-gray-700 mb-2 block">
+                        Height
+                      </label>
+                      {isEditing ? (
+                        <Input
+                          value={formData.height || ""}
+                          onChange={(e) => setFormData({ ...formData, height: e.target.value })}
+                          placeholder="Height"
+                        />
+                      ) : (
+                        <p className="text-gray-600">{contestant.height || "Not specified"}</p>
+                      )}
+                    </div>
+
+                    <div>
+                      <label className="text-sm font-medium text-gray-700 mb-2 block">
+                        Date of Birth
+                      </label>
+                      {isEditing ? (
+                        <Input
+                          value={formData.dateOfBirth || ""}
+                          onChange={(e) => setFormData({ ...formData, dateOfBirth: e.target.value })}
+                          placeholder="Date of Birth"
+                        />
+                      ) : (
+                        <p className="text-gray-600">{contestant.dateOfBirth || "Not specified"}</p>
+                      )}
+                    </div>
+
+                    <div>
+                      <label className="text-sm font-medium text-gray-700 mb-2 block">
+                        Birthplace
+                      </label>
+                      {isEditing ? (
+                        <Input
+                          value={formData.birthplace || ""}
+                          onChange={(e) => setFormData({ ...formData, birthplace: e.target.value })}
+                          placeholder="Birthplace"
+                        />
+                      ) : (
+                        <p className="text-gray-600">{contestant.birthplace || "Not specified"}</p>
+                      )}
+                    </div>
+
+                    <div>
+                      <label className="text-sm font-medium text-gray-700 mb-2 block">
+                        Location
+                      </label>
+                      {isEditing ? (
+                        <Input
+                          value={formData.location || ""}
+                          onChange={(e) => setFormData({ ...formData, location: e.target.value })}
+                          placeholder="Location"
+                        />
+                      ) : (
+                        <p className="text-gray-600">{contestant.location || "Not specified"}</p>
+                      )}
+                    </div>
+                  </div>
                 </div>
 
                 <div>

@@ -237,56 +237,92 @@ export async function extractBiographicalInfo(fandomUrl: string, options: Fandom
       timeout: options.timeout || 60000
     });
 
-    // Wait for the biographical section to load
-    // Selector: #mw-content-text > div > aside > section:nth-child(3)
+    // Wait for the page to load and find biographical information
     const bioInfo: BiographicalInfo = {};
 
     try {
-      // Try to find the biographical information section
-      const bioSection = await page.$('#mw-content-text > div > aside > section:nth-child(3)');
-      
-      if (bioSection) {
-        console.log(`[fandom-biographical] Found biographical section`);
+      // Wait for the aside element (infobox) to load
+      await page.waitForSelector('#mw-content-text > div > aside', { timeout: 10000 }).catch(() => {
+        console.log(`[fandom-biographical] Aside element not found`);
+      });
 
-        // Extract all data items from the section
-        const data = await bioSection.$$eval('div[data-source]', (elements) => {
-          return elements.map(el => ({
-            key: el.getAttribute('data-source') || '',
-            label: el.querySelector('h3')?.textContent?.trim() || '',
-            value: el.querySelector('div')?.textContent?.trim() || ''
-          }));
-        });
+      // Extract all data items from ALL sections in the aside element
+      // This is more resilient than targeting a specific nth-child section
+      const data = await page.$$eval('#mw-content-text > div > aside section div[data-source]', (elements) => {
+        return elements.map(el => ({
+          key: el.getAttribute('data-source') || '',
+          label: el.querySelector('h3')?.textContent?.trim() || '',
+          value: el.querySelector('div')?.textContent?.trim() || ''
+        }));
+      }).catch(() => {
+        console.log(`[fandom-biographical] No data-source elements found`);
+        return [];
+      });
 
-        console.log(`[fandom-biographical] Extracted data items:`, data);
+      console.log(`[fandom-biographical] Extracted ${data.length} data items from all sections`);
 
+      if (data.length > 0) {
         // Map the extracted data to our fields
+        // Prioritize data-source keys (more reliable) over label text
         for (const item of data) {
+          const key = item.key.toLowerCase();
           const label = item.label.toLowerCase();
           const value = item.value;
 
-          if (label.includes('gender')) {
+          if (!value) continue; // Skip empty values
+
+          // Map by data-source key first (most reliable)
+          if (key.includes('gender')) {
+            bioInfo.gender = value;
+          } else if (key.includes('pronoun')) {
+            bioInfo.pronouns = value;
+          } else if (key.includes('height')) {
+            bioInfo.height = value;
+          } else if (key.includes('birthdate') || key.includes('born') || key.includes('dob') || key.includes('dateofbirth')) {
+            bioInfo.dateOfBirth = value;
+          } else if (key.includes('birthplace')) {
+            bioInfo.birthplace = value;
+          } else if (key.includes('residence') || key.includes('location')) {
+            bioInfo.location = value;
+          } else if (key.includes('hometown')) {
+            if (!bioInfo.location) {
+              bioInfo.location = value;
+            }
+          }
+          // Fallback to label matching if key didn't match
+          else if (label.includes('gender')) {
             bioInfo.gender = value;
           } else if (label.includes('pronoun')) {
             bioInfo.pronouns = value;
           } else if (label.includes('height')) {
             bioInfo.height = value;
-          } else if (label.includes('date of birth') || label.includes('dob')) {
-            bioInfo.dateOfBirth = value;
+          } else if (label.includes('date of birth') || label.includes('dob') || label.includes('born')) {
+            if (!bioInfo.dateOfBirth) {
+              bioInfo.dateOfBirth = value;
+            }
           } else if (label.includes('birthplace')) {
-            bioInfo.birthplace = value;
+            if (!bioInfo.birthplace) {
+              bioInfo.birthplace = value;
+            }
           } else if (label.includes('location') && !label.includes('hometown')) {
-            bioInfo.location = value;
+            if (!bioInfo.location) {
+              bioInfo.location = value;
+            }
           } else if (label.includes('hometown')) {
-            // Store in location if we don't have it yet
             if (!bioInfo.location) {
               bioInfo.location = value;
             }
           }
         }
 
-        console.log(`[fandom-biographical] Extracted biographical info:`, bioInfo);
+        const fieldCount = Object.keys(bioInfo).length;
+        console.log(`[fandom-biographical] Extracted biographical info (${fieldCount} fields):`, bioInfo);
+        
+        if (fieldCount === 0) {
+          console.warn(`[fandom-biographical] WARNING: Found ${data.length} data items but could not map any to biographical fields. Labels found:`, data.map(d => d.label));
+        }
       } else {
-        console.log(`[fandom-biographical] Biographical section not found`);
+        console.log(`[fandom-biographical] No biographical data found in any sections`);
       }
     } catch (sectionError) {
       console.error(`[fandom-biographical] Error extracting biographical section:`, sectionError);
