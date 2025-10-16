@@ -29,7 +29,7 @@ export interface AppConfig {
 // Default configuration
 const defaultConfig: AppConfig = {
   imageScraping: {
-    enabled: process.env.IMAGE_SCRAPING_ENABLED === 'true' || true, // Default to enabled
+    enabled: process.env.IMAGE_SCRAPING_ENABLED === 'true' || false, // Default to enabled
     downloadTimeout: 30000, // 30 seconds
     maxFileSize: 10 * 1024 * 1024, // 10MB
     allowedFormats: ['jpg', 'jpeg', 'png', 'webp'],

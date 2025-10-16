@@ -5,14 +5,21 @@
       "type": "node",
       "request": "launch",
       "name": "Debug Scraper",
-      "program": "${workspaceFolder}/server/index.ts", // <-- update this to your entry file
-      "runtimeArgs": [
-        "-r",
-        "ts-node/register"
-      ],
+      "program": "${workspaceFolder}/server/index.ts",
+      "runtimeArgs": ["-r", "ts-node/register"],
       "env": {
         "HEADLESS": "false"
-      }
+      },
+      "skipFiles": ["<node_internals>/**"]
+    },
+    {
+      "type": "node",
+      "request": "attach",
+      "name": "Attach to Node (Inspect) 9229",
+      "port": 9229,
+      "restart": true,
+      "protocol": "inspector",
+      "skipFiles": ["<node_internals>/**"]
     }
   ]
 }
