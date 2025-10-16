@@ -25,6 +25,13 @@ export const contestants = pgTable("contestants", {
   imageCount: integer("image_count").default(0), // Number of images downloaded
   imageUrls: text("image_urls").array(), // S3 URLs of downloaded images
   lastImageScrapeAt: timestamp("last_image_scrape_at"), // When images were last scraped
+  // Biographical information from Fandom
+  gender: text("gender"),
+  pronouns: text("pronouns"),
+  height: text("height"),
+  dateOfBirth: text("date_of_birth"), // Stored as text for flexibility with different formats
+  birthplace: text("birthplace"),
+  location: text("location"),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });

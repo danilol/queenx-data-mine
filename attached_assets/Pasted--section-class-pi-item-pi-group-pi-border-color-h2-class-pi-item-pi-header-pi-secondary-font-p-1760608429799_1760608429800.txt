@@ -1,0 +1,67 @@
+<section class="pi-item pi-group pi-border-color">
+	<h2 class="pi-item pi-header pi-secondary-font pi-item-spacing pi-secondary-background">Biographical Information</h2>
+
+<div class="pi-item pi-data pi-item-spacing pi-border-color" data-source="Drag Name">
+	
+		<h3 class="pi-data-label pi-secondary-font">Drag Name</h3>
+	
+	<div class="pi-data-value pi-font">Ruby Nox</div>
+</div>
+
+<div class="pi-item pi-data pi-item-spacing pi-border-color" data-source="Gender">
+	
+		<h3 class="pi-data-label pi-secondary-font">Gender</h3>
+	
+	<div class="pi-data-value pi-font">Genderfluid<sup id="cite_ref-Ref_1-2" class="reference"><a href="#cite_note-Ref-1" aria-label="Reference 1"><span class="cite-bracket">[</span>1<span class="cite-bracket">]</span></a></sup><sup id="cite_ref-Desbinarize_4-0" class="reference"><a href="#cite_note-Desbinarize-4" aria-label="Reference 4"><span class="cite-bracket">[</span>4<span class="cite-bracket">]</span></a></sup></div>
+</div>
+
+<div class="pi-item pi-data pi-item-spacing pi-border-color" data-source="Pronouns">
+	
+		<h3 class="pi-data-label pi-secondary-font">Pronouns</h3>
+	
+	<div class="pi-data-value pi-font">She/Her <small>(In Drag)</small><sup id="cite_ref-IG1_5-0" class="reference"><a href="#cite_note-IG1-5" aria-label="Reference 5"><span class="cite-bracket">[</span>5<span class="cite-bracket">]</span></a></sup><br>Any <small>(Out of Drag)</small><sup id="cite_ref-Desbinarize_4-1" class="reference"><a href="#cite_note-Desbinarize-4" aria-label="Reference 4"><span class="cite-bracket">[</span>4<span class="cite-bracket">]</span></a></sup><sup id="cite_ref-IG1_5-1" class="reference"><a href="#cite_note-IG1-5" aria-label="Reference 5"><span class="cite-bracket">[</span>5<span class="cite-bracket">]</span></a></sup></div>
+</div>
+
+<div class="pi-item pi-data pi-item-spacing pi-border-color" data-source="Height">
+	
+		<h3 class="pi-data-label pi-secondary-font">Height</h3>
+	
+	<div class="pi-data-value pi-font">5'6 ¾" (173 cm)<sup id="cite_ref-Ref_1-3" class="reference"><a href="#cite_note-Ref-1" aria-label="Reference 1"><span class="cite-bracket">[</span>1<span class="cite-bracket">]</span></a></sup></div>
+</div>
+
+<div class="pi-item pi-data pi-item-spacing pi-border-color" data-source="birth year">
+	
+		<h3 class="pi-data-label pi-secondary-font"><a href="/wiki/Birthday_Calendar" title="Birthday Calendar"><span class="link_color">Date of Birth</span></a></h3>
+	
+	<div class="pi-data-value pi-font">November 14, 1993<sup id="cite_ref-Ref_1-0" class="reference"><a href="#cite_note-Ref-1" aria-label="Reference 1"><span class="cite-bracket">[</span>1<span class="cite-bracket">]</span></a></sup><sup id="cite_ref-2" class="reference"><a href="#cite_note-2" aria-label="Reference 2"><span class="cite-bracket">[</span>2<span class="cite-bracket">]</span></a></sup></div>
+</div>
+
+<div class="pi-item pi-data pi-item-spacing pi-border-color" data-source="birth year">
+	
+		<h3 class="pi-data-label pi-secondary-font">Age</h3>
+	
+	<div class="pi-data-value pi-font">31</div>
+</div>
+
+<div class="pi-item pi-data pi-item-spacing pi-border-color" data-source="Birthplace">
+	
+		<h3 class="pi-data-label pi-secondary-font">Birthplace</h3>
+	
+	<div class="pi-data-value pi-font">Serra Talhada, PE, Brazil<sup id="cite_ref-3" class="reference"><a href="#cite_note-3" aria-label="Reference 3"><span class="cite-bracket">[</span>3<span class="cite-bracket">]</span></a></sup></div>
+</div>
+
+<div class="pi-item pi-data pi-item-spacing pi-border-color" data-source="Hometown">
+	
+		<h3 class="pi-data-label pi-secondary-font">Hometown</h3>
+	
+	<div class="pi-data-value pi-font">Carnaíba, PE, Brazil<sup id="cite_ref-Ref_1-1" class="reference"><a href="#cite_note-Ref-1" aria-label="Reference 1"><span class="cite-bracket">[</span>1<span class="cite-bracket">]</span></a></sup></div>
+</div>
+
+<div class="pi-item pi-data pi-item-spacing pi-border-color" data-source="Location">
+	
+		<h3 class="pi-data-label pi-secondary-font">Location</h3>
+	
+	<div class="pi-data-value pi-font">Carnaíba, PE, Brazil</div>
+</div>
+
+</section>
