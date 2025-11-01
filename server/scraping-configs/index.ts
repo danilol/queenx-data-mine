@@ -2,11 +2,13 @@ import { FranchiseScrapingConfig } from './types';
 import { defaultConfig } from './default';
 import { dragRaceUSConfig } from './drag-race-us';
 import { dragRaceBrasilConfig } from './drag-race-brasil';
+import { dragRaceUKConfig } from './drag-race-uk';
 
 // Registry of all franchise configurations
 const configRegistry: Map<string, FranchiseScrapingConfig> = new Map([
   ['RuPaul\'s Drag Race', dragRaceUSConfig],
   ['Drag Race Brasil', dragRaceBrasilConfig],
+  ['RuPaul\'s Drag Race UK', dragRaceUKConfig],
 ]);
 
 /**
