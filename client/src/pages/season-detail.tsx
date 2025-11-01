@@ -137,7 +137,7 @@ export default function SeasonDetail() {
       <div className="min-h-screen bg-gray-50">
         <Header title="Season Not Found" subtitle="The season you're looking for doesn't exist" />
         <div className="container mx-auto px-4 py-8">
-          <Button onClick={() => navigate("/manage/seasons")}>
+          <Button onClick={() => navigate("/manage/seasons")} data-testid="button-back-to-seasons">
             <ArrowLeft className="h-4 w-4 mr-2" />
             Back to Seasons
           </Button>
@@ -156,7 +156,8 @@ export default function SeasonDetail() {
         <div className="flex items-center gap-4 mb-6">
           <Button 
             variant="outline" 
-            onClick={() => navigate("/manage/seasons")}
+            onClick={() => navigate(`/manage/seasons?franchiseId=${season.franchiseId}`)}
+            data-testid="button-back-to-seasons"
           >
             <ArrowLeft className="h-4 w-4 mr-2" />
             Back to Seasons

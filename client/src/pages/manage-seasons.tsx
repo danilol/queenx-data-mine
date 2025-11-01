@@ -42,7 +42,11 @@ interface SeasonWithFranchise extends Season {
 
 export default function ManageSeasons() {
   const [, navigate] = useLocation();
+  const searchParams = new URLSearchParams(window.location.search);
+  const urlFranchiseId = searchParams.get('franchiseId');
+  
   const [searchTerm, setSearchTerm] = useState("");
+  const [selectedFranchiseId, setSelectedFranchiseId] = useState<string>(urlFranchiseId || "");
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [formData, setFormData] = useState<Partial<InsertSeason>>({});
   const [expandedSeasons, setExpandedSeasons] = useState<Set<string>>(new Set());
@@ -54,7 +58,7 @@ export default function ManageSeasons() {
   const queryClient = useQueryClient();
 
   const { data: seasons = [], isLoading } = useQuery({
-    queryKey: ["/api/seasons", sortBy, sortOrder, currentPage],
+    queryKey: ["/api/seasons", sortBy, sortOrder, currentPage, selectedFranchiseId],
     queryFn: async () => {
       const params = new URLSearchParams({
         sortBy,
@@ -62,6 +66,10 @@ export default function ManageSeasons() {
         page: currentPage.toString(),
         limit: itemsPerPage.toString(),
       });
+      
+      if (selectedFranchiseId) {
+        params.append('franchiseId', selectedFranchiseId);
+      }
       
       const response = await fetch(`/api/seasons?${params.toString()}`);
       if (!response.ok) throw new Error("Failed to fetch seasons");
@@ -138,6 +146,18 @@ export default function ManageSeasons() {
     setCurrentPage(page);
   };
 
+  const handleFranchiseFilterChange = (value: string) => {
+    const franchiseId = value === "all" ? "" : value;
+    setSelectedFranchiseId(franchiseId);
+    setCurrentPage(1);
+    
+    // Update URL without triggering a reload
+    const newUrl = franchiseId 
+      ? `/manage/seasons?franchiseId=${franchiseId}` 
+      : '/manage/seasons';
+    window.history.pushState({}, '', newUrl);
+  };
+
   return (
     <div className="min-h-screen bg-gray-50">
       <Header title="Manage Seasons" subtitle="Add, edit, and manage season information" />
@@ -203,10 +223,30 @@ export default function ManageSeasons() {
 
         <Card>
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Calendar className="h-5 w-5" />
-              Seasons ({seasons.length})
-            </CardTitle>
+            <div className="flex items-center justify-between">
+              <CardTitle className="flex items-center gap-2">
+                <Calendar className="h-5 w-5" />
+                Seasons ({seasons.length})
+              </CardTitle>
+              <div className="w-64">
+                <Select
+                  value={selectedFranchiseId || "all"}
+                  onValueChange={handleFranchiseFilterChange}
+                >
+                  <SelectTrigger data-testid="select-franchise-filter">
+                    <SelectValue placeholder="All Franchises" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Franchises</SelectItem>
+                    {franchises.map((franchise) => (
+                      <SelectItem key={franchise.id} value={franchise.id}>
+                        {franchise.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
           </CardHeader>
           <CardContent>
             {isLoading ? (
