@@ -45,12 +45,12 @@ export const dragRaceAllStarsConfig: FranchiseScrapingConfig = {
           },
           age: {
             cellType: 'td',
-            index: 0,
+            index: 1,
             parser: 'extractAge'
           },
           hometown: {
             cellType: 'td',
-            index: 1,
+            index: 2,
             parser: 'trim'
           },
           outcome: {

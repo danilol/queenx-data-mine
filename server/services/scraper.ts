@@ -571,7 +571,8 @@ export class RuPaulScraper {
 
       // Get franchise name for this season
       const franchiseName = seasonData.franchiseName;
-      const config = getScrapingConfig(franchiseName);
+      const seasonName = seasonData.name;
+      const config = getScrapingConfig(franchiseName, seasonName);
       
       console.log(`[scraper] Navigating to ${seasonData.metadataSourceUrl} for season: ${seasonData.name} (Franchise: ${franchiseName})`);
       

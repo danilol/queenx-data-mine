@@ -14,10 +14,22 @@ const configRegistry: Map<string, FranchiseScrapingConfig> = new Map([
 ]);
 
 /**
- * Get scraping configuration for a franchise
+ * Get scraping configuration for a franchise/season
  * Falls back to default config if no specific config exists
+ * @param franchiseName - The franchise name
+ * @param seasonName - Optional season name to detect sub-franchise variants (e.g., "All Stars")
  */
-export function getScrapingConfig(franchiseName: string): FranchiseScrapingConfig {
+export function getScrapingConfig(franchiseName: string, seasonName?: string): FranchiseScrapingConfig {
+  // Check for All Stars seasons within the US franchise
+  if (seasonName && seasonName.toLowerCase().includes('all stars') && 
+      franchiseName === "RuPaul's Drag Race (US)") {
+    const allStarsConfig = configRegistry.get("RuPaul's Drag Race All Stars");
+    if (allStarsConfig) {
+      console.log(`[config] Using All Stars config for season: ${seasonName}`);
+      return allStarsConfig;
+    }
+  }
+
   const config = configRegistry.get(franchiseName);
   if (config) {
     console.log(`[config] Using custom config for franchise: ${franchiseName}`);
