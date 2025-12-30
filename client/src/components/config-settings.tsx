@@ -34,7 +34,7 @@ export function ConfigSettings() {
   // Fetch current configuration
   const { data: config, isLoading, error } = useQuery<AppConfig>({
     queryKey: ['/api/config'],
-    refetchInterval: Number(process.env.DEFAULT_TIMEOUT) || 60000, // Refetch every 60 seconds
+    refetchInterval: 60000, // Refetch every 60 seconds
   });
 
   // Update image scraping setting
