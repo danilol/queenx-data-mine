@@ -151,7 +151,7 @@ export class ImageScraper {
       }
 
       // Additional wait to ensure page fully loads after privacy dialog
-      await page.waitForTimeout(3000);
+      await page.waitForTimeout(6000);
 
       // Scroll down to trigger lazy loading of images
       console.log(`[image-scraper] Scrolling to trigger lazy loading for ${contestantName}...`);

@@ -62,7 +62,7 @@ app.use((req, res, next) => {
   // ALWAYS serve the app on the port specified in the environment variable PORT
   // The workflow expects port 5000, so we use that for compatibility
   // this serves both the API and the client.
-  const port = 5000;
+  const port = 3000;
   server.listen({
     port,
     host: "0.0.0.0",
