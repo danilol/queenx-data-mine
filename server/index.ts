@@ -59,9 +59,8 @@ app.use((req, res, next) => {
     serveStatic(app);
   }
 
-  // ALWAYS serve the app on the port specified in the environment variable PORT
-  // The workflow expects port 5000, so we use that for compatibility
-  // this serves both the API and the client.
+  // ALWAYS serve the app on port 5000 for workflow compatibility
+  // Replit will automatically bind this to external ports
   const port = 5000;
   server.listen({
     port,
