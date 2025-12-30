@@ -432,7 +432,7 @@ export class RuPaulScraper {
         if (needsBioInfo) {
           console.log(`[scraper] Extracting biographical info for ${contestant.dragName} from Fandom`);
           const { extractBiographicalInfo } = await import('./fandom-lookup.js');
-          const bioInfo = await extractBiographicalInfo(contestant.metadataSourceUrl, { timeout: 30000 });
+          const bioInfo = await extractBiographicalInfo(contestant.metadataSourceUrl, { timeout: Number(process.env.tiDEFAULT_TIMEOUTmeout) || 60000 });
           
           if (bioInfo && Object.keys(bioInfo).length > 0) {
             console.log(`[scraper] Found biographical info for ${contestant.dragName}:`, bioInfo);
