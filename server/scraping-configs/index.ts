@@ -3,12 +3,14 @@ import { defaultConfig } from './default';
 import { dragRaceUSConfig } from './drag-race-us';
 import { dragRaceBrasilConfig } from './drag-race-brasil';
 import { dragRaceUKConfig } from './drag-race-uk';
+import { dragRaceAllStarsConfig } from './drag-race-all-stars';
 
 // Registry of all franchise configurations
 const configRegistry: Map<string, FranchiseScrapingConfig> = new Map([
   ['RuPaul\'s Drag Race (US)', dragRaceUSConfig],
   ['Drag Race Brasil', dragRaceBrasilConfig],
   ['RuPaul\'s Drag Race UK', dragRaceUKConfig],
+  ["RuPaul's Drag Race All Stars", dragRaceAllStarsConfig],
 ]);
 
 /**
@@ -34,5 +36,5 @@ export function registerConfig(config: FranchiseScrapingConfig): void {
 }
 
 // Export all configs for direct access if needed
-export { defaultConfig, dragRaceUSConfig, dragRaceBrasilConfig };
+export { defaultConfig, dragRaceUSConfig, dragRaceBrasilConfig, dragRaceAllStarsConfig };
 export * from './types';
