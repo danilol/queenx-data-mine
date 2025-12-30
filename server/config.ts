@@ -30,7 +30,7 @@ export interface AppConfig {
 const defaultConfig: AppConfig = {
   imageScraping: {
     enabled: process.env.IMAGE_SCRAPING_ENABLED === 'true' || false, // Default to enabled
-    downloadTimeout: 30000, // 30 seconds
+    downloadTimeout: Number(process.env.DEFAULT_TIMEOUT) || 60000, // 60 seconds
     maxFileSize: 10 * 1024 * 1024, // 10MB
     allowedFormats: ['jpg', 'jpeg', 'png', 'webp'],
   },
@@ -44,7 +44,7 @@ const defaultConfig: AppConfig = {
   
   storage: {
     s3Enabled: !!(process.env.AWS_ACCESS_KEY_ID && process.env.AWS_SECRET_ACCESS_KEY && process.env.S3_BUCKET_NAME),
-    uploadTimeout: 30000, // 30 seconds
+    uploadTimeout: Number(process.env.DEFAULT_TIMEOUT) || 60000, // 30 seconds
   },
 };
 

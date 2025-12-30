@@ -109,7 +109,7 @@ export class ImageScraper {
 
       await page.goto(metadataSourceUrl, { 
         waitUntil: 'networkidle',
-        timeout: 30000 
+        timeout: Number(process.env.DEFAULT_TIMEOUT) || 60000 
       });
 
       // Handle privacy/consent dialogs that may block content
@@ -436,7 +436,7 @@ export class ImageScraper {
           for (const urlToTry of urlsToTry) {
             try {
               console.log(`[image-scraper] Trying URL for ${contestantName}: ${urlToTry}`);
-              response = await page.goto(urlToTry, { timeout: 30000 });
+              response = await page.goto(urlToTry, { timeout: Number(process.env.DEFAULT_TIMEOUT) || 60000 });
               
               if (response && response.status() === 200) {
                 console.log(`[image-scraper] Successfully downloaded from: ${urlToTry}`);
@@ -649,7 +649,7 @@ export const imageScraper = {
         await scraper.initialize();
       }
       page = await scraper['browser']!.newPage();
-      await page.goto(metadataSourceUrl, { waitUntil: 'networkidle', timeout: 30000 });
+      await page.goto(metadataSourceUrl, { waitUntil: 'networkidle', timeout: Number(process.env.DEFAULT_TIMEOUT) || 60000 });
       
       // Analyze page structure
       const pageInfo = await page.evaluate(() => {
