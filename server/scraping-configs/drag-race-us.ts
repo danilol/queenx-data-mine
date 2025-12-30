@@ -2,7 +2,7 @@ import { FranchiseScrapingConfig } from './types';
 
 // Configuration for RuPaul's Drag Race (US)
 export const dragRaceUSConfig: FranchiseScrapingConfig = {
-  franchiseName: 'RuPaul\'s Drag Race',
+  franchiseName: 'RuPaul\'s Drag Race (US)',
   season: {
     contestantTable: {
       tableSelector: '.wikitable',
