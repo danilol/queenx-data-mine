@@ -16,6 +16,52 @@ export interface ScrapingOptions {
   screenshotsEnabled?: boolean;
 }
 
+// Helper function to handle cookie consent dialogs on Fandom pages
+async function handleCookieConsent(page: Page): Promise<void> {
+  try {
+    // Look for common cookie consent button selectors used by Fandom
+    const consentButtonSelectors = [
+      'button:has-text("I Accept")',
+      'button:has-text("Accept")',
+      'button:has-text("Accept All")',
+      '[data-tracking-opt-in-accept]',
+      '.NN0_TB_DIs498iQlfhIt', // Fandom specific class
+      '#onetrust-accept-btn-handler',
+      '.accept-all-btn'
+    ];
+
+    // Wait briefly for any consent dialog to appear
+    await page.waitForTimeout(1000);
+
+    for (const selector of consentButtonSelectors) {
+      try {
+        // Check if element exists and is visible
+        const button = page.locator(selector).first();
+        const count = await button.count();
+        
+        if (count > 0) {
+          const isVisible = await button.isVisible().catch(() => false);
+          
+          if (isVisible) {
+            console.log(`[scraper] Found cookie consent button with selector: ${selector}`);
+            await button.click({ timeout: 3000 });
+            // Wait a moment for the dialog to close
+            await page.waitForTimeout(500);
+            console.log('[scraper] Cookie consent accepted');
+            return;
+          }
+        }
+      } catch {
+        // Continue to next selector
+      }
+    }
+    
+    console.log('[scraper] No cookie consent dialog found or already accepted');
+  } catch (error) {
+    console.log('[scraper] Error handling cookie consent (non-critical):', error);
+  }
+}
+
 export class RuPaulScraper {
   private browser: Browser | null = null;
   private scrapingJob: ScrapingJobPayload | null = null;
@@ -538,6 +584,11 @@ export class RuPaulScraper {
         waitUntil: waitStrategy,
         timeout: 60000  // Increase timeout to 60s for heavy pages
       });
+
+      // Handle cookie consent dialog if present (especially on Fandom pages)
+      if (isFandomUrl) {
+        await handleCookieConsent(page);
+      }
 
       if (screenshotsEnabled) {
         await this.takeScreenshot(page, `season_${seasonData.name.replace(/\s/g, '_')}`);
